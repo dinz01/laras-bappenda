@@ -1,7 +1,7 @@
 import { ClipboardList } from 'lucide-react';
+import { EmptyState } from '@/components/Common/empty-state';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/Common/empty-state';
 
 type RecentActivityRow = {
     id: number;

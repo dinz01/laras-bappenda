@@ -1,5 +1,5 @@
-import type { ComponentType } from 'react';
 import { Link } from '@inertiajs/react';
+import type { ComponentType } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface QuickAccessItem {

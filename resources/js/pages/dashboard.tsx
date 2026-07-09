@@ -12,10 +12,10 @@ import {
     Activity,
     FolderOpen,
 } from 'lucide-react';
-import { StatisticCard } from '@/components/Cards/statistic-card';
 import { QuickAccessCard } from '@/components/Cards/quick-access-card';
-import { SystemInformationCard } from '@/components/Cards/system-information-card';
 import { RecentActivityCard } from '@/components/Cards/recent-activity-card';
+import { StatisticCard } from '@/components/Cards/statistic-card';
+import { SystemInformationCard } from '@/components/Cards/system-information-card';
 import { DashboardHeader } from '@/components/Layout/dashboard-header';
 import { dashboard } from '@/routes';
 
