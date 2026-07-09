@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Providers;
+
+use App\Interfaces\AiServiceInterface;
+use App\Interfaces\OcrServiceInterface;
+use App\Interfaces\SearchServiceInterface;
+use App\Interfaces\TteServiceInterface;
+use App\Services\NullAiService;
+use App\Services\NullOcrService;
+use App\Services\NullSearchService;
+use App\Services\NullTteService;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
+
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        $this->app->bind(OcrServiceInterface::class, NullOcrService::class);
+        $this->app->bind(AiServiceInterface::class, NullAiService::class);
+        $this->app->bind(TteServiceInterface::class, NullTteService::class);
+        $this->app->bind(SearchServiceInterface::class, NullSearchService::class);
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        $this->configureDefaults();
+    }
+
+    /**
+     * Configure default behaviors for production-ready applications.
+     */
+    protected function configureDefaults(): void
+    {
+        Date::use(CarbonImmutable::class);
+
+        DB::prohibitDestructiveCommands(
+            app()->isProduction(),
+        );
+
+        Password::defaults(fn (): ?Password => app()->isProduction()
+            ? Password::min(12)
+                ->mixedCase()
+                ->letters()
+                ->numbers()
+                ->symbols()
+                ->uncompromised()
+            : null,
+        );
+    }
+}
