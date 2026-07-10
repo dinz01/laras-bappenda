@@ -1,0 +1,68 @@
+<?php
+
+namespace App\Models;
+
+use Database\Factories\KondisiArsipFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
+
+/**
+ * Model Kondisi Arsip.
+ *
+ * @property int $id
+ * @property string $kode
+ * @property string $nama
+ * @property string|null $deskripsi
+ * @property string $status
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ *
+ * @method static Builder<static> active()
+ *
+ * @use HasFactory<KondisiArsipFactory>
+ */
+class KondisiArsip extends Model
+{
+    /** @use HasFactory<KondisiArsipFactory> */
+    use HasFactory;
+
+    /**
+     * Nama tabel.
+     *
+     * @var string
+     */
+    protected $table = 'kondisi_arsip';
+
+    /**
+     * Atribut yang boleh diisi secara massal.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'kode',
+        'nama',
+        'deskripsi',
+        'status',
+    ];
+
+    /**
+     * Scope kondisi aktif.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', 'active');
+    }
+
+    /**
+     * Factory untuk model ini.
+     */
+    protected static function newFactory(): KondisiArsipFactory
+    {
+        return KondisiArsipFactory::new();
+    }
+}
