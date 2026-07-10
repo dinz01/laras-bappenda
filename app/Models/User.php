@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -32,6 +33,10 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $last_login_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property int|null $unit_organisasi_id
+ * @property int|null $jabatan_id
+ * @property-read UnitOrganisasi|null $unitOrganisasi
+ * @property-read Jabatan|null $jabatan
  */
 #[Fillable(['nip', 'nama_lengkap', 'name', 'email', 'password', 'status', 'avatar_path', 'last_login_at'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -53,5 +58,25 @@ class User extends Authenticatable implements PasskeyUser
             'two_factor_confirmed_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Relasi ke Unit Organisasi.
+     *
+     * @return BelongsTo<UnitOrganisasi, $this>
+     */
+    public function unitOrganisasi(): BelongsTo
+    {
+        return $this->belongsTo(UnitOrganisasi::class, 'unit_organisasi_id');
+    }
+
+    /**
+     * Relasi ke Jabatan.
+     *
+     * @return BelongsTo<Jabatan, $this>
+     */
+    public function jabatan(): BelongsTo
+    {
+        return $this->belongsTo(Jabatan::class, 'jabatan_id');
     }
 }
