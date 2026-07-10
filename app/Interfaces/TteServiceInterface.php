@@ -7,7 +7,6 @@ interface TteServiceInterface
     /**
      * Tanda tangani dokumen secara elektronik.
      *
-     * @param  string  $filePath
      * @param  array<string, mixed>  $signerData
      * @return string Path file yang telah ditandatangani
      */
@@ -15,9 +14,6 @@ interface TteServiceInterface
 
     /**
      * Verifikasi tanda tangan elektronik dokumen.
-     *
-     * @param  string  $filePath
-     * @return bool
      */
     public function verify(string $filePath): bool;
 }

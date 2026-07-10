@@ -10,9 +10,7 @@ class SearchService implements SearchServiceInterface
     /**
      * Indeks dokumen ke mesin pencari.
      *
-     * @param  string  $index
      * @param  array<string, mixed>  $documents
-     * @return void
      */
     public function index(string $index, array $documents): void
     {
@@ -22,8 +20,6 @@ class SearchService implements SearchServiceInterface
     /**
      * Cari dokumen pada mesin pencari.
      *
-     * @param  string  $index
-     * @param  string  $query
      * @param  array<string, mixed>  $options
      * @return array<string, mixed>
      */
@@ -34,10 +30,6 @@ class SearchService implements SearchServiceInterface
 
     /**
      * Hapus dokumen dari indeks.
-     *
-     * @param  string  $index
-     * @param  int|string  $id
-     * @return void
      */
     public function delete(string $index, int|string $id): void
     {

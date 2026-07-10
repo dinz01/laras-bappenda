@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Database\Factories\UnitOrganisasiFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
+ * Model Unit Organisasi.
+ *
  * @property int $id
  * @property string $kode
  * @property string $nama
@@ -23,21 +25,40 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read UnitOrganisasi|null $parent
  * @property-read Collection<int, UnitOrganisasi> $children
+ *
+ * @method static Builder<static> active()
+ * @method static Builder<static> root()
+ *
+ * @use HasFactory<UnitOrganisasiFactory>
  */
-#[Fillable(['kode', 'nama', 'singkatan', 'parent_id', 'urutan', 'status'])]
 class UnitOrganisasi extends Model
 {
+    /** @use HasFactory<UnitOrganisasiFactory> */
     use HasFactory;
 
     /**
-     * Nama tabel di database.
+     * Nama tabel.
      *
      * @var string
      */
     protected $table = 'unit_organisasi';
 
     /**
-     * Get the attributes that should be cast.
+     * Atribut yang boleh diisi secara massal.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'kode',
+        'nama',
+        'singkatan',
+        'parent_id',
+        'urutan',
+        'status',
+    ];
+
+    /**
+     * Attribute casting.
      *
      * @return array<string, string>
      */
@@ -49,30 +70,30 @@ class UnitOrganisasi extends Model
     }
 
     /**
-     * Relasi ke parent unit organisasi (Self-referencing).
+     * Relasi ke parent unit organisasi.
      *
      * @return BelongsTo<UnitOrganisasi, $this>
      */
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(UnitOrganisasi::class, 'parent_id');
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     /**
-     * Relasi ke child unit organisasi (Self-referencing).
+     * Relasi ke seluruh child unit organisasi.
      *
      * @return HasMany<UnitOrganisasi, $this>
      */
     public function children(): HasMany
     {
-        return $this->hasMany(UnitOrganisasi::class, 'parent_id');
+        return $this->hasMany(self::class, 'parent_id');
     }
 
     /**
-     * Scope untuk memfilter unit organisasi yang aktif.
+     * Scope unit aktif.
      *
-     * @param  Builder<UnitOrganisasi>  $query
-     * @return Builder<UnitOrganisasi>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeActive(Builder $query): Builder
     {
@@ -80,13 +101,21 @@ class UnitOrganisasi extends Model
     }
 
     /**
-     * Scope untuk memfilter unit organisasi tingkat teratas (root).
+     * Scope unit level root.
      *
-     * @param  Builder<UnitOrganisasi>  $query
-     * @return Builder<UnitOrganisasi>
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
     public function scopeRoot(Builder $query): Builder
     {
         return $query->whereNull('parent_id');
+    }
+
+    /**
+     * Factory untuk model ini.
+     */
+    protected static function newFactory(): UnitOrganisasiFactory
+    {
+        return UnitOrganisasiFactory::new();
     }
 }
