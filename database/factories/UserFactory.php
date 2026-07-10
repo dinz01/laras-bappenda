@@ -24,12 +24,19 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $nama = fake('id_ID')->name();
+
         return [
-            'name' => fake()->name(),
+            'nip' => null,
+            'nama_lengkap' => $nama,
+            'name' => $nama,
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'status' => 'active',
+            'avatar_path' => null,
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'last_login_at' => null,
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
@@ -43,6 +50,16 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user account is inactive.
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'inactive',
         ]);
     }
 
