@@ -17,6 +17,20 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PermissionSeeder::class,
             RoleSeeder::class,
+            UnitOrganisasiSeeder::class,
+            JabatanSeeder::class,
+            KlasifikasiArsipSeeder::class,
+            LokasiArsipSeeder::class,
+            JenisArsipSeeder::class,
+            MediaArsipSeeder::class,
+            SifatArsipSeeder::class,
+            TingkatPerkembanganArsipSeeder::class,
+            MetodePenyusutanArsipSeeder::class,
+            KondisiArsipSeeder::class,
+            TingkatAksesArsipSeeder::class,
+            StatusArsipSeeder::class,
+            JenisDokumenSeeder::class,
+            RetensiArsipSeeder::class,
             UserSeeder::class,
         ]);
     }
