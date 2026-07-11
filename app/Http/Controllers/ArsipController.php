@@ -5,7 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreArsipRequest;
 use App\Http\Requests\UpdateArsipRequest;
 use App\Models\Arsip;
+use App\Models\JenisDokumen;
+use App\Models\KlasifikasiArsip;
+use App\Models\LokasiArsip;
+use App\Models\StatusArsip;
+use App\Models\UnitOrganisasi;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -16,19 +22,56 @@ class ArsipController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Arsip::class);
 
-        $arsips = Arsip::with([
+        $query = Arsip::query()->with([
             'klasifikasiArsip',
             'lokasiArsip',
             'statusArsip',
             'unitOrganisasi',
-        ])->paginate(10);
+        ]);
+
+        // Search
+        if ($request->has('search') && ! empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nomor_arsip', 'like', "%{$search}%")
+                    ->orWhere('judul', 'like', "%{$search}%")
+                    ->orWhereHas('klasifikasiArsip', function ($qk) use ($search) {
+                        $qk->where('kode', 'like', "%{$search}%")
+                            ->orWhere('nama', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filters
+        if ($request->has('status_arsip_id') && ! empty($request->status_arsip_id)) {
+            $query->where('status_arsip_id', $request->status_arsip_id);
+        }
+
+        if ($request->has('unit_organisasi_id') && ! empty($request->unit_organisasi_id)) {
+            $query->where('unit_organisasi_id', $request->unit_organisasi_id);
+        }
+
+        if ($request->has('klasifikasi_arsip_id') && ! empty($request->klasifikasi_arsip_id)) {
+            $query->where('klasifikasi_arsip_id', $request->klasifikasi_arsip_id);
+        }
+
+        $arsips = $query->paginate(10)->withQueryString();
+
+        // Master lists for filters
+        $klasifikasis = KlasifikasiArsip::active()->get(['id', 'kode', 'nama']);
+        $unitOrganisasis = UnitOrganisasi::active()->get(['id', 'kode', 'nama']);
+        $statusArsips = StatusArsip::active()->get(['id', 'kode', 'nama']);
 
         return Inertia::render('arsip/index', [
             'arsips' => $arsips,
+            'klasifikasis' => $klasifikasis,
+            'unitOrganisasis' => $unitOrganisasis,
+            'statusArsips' => $statusArsips,
+            'filters' => $request->only(['search', 'status_arsip_id', 'unit_organisasi_id', 'klasifikasi_arsip_id']),
         ]);
     }
 
@@ -39,7 +82,13 @@ class ArsipController extends Controller
     {
         Gate::authorize('create', Arsip::class);
 
-        return Inertia::render('arsip/create');
+        return Inertia::render('arsip/create', [
+            'klasifikasis' => KlasifikasiArsip::active()->get(['id', 'kode', 'nama']),
+            'jenisDokumens' => JenisDokumen::active()->get(['id', 'kode', 'nama']),
+            'unitOrganisasis' => UnitOrganisasi::active()->get(['id', 'kode', 'nama']),
+            'lokasiArsips' => LokasiArsip::active()->get(['id', 'kode', 'nama']),
+            'statusArsips' => StatusArsip::active()->get(['id', 'kode', 'nama']),
+        ]);
     }
 
     /**
@@ -98,6 +147,11 @@ class ArsipController extends Controller
 
         return Inertia::render('arsip/edit', [
             'arsip' => $arsip,
+            'klasifikasis' => KlasifikasiArsip::active()->get(['id', 'kode', 'nama']),
+            'jenisDokumens' => JenisDokumen::active()->get(['id', 'kode', 'nama']),
+            'unitOrganisasis' => UnitOrganisasi::active()->get(['id', 'kode', 'nama']),
+            'lokasiArsips' => LokasiArsip::active()->get(['id', 'kode', 'nama']),
+            'statusArsips' => StatusArsip::active()->get(['id', 'kode', 'nama']),
         ]);
     }
 

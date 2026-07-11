@@ -142,3 +142,42 @@ it('allows deleting (soft deleting) an archive', function () {
         'id' => $arsip->id,
     ]);
 });
+
+it('allows filtering and searching archives on index', function () {
+    $klasifikasiA = KlasifikasiArsip::factory()->create(['kode' => 'KL-001', 'nama' => 'Klasifikasi A']);
+    $klasifikasiB = KlasifikasiArsip::factory()->create(['kode' => 'KL-002', 'nama' => 'Klasifikasi B']);
+
+    $arsip1 = Arsip::factory()->create([
+        'judul' => 'Arsip Pertama',
+        'nomor_arsip' => 'ARS-001',
+        'klasifikasi_arsip_id' => $klasifikasiA->id,
+    ]);
+
+    $arsip2 = Arsip::factory()->create([
+        'judul' => 'Dokumen Kedua',
+        'nomor_arsip' => 'ARS-002',
+        'klasifikasi_arsip_id' => $klasifikasiB->id,
+    ]);
+
+    // Search by title
+    $response = $this->actingAs($this->user)
+        ->get(route('arsip.index', ['search' => 'Pertama']));
+
+    $response->assertOk()
+        ->assertInertia(function ($page) use ($arsip1) {
+            $data = $page->toArray()['props']['arsips']['data'];
+            expect($data)->toHaveCount(1)
+                ->and($data[0]['id'])->toBe($arsip1->id);
+        });
+
+    // Filter by classification
+    $response = $this->actingAs($this->user)
+        ->get(route('arsip.index', ['klasifikasi_arsip_id' => $klasifikasiB->id]));
+
+    $response->assertOk()
+        ->assertInertia(function ($page) use ($arsip2) {
+            $data = $page->toArray()['props']['arsips']['data'];
+            expect($data)->toHaveCount(1)
+                ->and($data[0]['id'])->toBe($arsip2->id);
+        });
+});

@@ -1,5 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Calendar, FileText, MapPin, Pencil, RotateCcw, Trash2 } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, Calendar, FileText, MapPin, Pencil, Trash2 } from 'lucide-react';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
 import { PageContainer } from '@/components/Layout/page-container';
@@ -8,28 +8,49 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { index, show } from '@/routes/arsip';
 
-const dummy = {
-    id: 1,
-    nomor_arsip: 'ARS/2026/00001',
-    judul: 'Laporan Keuangan Triwulan I',
-    deskripsi: 'Laporan realisasi anggaran semester pertama tahun 2026, mencakup seluruh pos belanja operasional dan modal instansi.',
-    tanggal_arsip: '31 Januari 2026',
-    file_path: 'arsip/laporan-keuangan-q1.pdf',
-    klasifikasi: 'KU.01 — Keuangan Umum',
-    jenis_dokumen: 'Laporan',
-    media: 'Digital (PDF)',
-    kondisi: 'Baik',
-    status: 'Aktif',
-    tingkat_akses: 'Umum',
-    unit_organisasi: 'Bidang Keuangan',
-    lokasi: 'Rak A-01 — Ruang Arsip Utama',
-    gedung: 'Gedung Utama Lt. 2',
-    retensi_aktif: '5 Tahun',
-    retensi_inaktif: '10 Tahun',
-    metode_penyusutan: 'Dimusnahkan',
-    created_by: 'Admin Sistem',
-    created_at: '11 Juli 2026, 09:45',
-    updated_at: '11 Juli 2026, 09:45',
+type MasterItem = {
+    id: number;
+    kode: string;
+    nama: string;
+};
+
+type RetentionItem = {
+    id: number;
+    kode: string;
+    nama: string;
+    retensi_aktif: number;
+    retensi_inaktif: number;
+    keterangan: string | null;
+};
+
+type UserItem = {
+    id: number;
+    name: string;
+};
+
+type Arsip = {
+    id: number;
+    nomor_arsip: string;
+    judul: string;
+    deskripsi: string | null;
+    tanggal_arsip: string;
+    file_path: string | null;
+    created_at: string;
+    updated_at: string;
+    klasifikasi_arsip?: MasterItem | null;
+    lokasi_arsip?: MasterItem | null;
+    jenis_dokumen?: MasterItem | null;
+    media_arsip?: MasterItem | null;
+    kondisi_arsip?: MasterItem | null;
+    status_arsip?: MasterItem | null;
+    tingkat_akses_arsip?: MasterItem | null;
+    retensi_arsip?: RetentionItem | null;
+    unit_organisasi?: MasterItem | null;
+    creator?: UserItem | null;
+};
+
+type ShowProps = {
+    arsip: Arsip;
 };
 
 type DetailRowProps = {
@@ -46,18 +67,46 @@ function DetailRow({ label, value }: DetailRowProps) {
     );
 }
 
-export default function Show() {
+function statusVariant(statusName?: string | null) {
+    if (!statusName) {
+return 'secondary' as const;
+}
+
+    const name = statusName.toLowerCase();
+
+    if (name.includes('aktif') && !name.includes('inaktif')) {
+return 'success' as const;
+}
+
+    if (name.includes('inaktif')) {
+return 'secondary' as const;
+}
+
+    if (name.includes('musnah') || name.includes('hapus')) {
+return 'danger' as const;
+}
+
+    return 'warning' as const;
+}
+
+export default function Show({ arsip }: ShowProps) {
+    const handleDelete = () => {
+        if (confirm('Apakah Anda yakin ingin menghapus arsip ini?')) {
+            router.delete(`/arsip/${arsip.id}`);
+        }
+    };
+
     return (
         <>
-            <Head title={`Arsip — ${dummy.nomor_arsip}`} />
+            <Head title={`Arsip — ${arsip.nomor_arsip}`} />
             <PageContainer>
                 <PageHeader
-                    title={dummy.nomor_arsip}
-                    description={dummy.judul}
+                    title={arsip.nomor_arsip}
+                    description={arsip.judul}
                     breadcrumb={[
                         { title: 'Dashboard', href: '/dashboard' },
                         { title: 'Repository Arsip', href: index() },
-                        { title: dummy.nomor_arsip, href: show({ arsip: dummy.id }) },
+                        { title: arsip.nomor_arsip, href: show({ arsip: arsip.id }) },
                     ]}
                     actions={
                         <div className="flex items-center gap-2">
@@ -68,7 +117,7 @@ export default function Show() {
                                 </Link>
                             </Button>
                             <Button size="sm" asChild>
-                                <Link href={`/arsip/${dummy.id}/edit`}>
+                                <Link href={`/arsip/${arsip.id}/edit`}>
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Edit
                                 </Link>
@@ -87,47 +136,60 @@ export default function Show() {
                         >
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 text-sm">
-                                    <StatusBadge variant="success">{dummy.status}</StatusBadge>
+                                    <StatusBadge variant={statusVariant(arsip.status_arsip?.nama)}>
+                                        {arsip.status_arsip?.nama || 'Draft'}
+                                    </StatusBadge>
                                     <span className="text-muted-foreground">·</span>
                                     <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                                         <Calendar className="h-3.5 w-3.5" />
-                                        {dummy.tanggal_arsip}
+                                        {arsip.tanggal_arsip}
                                     </span>
                                 </div>
 
                                 <Separator className="border-border/40" />
 
                                 <div className="space-y-3">
-                                    <DetailRow label="Nomor Arsip" value={dummy.nomor_arsip} />
-                                    <DetailRow label="Judul" value={dummy.judul} />
-                                    <DetailRow label="Klasifikasi" value={dummy.klasifikasi} />
-                                    <DetailRow label="Jenis Dokumen" value={dummy.jenis_dokumen} />
-                                    <DetailRow label="Media" value={dummy.media} />
-                                    <DetailRow label="Kondisi" value={dummy.kondisi} />
-                                    <DetailRow label="Tingkat Akses" value={dummy.tingkat_akses} />
+                                    <DetailRow label="Nomor Arsip" value={arsip.nomor_arsip} />
+                                    <DetailRow label="Judul" value={arsip.judul} />
+                                    <DetailRow
+                                        label="Klasifikasi"
+                                        value={
+                                            arsip.klasifikasi_arsip
+                                                ? `${arsip.klasifikasi_arsip.kode} — ${arsip.klasifikasi_arsip.nama}`
+                                                : '-'
+                                        }
+                                    />
+                                    <DetailRow label="Jenis Dokumen" value={arsip.jenis_dokumen?.nama} />
+                                    <DetailRow label="Media" value={arsip.media_arsip?.nama} />
+                                    <DetailRow label="Kondisi" value={arsip.kondisi_arsip?.nama} />
+                                    <DetailRow label="Tingkat Akses" value={arsip.tingkat_akses_arsip?.nama} />
                                 </div>
 
-                                {dummy.deskripsi && (
+                                {arsip.deskripsi && (
                                     <>
                                         <Separator className="border-border/40" />
                                         <div>
                                             <p className="mb-1.5 text-xs font-medium text-muted-foreground">Keterangan</p>
-                                            <p className="text-sm leading-relaxed text-foreground">{dummy.deskripsi}</p>
+                                            <p className="text-sm leading-relaxed text-foreground">{arsip.deskripsi}</p>
                                         </div>
                                     </>
                                 )}
 
-                                {dummy.file_path && (
+                                {arsip.file_path && (
                                     <>
                                         <Separator className="border-border/40" />
                                         <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
                                             <FileText className="h-5 w-5 text-muted-foreground" />
                                             <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-medium">{dummy.file_path.split('/').pop()}</p>
+                                                <p className="truncate text-sm font-medium">
+                                                    {arsip.file_path.split('/').pop()}
+                                                </p>
                                                 <p className="text-xs text-muted-foreground">Berkas digital tersedia</p>
                                             </div>
-                                            <Button variant="outline" size="sm">
-                                                Unduh
+                                            <Button variant="outline" size="sm" asChild>
+                                                <a href={`/storage/${arsip.file_path}`} download target="_blank" rel="noopener noreferrer">
+                                                    Unduh
+                                                </a>
                                             </Button>
                                         </div>
                                     </>
@@ -140,11 +202,17 @@ export default function Show() {
                             title="Informasi Retensi"
                             description="Jadwal retensi dan penyusutan arsip"
                         >
-                            <div className="space-y-3">
-                                <DetailRow label="Retensi Aktif" value={dummy.retensi_aktif} />
-                                <DetailRow label="Retensi Inaktif" value={dummy.retensi_inaktif} />
-                                <DetailRow label="Metode Penyusutan" value={dummy.metode_penyusutan} />
-                            </div>
+                            {arsip.retensi_arsip ? (
+                                <div className="space-y-3">
+                                    <DetailRow label="Kode Retensi" value={arsip.retensi_arsip.kode} />
+                                    <DetailRow label="Nama Retensi" value={arsip.retensi_arsip.nama} />
+                                    <DetailRow label="Retensi Aktif" value={`${arsip.retensi_arsip.retensi_aktif} Tahun`} />
+                                    <DetailRow label="Retensi Inaktif" value={`${arsip.retensi_arsip.retensi_inaktif} Tahun`} />
+                                    <DetailRow label="Keterangan Retensi" value={arsip.retensi_arsip.keterangan} />
+                                </div>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">Jadwal retensi belum diatur.</p>
+                            )}
                         </ContentCard>
                     </div>
 
@@ -159,12 +227,14 @@ export default function Show() {
                                 <div className="flex items-start gap-2 text-sm text-muted-foreground">
                                     <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
                                     <div>
-                                        <p className="font-medium text-foreground">{dummy.lokasi}</p>
-                                        <p className="text-xs">{dummy.gedung}</p>
+                                        <p className="font-medium text-foreground">
+                                            {arsip.lokasi_arsip?.nama || 'Belum diatur'}
+                                        </p>
+                                        <p className="text-xs">{arsip.lokasi_arsip?.kode || '-'}</p>
                                     </div>
                                 </div>
                                 <Separator className="border-border/40" />
-                                <DetailRow label="Unit Organisasi" value={dummy.unit_organisasi} />
+                                <DetailRow label="Unit Organisasi" value={arsip.unit_organisasi?.nama} />
                             </div>
                         </ContentCard>
 
@@ -174,20 +244,17 @@ export default function Show() {
                             description="Data teknis dan pencatatan"
                         >
                             <div className="space-y-3">
-                                <DetailRow label="Dibuat oleh" value={dummy.created_by} />
-                                <DetailRow label="Tanggal dibuat" value={dummy.created_at} />
-                                <DetailRow label="Diperbarui" value={dummy.updated_at} />
+                                <DetailRow label="Dibuat oleh" value={arsip.creator?.name} />
+                                <DetailRow label="Tanggal dibuat" value={new Date(arsip.created_at).toLocaleString('id-ID')} />
+                                <DetailRow label="Diperbarui" value={new Date(arsip.updated_at).toLocaleString('id-ID')} />
                             </div>
                         </ContentCard>
 
                         {/* Aksi Bahaya */}
                         <ContentCard title="Aksi">
                             <div className="space-y-2">
-                                <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-muted-foreground">
-                                    <RotateCcw className="h-4 w-4" />
-                                    Pindahkan ke Inaktif
-                                </Button>
                                 <Button
+                                    onClick={handleDelete}
                                     variant="outline"
                                     size="sm"
                                     className="w-full justify-start gap-2 text-destructive hover:text-destructive"

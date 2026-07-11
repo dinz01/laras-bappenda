@@ -1,6 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { ContentCard } from '@/components/Cards/content-card';
+import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
 import { Button } from '@/components/ui/button';
@@ -15,39 +16,45 @@ import {
 } from '@/components/ui/select';
 import { index, create } from '@/routes/arsip';
 
-const klasifikasiOptions = [
-    { value: '1', label: 'KU.01 — Keuangan' },
-    { value: '2', label: 'KP.03 — Kepegawaian' },
-    { value: '3', label: 'HK.02 — Hukum' },
-];
+type MasterItem = {
+    id: number;
+    kode: string;
+    nama: string;
+};
 
-const jenisDokumenOptions = [
-    { value: '1', label: 'Surat' },
-    { value: '2', label: 'Laporan' },
-    { value: '3', label: 'Berita Acara' },
-    { value: '4', label: 'Keputusan' },
-];
+type CreateProps = {
+    klasifikasis: MasterItem[];
+    jenisDokumens: MasterItem[];
+    unitOrganisasis: MasterItem[];
+    lokasiArsips: MasterItem[];
+    statusArsips: MasterItem[];
+};
 
-const unitOrganisasiOptions = [
-    { value: '1', label: 'Sekretariat' },
-    { value: '2', label: 'Bidang Keuangan' },
-    { value: '3', label: 'Bidang Pendataan' },
-    { value: '4', label: 'Bidang Pengawasan' },
-];
+export default function Create({
+    klasifikasis,
+    jenisDokumens,
+    unitOrganisasis,
+    lokasiArsips,
+    statusArsips,
+}: CreateProps) {
+    const { data, setData, post, processing, errors } = useForm({
+        nomor_arsip: '',
+        judul: '',
+        deskripsi: '',
+        tanggal_arsip: '',
+        klasifikasi_arsip_id: '',
+        jenis_dokumen_id: '',
+        unit_organisasi_id: '',
+        lokasi_arsip_id: '',
+        status_arsip_id: '',
+        file: null as File | null,
+    });
 
-const lokasiOptions = [
-    { value: '1', label: 'Rak A-01 — Ruang Arsip Utama' },
-    { value: '2', label: 'Rak B-03 — Ruang Arsip Sekretariat' },
-    { value: '3', label: 'Rak C-02 — Ruang Arsip Bidang' },
-];
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post('/arsip');
+    };
 
-const statusOptions = [
-    { value: '1', label: 'Aktif' },
-    { value: '2', label: 'Inaktif' },
-    { value: '3', label: 'Musnah' },
-];
-
-export default function Create() {
     return (
         <>
             <Head title="Tambah Arsip" />
@@ -70,7 +77,7 @@ export default function Create() {
                     }
                 />
 
-                <form className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Informasi Dasar */}
                     <ContentCard
                         title="Informasi Dasar"
@@ -83,10 +90,12 @@ export default function Create() {
                                 </Label>
                                 <Input
                                     id="nomor_arsip"
-                                    name="nomor_arsip"
+                                    value={data.nomor_arsip}
+                                    onChange={(e) => setData('nomor_arsip', e.target.value)}
                                     placeholder="Contoh: ARS/2026/00001"
                                     className="border-border/60"
                                 />
+                                <InputError message={errors.nomor_arsip} />
                             </div>
 
                             <div className="space-y-2">
@@ -95,10 +104,12 @@ export default function Create() {
                                 </Label>
                                 <Input
                                     id="tanggal_arsip"
-                                    name="tanggal_arsip"
                                     type="date"
+                                    value={data.tanggal_arsip}
+                                    onChange={(e) => setData('tanggal_arsip', e.target.value)}
                                     className="border-border/60"
                                 />
+                                <InputError message={errors.tanggal_arsip} />
                             </div>
 
                             <div className="sm:col-span-2 space-y-2">
@@ -107,21 +118,25 @@ export default function Create() {
                                 </Label>
                                 <Input
                                     id="judul"
-                                    name="judul"
+                                    value={data.judul}
+                                    onChange={(e) => setData('judul', e.target.value)}
                                     placeholder="Masukkan judul arsip"
                                     className="border-border/60"
                                 />
+                                <InputError message={errors.judul} />
                             </div>
 
                             <div className="sm:col-span-2 space-y-2">
                                 <Label htmlFor="deskripsi">Keterangan / Deskripsi</Label>
                                 <textarea
                                     id="deskripsi"
-                                    name="deskripsi"
+                                    value={data.deskripsi}
+                                    onChange={(e) => setData('deskripsi', e.target.value)}
                                     rows={3}
                                     placeholder="Deskripsi singkat isi arsip (opsional)"
                                     className="flex w-full rounded-md border border-border/60 bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
                                 />
+                                <InputError message={errors.deskripsi} />
                             </div>
                         </div>
                     </ContentCard>
@@ -136,82 +151,113 @@ export default function Create() {
                                 <Label htmlFor="klasifikasi_arsip_id">
                                     Klasifikasi Arsip <span className="text-destructive">*</span>
                                 </Label>
-                                <Select name="klasifikasi_arsip_id">
+                                <Select
+                                    value={data.klasifikasi_arsip_id}
+                                    onValueChange={(val) => setData('klasifikasi_arsip_id', val)}
+                                >
                                     <SelectTrigger id="klasifikasi_arsip_id" className="border-border/60">
                                         <SelectValue placeholder="Pilih klasifikasi..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {klasifikasiOptions.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>
-                                                {opt.label}
+                                        {klasifikasis.map((opt) => (
+                                            <SelectItem key={opt.id} value={opt.id.toString()}>
+                                                {opt.kode} — {opt.nama}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <InputError message={errors.klasifikasi_arsip_id} />
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="jenis_dokumen_id">Jenis Dokumen</Label>
-                                <Select name="jenis_dokumen_id">
+                                <Select
+                                    value={data.jenis_dokumen_id}
+                                    onValueChange={(val) => setData('jenis_dokumen_id', val)}
+                                >
                                     <SelectTrigger id="jenis_dokumen_id" className="border-border/60">
                                         <SelectValue placeholder="Pilih jenis dokumen..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {jenisDokumenOptions.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>
-                                                {opt.label}
+                                        {jenisDokumens.map((opt) => (
+                                            <SelectItem key={opt.id} value={opt.id.toString()}>
+                                                {opt.nama}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <InputError message={errors.jenis_dokumen_id} />
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="unit_organisasi_id">Unit Organisasi</Label>
-                                <Select name="unit_organisasi_id">
+                                <Select
+                                    value={data.unit_organisasi_id}
+                                    onValueChange={(val) => setData('unit_organisasi_id', val)}
+                                >
                                     <SelectTrigger id="unit_organisasi_id" className="border-border/60">
                                         <SelectValue placeholder="Pilih unit organisasi..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {unitOrganisasiOptions.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>
-                                                {opt.label}
+                                        {unitOrganisasis.map((opt) => (
+                                            <SelectItem key={opt.id} value={opt.id.toString()}>
+                                                {opt.nama}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <InputError message={errors.unit_organisasi_id} />
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="lokasi_arsip_id">Lokasi Arsip</Label>
-                                <Select name="lokasi_arsip_id">
+                                <Select
+                                    value={data.lokasi_arsip_id}
+                                    onValueChange={(val) => setData('lokasi_arsip_id', val)}
+                                >
                                     <SelectTrigger id="lokasi_arsip_id" className="border-border/60">
                                         <SelectValue placeholder="Pilih lokasi..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {lokasiOptions.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>
-                                                {opt.label}
+                                        {lokasiArsips.map((opt) => (
+                                            <SelectItem key={opt.id} value={opt.id.toString()}>
+                                                {opt.nama}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <InputError message={errors.lokasi_arsip_id} />
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="status_arsip_id">Status</Label>
-                                <Select name="status_arsip_id" defaultValue="1">
+                                <Select
+                                    value={data.status_arsip_id}
+                                    onValueChange={(val) => setData('status_arsip_id', val)}
+                                >
                                     <SelectTrigger id="status_arsip_id" className="border-border/60">
                                         <SelectValue placeholder="Pilih status..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {statusOptions.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>
-                                                {opt.label}
+                                        {statusArsips.map((opt) => (
+                                            <SelectItem key={opt.id} value={opt.id.toString()}>
+                                                {opt.nama}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <InputError message={errors.status_arsip_id} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="file">Berkas Digital</Label>
+                                <Input
+                                    id="file"
+                                    type="file"
+                                    onChange={(e) => setData('file', e.target.files ? e.target.files[0] : null)}
+                                    className="border-border/60"
+                                />
+                                <InputError message={errors.file} />
                             </div>
                         </div>
                     </ContentCard>
@@ -221,7 +267,7 @@ export default function Create() {
                         <Button variant="outline" asChild>
                             <Link href={index()}>Batal</Link>
                         </Button>
-                        <Button type="submit">
+                        <Button type="submit" disabled={processing}>
                             <Save className="mr-2 h-4 w-4" />
                             Simpan Arsip
                         </Button>
