@@ -19,7 +19,7 @@ use Spatie\Permission\Traits\HasRoles;
 /**
  * @property int $id
  * @property string|null $nip
- * @property string $nama_lengkap
+ * @property string|null $nama_lengkap
  * @property string $name
  * @property string $email
  * @property Carbon|null $email_verified_at

@@ -11,14 +11,33 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class UnitOrganisasiFactory extends Factory
 {
     /**
+     * Counter untuk kode sekuensial.
+     */
+    protected static int $sequence = 1;
+
+    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
+        $units = [
+            'Sekretariat',
+            'Bidang Pendataan',
+            'Bidang Penetapan',
+            'Bidang Penagihan',
+            'Bidang Pengembangan',
+            'Bidang Perencanaan',
+        ];
+
         return [
-            //
+            'kode' => 'UN-'.str_pad((string) self::$sequence++, 5, '0', STR_PAD_LEFT),
+            'nama' => fake()->randomElement($units),
+            'singkatan' => strtoupper(fake()->lexify('??')),
+            'parent_id' => null,
+            'urutan' => fake()->numberBetween(1, 10),
+            'status' => 'active',
         ];
     }
 }
