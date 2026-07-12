@@ -27,7 +27,7 @@ class StoreArsipRequest extends FormRequest
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'tanggal_arsip' => 'required|date',
-            'file' => 'nullable|file|mimes:pdf,docx,xlsx,zip,jpg,png|max:10240',
+            'file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
             'klasifikasi_arsip_id' => 'required|integer|exists:klasifikasi_arsip,id',
             'lokasi_arsip_id' => 'nullable|integer|exists:lokasi_arsip,id',
             'jenis_dokumen_id' => 'nullable|integer|exists:jenis_dokumen,id',

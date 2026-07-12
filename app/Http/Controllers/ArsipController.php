@@ -14,8 +14,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ArsipController extends Controller
 {
@@ -31,6 +33,7 @@ class ArsipController extends Controller
             'lokasiArsip',
             'statusArsip',
             'unitOrganisasi',
+            'dokumen',
         ]);
 
         // Search
@@ -99,15 +102,27 @@ class ArsipController extends Controller
         Gate::authorize('create', Arsip::class);
 
         $validated = $request->validated();
-
-        if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('arsip');
-            $validated['file_path'] = $path;
-        }
-
         $validated['created_by'] = auth()->id();
 
-        Arsip::create($validated);
+        $arsip = Arsip::create($validated);
+
+        if ($request->hasFile('file')) {
+            $uploadedFile = $request->file('file');
+            $originalName = $uploadedFile->getClientOriginalName();
+            $extension = $uploadedFile->getClientOriginalExtension();
+            $generatedName = Str::uuid().'.'.$extension;
+            $path = $uploadedFile->storeAs('archives', $generatedName, 'local');
+
+            $arsip->dokumen()->create([
+                'nama_original' => $originalName,
+                'nama_generated' => $generatedName,
+                'ukuran' => $uploadedFile->getSize(),
+                'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
+                'path_penyimpanan' => $path,
+                'uploaded_at' => now(),
+                'uploaded_by' => auth()->id(),
+            ]);
+        }
 
         return redirect()->route('arsip.index')
             ->with('success', 'Arsip berhasil disimpan.');
@@ -131,6 +146,7 @@ class ArsipController extends Controller
             'retensiArsip',
             'unitOrganisasi',
             'creator',
+            'dokumen.uploader',
         ]);
 
         return Inertia::render('arsip/show', [
@@ -144,6 +160,8 @@ class ArsipController extends Controller
     public function edit(Arsip $arsip): Response
     {
         Gate::authorize('update', $arsip);
+
+        $arsip->load('dokumen');
 
         return Inertia::render('arsip/edit', [
             'arsip' => $arsip,
@@ -163,17 +181,31 @@ class ArsipController extends Controller
         Gate::authorize('update', $arsip);
 
         $validated = $request->validated();
+        $arsip->update($validated);
 
         if ($request->hasFile('file')) {
-            // Delete old file if exists
-            if ($arsip->file_path) {
-                Storage::delete($arsip->file_path);
+            // Delete old file
+            if ($arsip->dokumen) {
+                Storage::disk('local')->delete($arsip->dokumen->path_penyimpanan);
+                $arsip->dokumen->delete();
             }
-            $path = $request->file('file')->store('arsip');
-            $validated['file_path'] = $path;
-        }
 
-        $arsip->update($validated);
+            $uploadedFile = $request->file('file');
+            $originalName = $uploadedFile->getClientOriginalName();
+            $extension = $uploadedFile->getClientOriginalExtension();
+            $generatedName = Str::uuid().'.'.$extension;
+            $path = $uploadedFile->storeAs('archives', $generatedName, 'local');
+
+            $arsip->dokumen()->create([
+                'nama_original' => $originalName,
+                'nama_generated' => $generatedName,
+                'ukuran' => $uploadedFile->getSize(),
+                'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
+                'path_penyimpanan' => $path,
+                'uploaded_at' => now(),
+                'uploaded_by' => auth()->id(),
+            ]);
+        }
 
         return redirect()->route('arsip.show', $arsip)
             ->with('success', 'Arsip berhasil diperbarui.');
@@ -186,9 +218,123 @@ class ArsipController extends Controller
     {
         Gate::authorize('delete', $arsip);
 
+        // Delete associated files if any
+        if ($arsip->dokumen) {
+            Storage::disk('local')->delete($arsip->dokumen->path_penyimpanan);
+            $arsip->dokumen->delete();
+        }
+
         $arsip->delete();
 
         return redirect()->route('arsip.index')
             ->with('success', 'Arsip berhasil dihapus.');
+    }
+
+    /**
+     * Download the associated document.
+     */
+    public function download(Arsip $arsip): StreamedResponse
+    {
+        Gate::authorize('view', $arsip);
+
+        $arsip->load('dokumen');
+
+        if (! $arsip->dokumen) {
+            abort(404, 'Berkas tidak ditemukan.');
+        }
+
+        return Storage::disk('local')->download(
+            $arsip->dokumen->path_penyimpanan,
+            $arsip->dokumen->nama_original
+        );
+    }
+
+    /**
+     * Upload document for existing archive.
+     */
+    public function uploadFile(Request $request, Arsip $arsip): RedirectResponse
+    {
+        Gate::authorize('update', $arsip);
+
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+        ]);
+
+        if ($arsip->dokumen) {
+            return redirect()->back()->withErrors(['file' => 'Arsip sudah memiliki dokumen. Gunakan fitur ganti file.']);
+        }
+
+        $uploadedFile = $request->file('file');
+        $originalName = $uploadedFile->getClientOriginalName();
+        $extension = $uploadedFile->getClientOriginalExtension();
+        $generatedName = Str::uuid().'.'.$extension;
+        $path = $uploadedFile->storeAs('archives', $generatedName, 'local');
+
+        $arsip->dokumen()->create([
+            'nama_original' => $originalName,
+            'nama_generated' => $generatedName,
+            'ukuran' => $uploadedFile->getSize(),
+            'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
+            'path_penyimpanan' => $path,
+            'uploaded_at' => now(),
+            'uploaded_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('arsip.show', $arsip)
+            ->with('success', 'Dokumen berhasil diunggah.');
+    }
+
+    /**
+     * Replace document for existing archive.
+     */
+    public function replaceFile(Request $request, Arsip $arsip): RedirectResponse
+    {
+        Gate::authorize('update', $arsip);
+
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+        ]);
+
+        if ($arsip->dokumen) {
+            Storage::disk('local')->delete($arsip->dokumen->path_penyimpanan);
+            $arsip->dokumen->delete();
+        }
+
+        $uploadedFile = $request->file('file');
+        $originalName = $uploadedFile->getClientOriginalName();
+        $extension = $uploadedFile->getClientOriginalExtension();
+        $generatedName = Str::uuid().'.'.$extension;
+        $path = $uploadedFile->storeAs('archives', $generatedName, 'local');
+
+        $arsip->dokumen()->create([
+            'nama_original' => $originalName,
+            'nama_generated' => $generatedName,
+            'ukuran' => $uploadedFile->getSize(),
+            'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
+            'path_penyimpanan' => $path,
+            'uploaded_at' => now(),
+            'uploaded_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('arsip.show', $arsip)
+            ->with('success', 'Dokumen berhasil diperbarui.');
+    }
+
+    /**
+     * Delete document for existing archive.
+     */
+    public function deleteFile(Arsip $arsip): RedirectResponse
+    {
+        Gate::authorize('update', $arsip);
+
+        $arsip->load('dokumen');
+
+        if ($arsip->dokumen) {
+            Storage::disk('local')->delete($arsip->dokumen->path_penyimpanan);
+            $arsip->dokumen->delete();
+        }
+
+        return redirect()->route('arsip.show', $arsip)
+            ->with('success', 'Dokumen berhasil dihapus.');
     }
 }

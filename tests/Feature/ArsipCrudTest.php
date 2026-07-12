@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Arsip;
+use App\Models\DokumenArsip;
 use App\Models\KlasifikasiArsip;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -74,8 +75,33 @@ it('allows storing an archive with file upload', function () {
     ]);
 
     $arsip = Arsip::where('nomor_arsip', 'ARS/2026/00100')->first();
-    expect($arsip->file_path)->not->toBeNull();
-    Storage::assertExists($arsip->file_path);
+    expect($arsip)->not->toBeNull();
+
+    $this->assertDatabaseHas('dokumen_arsip', [
+        'arsip_id' => $arsip->id,
+        'nama_original' => 'document.pdf',
+    ]);
+
+    $dokumen = DokumenArsip::where('arsip_id', $arsip->id)->first();
+    Storage::assertExists($dokumen->path_penyimpanan);
+});
+
+it('allows storing an archive without file', function () {
+    $klasifikasi = KlasifikasiArsip::factory()->create();
+
+    $data = [
+        'nomor_arsip' => 'ARS/2026/00200',
+        'judul' => 'Arsip Tanpa File',
+        'tanggal_arsip' => '2026-07-11',
+        'klasifikasi_arsip_id' => $klasifikasi->id,
+    ];
+
+    $response = $this->actingAs($this->user)
+        ->post(route('arsip.store'), $data);
+
+    $response->assertRedirect(route('arsip.index'));
+    $this->assertDatabaseHas('arsip', ['nomor_arsip' => 'ARS/2026/00200']);
+    $this->assertDatabaseCount('dokumen_arsip', 0);
 });
 
 it('allows viewing archive details', function () {
@@ -98,23 +124,15 @@ it('allows viewing edit form', function () {
         ->assertInertia(fn ($page) => $page->component('arsip/edit')->has('arsip'));
 });
 
-it('allows updating an archive and replacing file', function () {
-    Storage::fake('local');
-    $oldFile = UploadedFile::fake()->create('old.pdf', 500, 'application/pdf');
-    $newFile = UploadedFile::fake()->create('new.pdf', 800, 'application/pdf');
-
+it('allows updating an archive without changing file', function () {
     $klasifikasi = KlasifikasiArsip::factory()->create();
-    $arsip = Arsip::factory()->create([
-        'klasifikasi_arsip_id' => $klasifikasi->id,
-        'file_path' => $oldFile->store('arsip'),
-    ]);
+    $arsip = Arsip::factory()->create(['klasifikasi_arsip_id' => $klasifikasi->id]);
 
     $data = [
         'nomor_arsip' => $arsip->nomor_arsip,
         'judul' => 'Judul Baru Diperbarui',
         'tanggal_arsip' => $arsip->tanggal_arsip->format('Y-m-d'),
         'klasifikasi_arsip_id' => $klasifikasi->id,
-        'file' => $newFile,
     ];
 
     $response = $this->actingAs($this->user)
@@ -125,10 +143,105 @@ it('allows updating an archive and replacing file', function () {
         'id' => $arsip->id,
         'judul' => 'Judul Baru Diperbarui',
     ]);
+});
 
-    $arsip->refresh();
-    Storage::assertMissing('arsip/'.$oldFile->hashName());
-    Storage::assertExists($arsip->file_path);
+it('allows replacing document via update', function () {
+    Storage::fake('local');
+    $klasifikasi = KlasifikasiArsip::factory()->create();
+    $arsip = Arsip::factory()->create(['klasifikasi_arsip_id' => $klasifikasi->id]);
+
+    $oldPath = 'arsip/old-file.pdf';
+    Storage::put($oldPath, 'old content');
+
+    DokumenArsip::factory()->create([
+        'arsip_id' => $arsip->id,
+        'path_penyimpanan' => $oldPath,
+    ]);
+
+    $newFile = UploadedFile::fake()->create('new.pdf', 800, 'application/pdf');
+
+    $data = [
+        'nomor_arsip' => $arsip->nomor_arsip,
+        'judul' => $arsip->judul,
+        'tanggal_arsip' => $arsip->tanggal_arsip->format('Y-m-d'),
+        'klasifikasi_arsip_id' => $klasifikasi->id,
+        'file' => $newFile,
+    ];
+
+    $response = $this->actingAs($this->user)
+        ->put(route('arsip.update', $arsip), $data);
+
+    $response->assertRedirect(route('arsip.show', $arsip));
+
+    Storage::assertMissing($oldPath);
+
+    $dokumen = DokumenArsip::where('arsip_id', $arsip->id)->first();
+    expect($dokumen->nama_original)->toBe('new.pdf');
+    Storage::assertExists($dokumen->path_penyimpanan);
+});
+
+it('allows deleting a document file', function () {
+    Storage::fake('local');
+    $arsip = Arsip::factory()->create();
+
+    $path = 'arsip/test-file.pdf';
+    Storage::put($path, 'content');
+
+    DokumenArsip::factory()->create([
+        'arsip_id' => $arsip->id,
+        'path_penyimpanan' => $path,
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->delete(route('arsip.delete-file', $arsip));
+
+    $response->assertRedirect();
+    $this->assertDatabaseCount('dokumen_arsip', 0);
+    Storage::assertMissing($path);
+});
+
+it('allows replacing document via replace route', function () {
+    Storage::fake('local');
+    $arsip = Arsip::factory()->create();
+
+    $oldPath = 'arsip/replaced.pdf';
+    Storage::put($oldPath, 'old');
+
+    DokumenArsip::factory()->create([
+        'arsip_id' => $arsip->id,
+        'path_penyimpanan' => $oldPath,
+    ]);
+
+    $newFile = UploadedFile::fake()->create('replaced.pdf', 600, 'application/pdf');
+
+    $response = $this->actingAs($this->user)
+        ->post(route('arsip.replace-file', $arsip), ['file' => $newFile]);
+
+    $response->assertRedirect();
+    Storage::assertMissing($oldPath);
+
+    $dokumen = DokumenArsip::where('arsip_id', $arsip->id)->first();
+    Storage::assertExists($dokumen->path_penyimpanan);
+});
+
+it('allows downloading a document file', function () {
+    Storage::fake('local');
+    $arsip = Arsip::factory()->create();
+
+    $path = 'arsip/download-test.pdf';
+    Storage::put($path, '%PDF-1.4 test content');
+
+    DokumenArsip::factory()->create([
+        'arsip_id' => $arsip->id,
+        'path_penyimpanan' => $path,
+        'nama_original' => 'download-test.pdf',
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->get(route('arsip.download', $arsip));
+
+    $response->assertOk();
+    $response->assertHeader('Content-Disposition');
 });
 
 it('allows deleting (soft deleting) an archive', function () {

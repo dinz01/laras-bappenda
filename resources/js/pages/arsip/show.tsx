@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Calendar, FileText, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Download, Eye, FileText, MapPin, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
 import { PageContainer } from '@/components/Layout/page-container';
@@ -28,13 +29,23 @@ type UserItem = {
     name: string;
 };
 
+type DokumenArsip = {
+    id: number;
+    nama_original: string;
+    nama_generated: string;
+    ukuran: number;
+    mime_type: string;
+    path_penyimpanan: string;
+    uploaded_at: string | null;
+    uploader?: UserItem | null;
+};
+
 type Arsip = {
     id: number;
     nomor_arsip: string;
     judul: string;
     deskripsi: string | null;
     tanggal_arsip: string;
-    file_path: string | null;
     created_at: string;
     updated_at: string;
     klasifikasi_arsip?: MasterItem | null;
@@ -47,6 +58,7 @@ type Arsip = {
     retensi_arsip?: RetentionItem | null;
     unit_organisasi?: MasterItem | null;
     creator?: UserItem | null;
+    dokumen?: DokumenArsip | null;
 };
 
 type ShowProps = {
@@ -89,11 +101,45 @@ return 'danger' as const;
     return 'warning' as const;
 }
 
+function formatBytes(bytes: number) {
+    if (bytes < 1024) {
+return `${bytes} B`;
+}
+
+    if (bytes < 1024 * 1024) {
+return `${(bytes / 1024).toFixed(1)} KB`;
+}
+
+    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
+
+function isPreviewable(mimeType: string) {
+    return ['application/pdf', 'image/jpg', 'image/jpeg', 'image/png'].includes(mimeType);
+}
+
 export default function Show({ arsip }: ShowProps) {
+    const [replacingFile, setReplacingFile] = useState(false);
+
     const handleDelete = () => {
         if (confirm('Apakah Anda yakin ingin menghapus arsip ini?')) {
             router.delete(`/arsip/${arsip.id}`);
         }
+    };
+
+    const handleDeleteFile = () => {
+        if (confirm('Hapus dokumen ini? Tindakan tidak dapat dibatalkan.')) {
+            router.delete(`/arsip/${arsip.id}/file`, { preserveScroll: true });
+        }
+    };
+
+    const handleReplaceSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const form = e.currentTarget;
+        const formData = new FormData(form);
+        router.post(`/arsip/${arsip.id}/replace`, formData, {
+            preserveScroll: true,
+            onSuccess: () => setReplacingFile(false),
+        });
     };
 
     return (
@@ -130,10 +176,7 @@ export default function Show({ arsip }: ShowProps) {
                     {/* Kolom Utama */}
                     <div className="space-y-6 lg:col-span-2">
                         {/* Informasi Arsip */}
-                        <ContentCard
-                            title="Informasi Arsip"
-                            description="Data identitas dan konten arsip"
-                        >
+                        <ContentCard title="Informasi Arsip" description="Data identitas dan konten arsip">
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 text-sm">
                                     <StatusBadge variant={statusVariant(arsip.status_arsip?.nama)}>
@@ -153,11 +196,9 @@ export default function Show({ arsip }: ShowProps) {
                                     <DetailRow label="Judul" value={arsip.judul} />
                                     <DetailRow
                                         label="Klasifikasi"
-                                        value={
-                                            arsip.klasifikasi_arsip
-                                                ? `${arsip.klasifikasi_arsip.kode} — ${arsip.klasifikasi_arsip.nama}`
-                                                : '-'
-                                        }
+                                        value={arsip.klasifikasi_arsip
+                                            ? `${arsip.klasifikasi_arsip.kode} — ${arsip.klasifikasi_arsip.nama}`
+                                            : '-'}
                                     />
                                     <DetailRow label="Jenis Dokumen" value={arsip.jenis_dokumen?.nama} />
                                     <DetailRow label="Media" value={arsip.media_arsip?.nama} />
@@ -174,34 +215,128 @@ export default function Show({ arsip }: ShowProps) {
                                         </div>
                                     </>
                                 )}
-
-                                {arsip.file_path && (
-                                    <>
-                                        <Separator className="border-border/40" />
-                                        <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
-                                            <FileText className="h-5 w-5 text-muted-foreground" />
-                                            <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-medium">
-                                                    {arsip.file_path.split('/').pop()}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">Berkas digital tersedia</p>
-                                            </div>
-                                            <Button variant="outline" size="sm" asChild>
-                                                <a href={`/storage/${arsip.file_path}`} download target="_blank" rel="noopener noreferrer">
-                                                    Unduh
-                                                </a>
-                                            </Button>
-                                        </div>
-                                    </>
-                                )}
                             </div>
                         </ContentCard>
 
+                        {/* Dokumen Digital */}
+                        <ContentCard title="Dokumen Digital" description="Berkas fisik arsip yang telah diunggah">
+                            {arsip.dokumen ? (
+                                <div className="space-y-4">
+                                    {/* File metadata */}
+                                    <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/30 p-4">
+                                        <FileText className="mt-0.5 h-8 w-8 shrink-0 text-muted-foreground" />
+                                        <div className="min-w-0 flex-1 space-y-1">
+                                            <p className="truncate font-medium text-sm">{arsip.dokumen.nama_original}</p>
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                                <span>{formatBytes(arsip.dokumen.ukuran)}</span>
+                                                <span>·</span>
+                                                <span>{arsip.dokumen.mime_type}</span>
+                                                {arsip.dokumen.uploaded_at && (
+                                                    <>
+                                                        <span>·</span>
+                                                        <span>
+                                                            Diunggah {new Date(arsip.dokumen.uploaded_at).toLocaleDateString('id-ID', {
+                                                                day: 'numeric',
+                                                                month: 'long',
+                                                                year: 'numeric',
+                                                            })}
+                                                        </span>
+                                                    </>
+                                                )}
+                                                {arsip.dokumen.uploader && (
+                                                    <>
+                                                        <span>·</span>
+                                                        <span>oleh {arsip.dokumen.uploader.name}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Aksi File */}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {isPreviewable(arsip.dokumen.mime_type) && (
+                                            <Button variant="outline" size="sm" asChild>
+                                                <a
+                                                    href={`/arsip/${arsip.id}/download?preview=1`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    <Eye className="mr-2 h-4 w-4" />
+                                                    Lihat
+                                                </a>
+                                            </Button>
+                                        )}
+                                        <Button variant="outline" size="sm" asChild>
+                                            <a href={`/arsip/${arsip.id}/download`}>
+                                                <Download className="mr-2 h-4 w-4" />
+                                                Unduh
+                                            </a>
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setReplacingFile((v) => !v)}
+                                        >
+                                            <RefreshCw className="mr-2 h-4 w-4" />
+                                            Ganti File
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="text-destructive hover:text-destructive"
+                                            onClick={handleDeleteFile}
+                                        >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Hapus File
+                                        </Button>
+                                    </div>
+
+                                    {/* Replace form */}
+                                    {replacingFile && (
+                                        <form onSubmit={handleReplaceSubmit} className="rounded-lg border border-border/60 p-4 space-y-3">
+                                            <p className="text-sm font-medium">Pilih berkas pengganti:</p>
+                                            <input
+                                                type="file"
+                                                name="file"
+                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                                required
+                                                className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground hover:file:bg-secondary/80"
+                                            />
+                                            <div className="flex items-center gap-2">
+                                                <Button type="submit" size="sm">
+                                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                                    Ganti
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setReplacingFile(false)}
+                                                >
+                                                    Batal
+                                                </Button>
+                                            </div>
+                                        </form>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-8 text-center">
+                                    <FileText className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                                    <p className="text-sm font-medium text-muted-foreground">Belum ada dokumen digital</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Upload berkas melalui halaman edit arsip</p>
+                                    <Button variant="outline" size="sm" className="mt-4" asChild>
+                                        <Link href={`/arsip/${arsip.id}/edit`}>
+                                            <Pencil className="mr-2 h-4 w-4" />
+                                            Upload Dokumen
+                                        </Link>
+                                    </Button>
+                                </div>
+                            )}
+                        </ContentCard>
+
                         {/* Informasi Retensi */}
-                        <ContentCard
-                            title="Informasi Retensi"
-                            description="Jadwal retensi dan penyusutan arsip"
-                        >
+                        <ContentCard title="Informasi Retensi" description="Jadwal retensi dan penyusutan arsip">
                             {arsip.retensi_arsip ? (
                                 <div className="space-y-3">
                                     <DetailRow label="Kode Retensi" value={arsip.retensi_arsip.kode} />
@@ -219,10 +354,7 @@ export default function Show({ arsip }: ShowProps) {
                     {/* Kolom Sidebar */}
                     <div className="space-y-6">
                         {/* Informasi Lokasi */}
-                        <ContentCard
-                            title="Informasi Lokasi"
-                            description="Tempat penyimpanan arsip fisik"
-                        >
+                        <ContentCard title="Informasi Lokasi" description="Tempat penyimpanan arsip fisik">
                             <div className="space-y-3">
                                 <div className="flex items-start gap-2 text-sm text-muted-foreground">
                                     <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
@@ -239,10 +371,7 @@ export default function Show({ arsip }: ShowProps) {
                         </ContentCard>
 
                         {/* Informasi Sistem */}
-                        <ContentCard
-                            title="Informasi Sistem"
-                            description="Data teknis dan pencatatan"
-                        >
+                        <ContentCard title="Informasi Sistem" description="Data teknis dan pencatatan">
                             <div className="space-y-3">
                                 <DetailRow label="Dibuat oleh" value={arsip.creator?.name} />
                                 <DetailRow label="Tanggal dibuat" value={new Date(arsip.created_at).toLocaleString('id-ID')} />

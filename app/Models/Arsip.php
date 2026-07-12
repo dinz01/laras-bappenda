@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -42,6 +43,7 @@ use Illuminate\Support\Carbon;
  * @property-read RetensiArsip|null $retensiArsip
  * @property-read UnitOrganisasi|null $unitOrganisasi
  * @property-read User|null $creator
+ * @property-read DokumenArsip|null $dokumen
  *
  * @method static Builder<static> active()
  *
@@ -192,6 +194,16 @@ class Arsip extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Relasi ke Dokumen Fisik Arsip.
+     *
+     * @return HasOne<DokumenArsip, $this>
+     */
+    public function dokumen(): HasOne
+    {
+        return $this->hasOne(DokumenArsip::class, 'arsip_id');
     }
 
     /**

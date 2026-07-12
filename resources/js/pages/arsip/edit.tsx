@@ -1,5 +1,6 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { ArrowLeft, FileText, Save, UploadCloud, X } from 'lucide-react';
+import { useState } from 'react';
 import { ContentCard } from '@/components/Cards/content-card';
 import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
@@ -22,13 +23,22 @@ type MasterItem = {
     nama: string;
 };
 
+type DokumenArsip = {
+    id: number;
+    nama_original: string;
+    nama_generated: string;
+    ukuran: number;
+    mime_type: string;
+    path_penyimpanan: string;
+    uploaded_at: string | null;
+};
+
 type Arsip = {
     id: number;
     nomor_arsip: string;
     judul: string;
     deskripsi: string | null;
     tanggal_arsip: string;
-    file_path: string | null;
     klasifikasi_arsip_id: number;
     lokasi_arsip_id: number | null;
     jenis_dokumen_id: number | null;
@@ -39,6 +49,7 @@ type Arsip = {
     retensi_arsip_id: number | null;
     unit_organisasi_id: number | null;
     created_by: number | null;
+    dokumen?: DokumenArsip | null;
 };
 
 type EditProps = {
@@ -49,6 +60,18 @@ type EditProps = {
     lokasiArsips: MasterItem[];
     statusArsips: MasterItem[];
 };
+
+function formatBytes(bytes: number) {
+    if (bytes < 1024) {
+return `${bytes} B`;
+}
+
+    if (bytes < 1024 * 1024) {
+return `${(bytes / 1024).toFixed(1)} KB`;
+}
+
+    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
 
 export default function Edit({
     arsip,
@@ -72,10 +95,38 @@ export default function Edit({
         file: null as File | null,
     });
 
+    const [dragActive, setDragActive] = useState(false);
+
+    const handleDrag = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (e.type === 'dragenter' || e.type === 'dragover') {
+            setDragActive(true);
+        } else if (e.type === 'dragleave') {
+            setDragActive(false);
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            setData('file', e.dataTransfer.files[0]);
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Use post with _method: 'put' to support file upload on update
         post(`/arsip/${arsip.id}`);
+    };
+
+    const handleDeleteFile = () => {
+        if (confirm('Hapus dokumen ini? Tindakan tidak dapat dibatalkan.')) {
+            router.delete(`/arsip/${arsip.id}/file`, { preserveScroll: true });
+        }
     };
 
     return (
@@ -103,10 +154,7 @@ export default function Edit({
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Informasi Dasar */}
-                    <ContentCard
-                        title="Informasi Dasar"
-                        description="Data pokok arsip"
-                    >
+                    <ContentCard title="Informasi Dasar" description="Data pokok arsip">
                         <div className="grid gap-5 sm:grid-cols-2">
                             <div className="space-y-2">
                                 <Label htmlFor="nomor_arsip">
@@ -163,19 +211,13 @@ export default function Edit({
                     </ContentCard>
 
                     {/* Klasifikasi & Referensi */}
-                    <ContentCard
-                        title="Klasifikasi & Referensi"
-                        description="Kategori dan pengelompokan arsip"
-                    >
+                    <ContentCard title="Klasifikasi & Referensi" description="Kategori dan pengelompokan arsip">
                         <div className="grid gap-5 sm:grid-cols-2">
                             <div className="space-y-2">
                                 <Label htmlFor="klasifikasi_arsip_id">
                                     Klasifikasi Arsip <span className="text-destructive">*</span>
                                 </Label>
-                                <Select
-                                    value={data.klasifikasi_arsip_id}
-                                    onValueChange={(val) => setData('klasifikasi_arsip_id', val)}
-                                >
+                                <Select value={data.klasifikasi_arsip_id} onValueChange={(val) => setData('klasifikasi_arsip_id', val)}>
                                     <SelectTrigger id="klasifikasi_arsip_id" className="border-border/60">
                                         <SelectValue placeholder="Pilih klasifikasi..." />
                                     </SelectTrigger>
@@ -192,10 +234,7 @@ export default function Edit({
 
                             <div className="space-y-2">
                                 <Label htmlFor="jenis_dokumen_id">Jenis Dokumen</Label>
-                                <Select
-                                    value={data.jenis_dokumen_id}
-                                    onValueChange={(val) => setData('jenis_dokumen_id', val)}
-                                >
+                                <Select value={data.jenis_dokumen_id} onValueChange={(val) => setData('jenis_dokumen_id', val)}>
                                     <SelectTrigger id="jenis_dokumen_id" className="border-border/60">
                                         <SelectValue placeholder="Pilih jenis dokumen..." />
                                     </SelectTrigger>
@@ -212,10 +251,7 @@ export default function Edit({
 
                             <div className="space-y-2">
                                 <Label htmlFor="unit_organisasi_id">Unit Organisasi</Label>
-                                <Select
-                                    value={data.unit_organisasi_id}
-                                    onValueChange={(val) => setData('unit_organisasi_id', val)}
-                                >
+                                <Select value={data.unit_organisasi_id} onValueChange={(val) => setData('unit_organisasi_id', val)}>
                                     <SelectTrigger id="unit_organisasi_id" className="border-border/60">
                                         <SelectValue placeholder="Pilih unit organisasi..." />
                                     </SelectTrigger>
@@ -232,10 +268,7 @@ export default function Edit({
 
                             <div className="space-y-2">
                                 <Label htmlFor="lokasi_arsip_id">Lokasi Arsip</Label>
-                                <Select
-                                    value={data.lokasi_arsip_id}
-                                    onValueChange={(val) => setData('lokasi_arsip_id', val)}
-                                >
+                                <Select value={data.lokasi_arsip_id} onValueChange={(val) => setData('lokasi_arsip_id', val)}>
                                     <SelectTrigger id="lokasi_arsip_id" className="border-border/60">
                                         <SelectValue placeholder="Pilih lokasi..." />
                                     </SelectTrigger>
@@ -252,10 +285,7 @@ export default function Edit({
 
                             <div className="space-y-2">
                                 <Label htmlFor="status_arsip_id">Status</Label>
-                                <Select
-                                    value={data.status_arsip_id}
-                                    onValueChange={(val) => setData('status_arsip_id', val)}
-                                >
+                                <Select value={data.status_arsip_id} onValueChange={(val) => setData('status_arsip_id', val)}>
                                     <SelectTrigger id="status_arsip_id" className="border-border/60">
                                         <SelectValue placeholder="Pilih status..." />
                                     </SelectTrigger>
@@ -269,17 +299,86 @@ export default function Edit({
                                 </Select>
                                 <InputError message={errors.status_arsip_id} />
                             </div>
+                        </div>
+                    </ContentCard>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="file">Berkas Digital (Pilih jika ingin mengganti)</Label>
-                                <Input
-                                    id="file"
-                                    type="file"
-                                    onChange={(e) => setData('file', e.target.files ? e.target.files[0] : null)}
-                                    className="border-border/60"
-                                />
-                                <InputError message={errors.file} />
+                    {/* Dokumen Digital */}
+                    <ContentCard title="Dokumen Digital" description="Upload berkas fisik arsip">
+                        {arsip.dokumen && !data.file ? (
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 p-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <FileText className="h-8 w-8 text-muted-foreground shrink-0" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-medium">{arsip.dokumen.nama_original}</p>
+                                            <p className="text-xs text-muted-foreground">{formatBytes(arsip.dokumen.ukuran)} · {arsip.dokumen.mime_type}</p>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-destructive hover:text-destructive shrink-0"
+                                        onClick={handleDeleteFile}
+                                    >
+                                        Hapus File
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Untuk mengganti file, unggah file baru di bawah ini:
+                                </p>
                             </div>
+                        ) : null}
+
+                        <div className={arsip.dokumen && !data.file ? 'mt-3' : ''}>
+                            {data.file ? (
+                                <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/40 p-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <FileText className="h-8 w-8 text-muted-foreground shrink-0" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-medium">{data.file.name}</p>
+                                            <p className="text-xs text-muted-foreground">{formatBytes(data.file.size)}</p>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                        onClick={() => setData('file', null)}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div
+                                    onDragEnter={handleDrag}
+                                    onDragOver={handleDrag}
+                                    onDragLeave={handleDrag}
+                                    onDrop={handleDrop}
+                                    className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+                                        dragActive ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20'
+                                    }`}
+                                >
+                                    <UploadCloud className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                                    <p className="text-sm font-medium">
+                                        {arsip.dokumen ? 'Seret berkas pengganti, atau' : 'Seret dan lepas berkas di sini, atau'}
+                                    </p>
+                                    <label className="mt-2 inline-flex h-8 items-center justify-center rounded-md bg-secondary px-3 text-xs font-medium text-secondary-foreground shadow-sm hover:bg-secondary/80 cursor-pointer">
+                                        {arsip.dokumen ? 'Pilih File Pengganti' : 'Pilih Berkas'}
+                                        <input
+                                            type="file"
+                                            className="sr-only"
+                                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                            onChange={(e) => setData('file', e.target.files ? e.target.files[0] : null)}
+                                        />
+                                    </label>
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                        PDF, DOC, DOCX, XLS, XLSX, JPG, PNG hingga 10MB
+                                    </p>
+                                </div>
+                            )}
+                            <InputError message={errors.file} className="mt-2" />
                         </div>
                     </ContentCard>
 

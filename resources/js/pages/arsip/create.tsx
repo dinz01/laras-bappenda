@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, UploadCloud, FileText, X } from 'lucide-react';
+import { useState } from 'react';
 import { ContentCard } from '@/components/Cards/content-card';
 import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
@@ -49,6 +50,29 @@ export default function Create({
         status_arsip_id: '',
         file: null as File | null,
     });
+
+    const [dragActive, setDragActive] = useState(false);
+
+    const handleDrag = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (e.type === 'dragenter' || e.type === 'dragover') {
+            setDragActive(true);
+        } else if (e.type === 'dragleave') {
+            setDragActive(false);
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            setData('file', e.dataTransfer.files[0]);
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -250,13 +274,52 @@ export default function Create({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="file">Berkas Digital</Label>
-                                <Input
-                                    id="file"
-                                    type="file"
-                                    onChange={(e) => setData('file', e.target.files ? e.target.files[0] : null)}
-                                    className="border-border/60"
-                                />
+                                <Label>Berkas Digital</Label>
+                                {data.file ? (
+                                    <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/40 p-3">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <FileText className="h-8 w-8 text-muted-foreground shrink-0" />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-sm font-medium">{data.file.name}</p>
+                                                <p className="text-xs text-muted-foreground">{(data.file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                            onClick={() => setData('file', null)}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onDragEnter={handleDrag}
+                                        onDragOver={handleDrag}
+                                        onDragLeave={handleDrag}
+                                        onDrop={handleDrop}
+                                        className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+                                            dragActive ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20'
+                                        }`}
+                                    >
+                                        <UploadCloud className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                                        <p className="text-sm font-medium">Seret dan lepas berkas di sini, atau</p>
+                                        <label className="mt-2 inline-flex h-8 items-center justify-center rounded-md bg-secondary px-3 text-xs font-medium text-secondary-foreground shadow-sm hover:bg-secondary/80 cursor-pointer">
+                                            Pilih Berkas
+                                            <input
+                                                type="file"
+                                                className="sr-only"
+                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                                onChange={(e) => setData('file', e.target.files ? e.target.files[0] : null)}
+                                            />
+                                        </label>
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                            PDF, DOC, DOCX, XLS, XLSX, JPG, PNG hingga 10MB
+                                        </p>
+                                    </div>
+                                )}
                                 <InputError message={errors.file} />
                             </div>
                         </div>
