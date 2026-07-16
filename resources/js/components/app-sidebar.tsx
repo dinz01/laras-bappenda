@@ -3,9 +3,19 @@ import {
     Archive,
     ArchiveRestore,
     BookOpen,
+    Building2,
+    ClipboardList,
+    FileKey2,
     FileStack,
+    FileText,
+    FolderOpen,
     LayoutDashboard,
+    MapPin,
+    ScrollText,
+    ShieldCheck,
     Trash2,
+    UserCog,
+    Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -20,38 +30,112 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as auditLogIndex } from '@/routes/admin/audit-log';
+import { index as penggunaIndex } from '@/routes/admin/pengguna';
+import { index as permissionIndex } from '@/routes/admin/permission';
+import { index as roleIndex } from '@/routes/admin/role';
+import { index as arsipIndex } from '@/routes/arsip';
+import { index as jabatanIndex } from '@/routes/master/jabatan';
+import { index as jenisArsipIndex } from '@/routes/master/jenis-arsip';
+import { index as klasifikasiArsipIndex } from '@/routes/master/klasifikasi-arsip';
+import { index as lokasiArsipIndex } from '@/routes/master/lokasi-arsip';
+import { index as mediaArsipIndex } from '@/routes/master/media-arsip';
+import { index as retensiArsipIndex } from '@/routes/master/retensi-arsip';
+import { index as unitOrganisasiIndex } from '@/routes/master/unit-organisasi';
+import { index as pemusnahanIndex } from '@/routes/pemusnahan';
+import { index as permohonanIndex } from '@/routes/permohonan';
+import { index as recordCenterIndex } from '@/routes/record-center';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
+const utamaNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
+        href: dashboard.url(),
         icon: LayoutDashboard,
     },
     {
         title: 'Repositori Arsip',
-        href: '#',
+        href: arsipIndex.url(),
         icon: Archive,
     },
+];
+
+const pengelolaanNavItems: NavItem[] = [
     {
         title: 'Record Center',
-        href: '#',
+        href: recordCenterIndex.url(),
         icon: FileStack,
     },
     {
         title: 'Retensi Arsip',
-        href: '#',
+        href: retensiArsipIndex.url(),
         icon: BookOpen,
     },
     {
         title: 'Pemusnahan',
-        href: '#',
+        href: pemusnahanIndex.url(),
         icon: Trash2,
     },
     {
         title: 'Permohonan',
-        href: '#',
+        href: permohonanIndex.url(),
         icon: ArchiveRestore,
+    },
+];
+
+const masterNavItems: NavItem[] = [
+    {
+        title: 'Unit Organisasi',
+        href: unitOrganisasiIndex.url(),
+        icon: Building2,
+    },
+    {
+        title: 'Jabatan',
+        href: jabatanIndex.url(),
+        icon: UserCog,
+    },
+    {
+        title: 'Klasifikasi Arsip',
+        href: klasifikasiArsipIndex.url(),
+        icon: FolderOpen,
+    },
+    {
+        title: 'Lokasi Arsip',
+        href: lokasiArsipIndex.url(),
+        icon: MapPin,
+    },
+    {
+        title: 'Jenis Arsip',
+        href: jenisArsipIndex.url(),
+        icon: FileText,
+    },
+    {
+        title: 'Media Arsip',
+        href: mediaArsipIndex.url(),
+        icon: ScrollText,
+    },
+];
+
+const administrasiNavItems: NavItem[] = [
+    {
+        title: 'Pengguna',
+        href: penggunaIndex.url(),
+        icon: Users,
+    },
+    {
+        title: 'Role',
+        href: roleIndex.url(),
+        icon: ShieldCheck,
+    },
+    {
+        title: 'Permission',
+        href: permissionIndex.url(),
+        icon: FileKey2,
+    },
+    {
+        title: 'Audit Log',
+        href: auditLogIndex.url(),
+        icon: ClipboardList,
     },
 ];
 
@@ -62,7 +146,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={dashboard.url()} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -71,7 +155,10 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={utamaNavItems} label="Utama" />
+                <NavMain items={pengelolaanNavItems} label="Pengelolaan" />
+                <NavMain items={masterNavItems} label="Master Data" />
+                <NavMain items={administrasiNavItems} label="Administrasi" />
             </SidebarContent>
 
             <SidebarFooter>
