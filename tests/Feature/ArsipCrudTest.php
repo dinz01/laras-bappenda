@@ -173,7 +173,7 @@ it('allows replacing document via update', function () {
 
     $response->assertRedirect(route('arsip.show', $arsip));
 
-    Storage::assertMissing($oldPath);
+    Storage::assertExists($oldPath);
 
     $dokumen = DokumenArsip::where('arsip_id', $arsip->id)->first();
     expect($dokumen->nama_original)->toBe('new.pdf');
@@ -218,7 +218,7 @@ it('allows replacing document via replace route', function () {
         ->post(route('arsip.replace-file', $arsip), ['file' => $newFile]);
 
     $response->assertRedirect();
-    Storage::assertMissing($oldPath);
+    Storage::assertExists($oldPath);
 
     $dokumen = DokumenArsip::where('arsip_id', $arsip->id)->first();
     Storage::assertExists($dokumen->path_penyimpanan);

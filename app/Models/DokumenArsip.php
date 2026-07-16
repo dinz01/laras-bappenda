@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Database\Factories\DokumenArsipFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -24,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Arsip $arsip
  * @property-read User|null $uploader
+ * @property-read Collection<int, DokumenArsipVersion> $versions
  *
  * @use HasFactory<DokumenArsipFactory>
  */
@@ -86,6 +89,16 @@ class DokumenArsip extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    /**
+     * Relasi ke Versi Dokumen.
+     *
+     * @return HasMany<DokumenArsipVersion, $this>
+     */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(DokumenArsipVersion::class, 'dokumen_arsip_id');
     }
 
     /**

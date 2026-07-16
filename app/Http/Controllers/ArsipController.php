@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreArsipRequest;
 use App\Http\Requests\UpdateArsipRequest;
 use App\Models\Arsip;
+use App\Models\DokumenArsipVersion;
 use App\Models\JenisDokumen;
 use App\Models\KlasifikasiArsip;
 use App\Models\LokasiArsip;
 use App\Models\StatusArsip;
 use App\Models\UnitOrganisasi;
+use App\Services\DocumentVersionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -21,6 +23,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ArsipController extends Controller
 {
+    public function __construct(
+        protected DocumentVersionService $documentVersionService
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -113,15 +119,30 @@ class ArsipController extends Controller
             $generatedName = Str::uuid().'.'.$extension;
             $path = $uploadedFile->storeAs('archives', $generatedName, 'local');
 
-            $arsip->dokumen()->create([
+            if ($path === false) {
+                abort(500, 'Gagal menyimpan file ke storage.');
+            }
+
+            $uploadedById = (int) auth()->id();
+
+            $dokumen = $arsip->dokumen()->create([
                 'nama_original' => $originalName,
                 'nama_generated' => $generatedName,
                 'ukuran' => $uploadedFile->getSize(),
                 'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
                 'path_penyimpanan' => $path,
                 'uploaded_at' => now(),
-                'uploaded_by' => auth()->id(),
+                'uploaded_by' => $uploadedById,
             ]);
+
+            $this->documentVersionService->createVersion(
+                $dokumen,
+                $originalName,
+                $path,
+                $uploadedFile->getSize(),
+                $uploadedFile->getMimeType() ?? 'application/octet-stream',
+                $uploadedById
+            );
         }
 
         return redirect()->route('arsip.index')
@@ -147,6 +168,7 @@ class ArsipController extends Controller
             'unitOrganisasi',
             'creator',
             'dokumen.uploader',
+            'dokumen.versions.uploader',
         ]);
 
         return Inertia::render('arsip/show', [
@@ -184,27 +206,49 @@ class ArsipController extends Controller
         $arsip->update($validated);
 
         if ($request->hasFile('file')) {
-            // Delete old file
-            if ($arsip->dokumen) {
-                Storage::disk('local')->delete($arsip->dokumen->path_penyimpanan);
-                $arsip->dokumen->delete();
-            }
-
             $uploadedFile = $request->file('file');
             $originalName = $uploadedFile->getClientOriginalName();
             $extension = $uploadedFile->getClientOriginalExtension();
             $generatedName = Str::uuid().'.'.$extension;
             $path = $uploadedFile->storeAs('archives', $generatedName, 'local');
 
-            $arsip->dokumen()->create([
-                'nama_original' => $originalName,
-                'nama_generated' => $generatedName,
-                'ukuran' => $uploadedFile->getSize(),
-                'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
-                'path_penyimpanan' => $path,
-                'uploaded_at' => now(),
-                'uploaded_by' => auth()->id(),
-            ]);
+            if ($path === false) {
+                abort(500, 'Gagal menyimpan file ke storage.');
+            }
+
+            $uploadedById = (int) auth()->id();
+
+            $dokumen = $arsip->dokumen;
+            if ($dokumen) {
+                $dokumen->update([
+                    'nama_original' => $originalName,
+                    'nama_generated' => $generatedName,
+                    'ukuran' => $uploadedFile->getSize(),
+                    'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
+                    'path_penyimpanan' => $path,
+                    'uploaded_at' => now(),
+                    'uploaded_by' => $uploadedById,
+                ]);
+            } else {
+                $dokumen = $arsip->dokumen()->create([
+                    'nama_original' => $originalName,
+                    'nama_generated' => $generatedName,
+                    'ukuran' => $uploadedFile->getSize(),
+                    'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
+                    'path_penyimpanan' => $path,
+                    'uploaded_at' => now(),
+                    'uploaded_by' => $uploadedById,
+                ]);
+            }
+
+            $this->documentVersionService->createVersion(
+                $dokumen,
+                $originalName,
+                $path,
+                $uploadedFile->getSize(),
+                $uploadedFile->getMimeType() ?? 'application/octet-stream',
+                $uploadedById
+            );
         }
 
         return redirect()->route('arsip.show', $arsip)
@@ -270,15 +314,30 @@ class ArsipController extends Controller
         $generatedName = Str::uuid().'.'.$extension;
         $path = $uploadedFile->storeAs('archives', $generatedName, 'local');
 
-        $arsip->dokumen()->create([
+        if ($path === false) {
+            abort(500, 'Gagal menyimpan file ke storage.');
+        }
+
+        $uploadedById = (int) auth()->id();
+
+        $dokumen = $arsip->dokumen()->create([
             'nama_original' => $originalName,
             'nama_generated' => $generatedName,
             'ukuran' => $uploadedFile->getSize(),
             'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
             'path_penyimpanan' => $path,
             'uploaded_at' => now(),
-            'uploaded_by' => auth()->id(),
+            'uploaded_by' => $uploadedById,
         ]);
+
+        $this->documentVersionService->createVersion(
+            $dokumen,
+            $originalName,
+            $path,
+            $uploadedFile->getSize(),
+            $uploadedFile->getMimeType() ?? 'application/octet-stream',
+            $uploadedById
+        );
 
         return redirect()->route('arsip.show', $arsip)
             ->with('success', 'Dokumen berhasil diunggah.');
@@ -295,26 +354,49 @@ class ArsipController extends Controller
             'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
         ]);
 
-        if ($arsip->dokumen) {
-            Storage::disk('local')->delete($arsip->dokumen->path_penyimpanan);
-            $arsip->dokumen->delete();
-        }
-
         $uploadedFile = $request->file('file');
         $originalName = $uploadedFile->getClientOriginalName();
         $extension = $uploadedFile->getClientOriginalExtension();
         $generatedName = Str::uuid().'.'.$extension;
         $path = $uploadedFile->storeAs('archives', $generatedName, 'local');
 
-        $arsip->dokumen()->create([
-            'nama_original' => $originalName,
-            'nama_generated' => $generatedName,
-            'ukuran' => $uploadedFile->getSize(),
-            'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
-            'path_penyimpanan' => $path,
-            'uploaded_at' => now(),
-            'uploaded_by' => auth()->id(),
-        ]);
+        if ($path === false) {
+            abort(500, 'Gagal menyimpan file ke storage.');
+        }
+
+        $uploadedById = (int) auth()->id();
+
+        $dokumen = $arsip->dokumen;
+        if ($dokumen) {
+            $dokumen->update([
+                'nama_original' => $originalName,
+                'nama_generated' => $generatedName,
+                'ukuran' => $uploadedFile->getSize(),
+                'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
+                'path_penyimpanan' => $path,
+                'uploaded_at' => now(),
+                'uploaded_by' => $uploadedById,
+            ]);
+        } else {
+            $dokumen = $arsip->dokumen()->create([
+                'nama_original' => $originalName,
+                'nama_generated' => $generatedName,
+                'ukuran' => $uploadedFile->getSize(),
+                'mime_type' => $uploadedFile->getMimeType() ?? 'application/octet-stream',
+                'path_penyimpanan' => $path,
+                'uploaded_at' => now(),
+                'uploaded_by' => $uploadedById,
+            ]);
+        }
+
+        $this->documentVersionService->createVersion(
+            $dokumen,
+            $originalName,
+            $path,
+            $uploadedFile->getSize(),
+            $uploadedFile->getMimeType() ?? 'application/octet-stream',
+            $uploadedById
+        );
 
         return redirect()->route('arsip.show', $arsip)
             ->with('success', 'Dokumen berhasil diperbarui.');
@@ -336,5 +418,20 @@ class ArsipController extends Controller
 
         return redirect()->route('arsip.show', $arsip)
             ->with('success', 'Dokumen berhasil dihapus.');
+    }
+
+    /**
+     * Download specific version of a document.
+     */
+    public function downloadVersion(DokumenArsipVersion $version): StreamedResponse
+    {
+        $version->load('dokumenArsip.arsip');
+
+        Gate::authorize('view', $version->dokumenArsip->arsip);
+
+        return Storage::disk('local')->download(
+            $version->path_file,
+            $version->nama_file
+        );
     }
 }

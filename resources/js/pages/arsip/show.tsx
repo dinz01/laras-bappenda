@@ -1,13 +1,15 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Calendar, Download, Eye, FileText, MapPin, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Download, Eye, FileText, Hash, MapPin, Pencil, RefreshCw, Trash2, User } from 'lucide-react';
 import { useState } from 'react';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { index, show } from '@/routes/arsip';
+import { downloadVersion } from '@/routes/arsip';
 
 type MasterItem = {
     id: number;
@@ -29,6 +31,19 @@ type UserItem = {
     name: string;
 };
 
+type DokumenArsipVersion = {
+    id: number;
+    versi: number;
+    nama_file: string;
+    path_file: string;
+    ukuran_file: number;
+    mime_type: string;
+    hash_file: string;
+    uploaded_by: number | null;
+    created_at: string;
+    uploader?: UserItem | null;
+};
+
 type DokumenArsip = {
     id: number;
     nama_original: string;
@@ -38,6 +53,7 @@ type DokumenArsip = {
     path_penyimpanan: string;
     uploaded_at: string | null;
     uploader?: UserItem | null;
+    versions?: DokumenArsipVersion[];
 };
 
 type Arsip = {
@@ -334,6 +350,74 @@ export default function Show({ arsip }: ShowProps) {
                                 </div>
                             )}
                         </ContentCard>
+
+                        {/* Riwayat Versi Dokumen */}
+                        {arsip.dokumen && arsip.dokumen.versions && arsip.dokumen.versions.length > 0 && (
+                            <ContentCard
+                                title="Riwayat Versi Dokumen"
+                                description="Seluruh versi file yang pernah diunggah untuk arsip ini"
+                            >
+                                <div className="space-y-3">
+                                    {arsip.dokumen.versions.map((ver) => (
+                                        <div
+                                            key={ver.id}
+                                            className="flex items-start justify-between gap-4 rounded-lg border border-border/60 bg-muted/20 p-3"
+                                        >
+                                            <div className="flex min-w-0 flex-1 items-start gap-3">
+                                                <Badge
+                                                    variant="outline"
+                                                    className="shrink-0 font-mono text-xs"
+                                                >
+                                                    v{ver.versi}
+                                                </Badge>
+                                                <div className="min-w-0 space-y-1">
+                                                    <p className="truncate text-sm font-medium">{ver.nama_file}</p>
+                                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                                                        <span className="inline-flex items-center gap-1">
+                                                            <Clock className="h-3 w-3" />
+                                                            {new Date(ver.created_at).toLocaleDateString('id-ID', {
+                                                                day: 'numeric',
+                                                                month: 'short',
+                                                                year: 'numeric',
+                                                            })}
+                                                        </span>
+                                                        {ver.uploader && (
+                                                            <span className="inline-flex items-center gap-1">
+                                                                <User className="h-3 w-3" />
+                                                                {ver.uploader.name}
+                                                            </span>
+                                                        )}
+                                                        <span>{formatBytes(ver.ukuran_file)}</span>
+                                                        <span className="inline-flex items-center gap-1 font-mono">
+                                                            <Hash className="h-3 w-3" />
+                                                            {ver.hash_file.slice(0, 12)}…
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex shrink-0 items-center gap-1">
+                                                {['application/pdf', 'image/jpg', 'image/jpeg', 'image/png'].includes(ver.mime_type) && (
+                                                    <Button variant="ghost" size="sm" asChild>
+                                                        <a
+                                                            href={downloadVersion({ version: ver.id }).url + '?preview=1'}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                        </a>
+                                                    </Button>
+                                                )}
+                                                <Button variant="ghost" size="sm" asChild>
+                                                    <a href={downloadVersion({ version: ver.id }).url}>
+                                                        <Download className="h-4 w-4" />
+                                                    </a>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ContentCard>
+                        )}
 
                         {/* Informasi Retensi */}
                         <ContentCard title="Informasi Retensi" description="Jadwal retensi dan penyusutan arsip">
