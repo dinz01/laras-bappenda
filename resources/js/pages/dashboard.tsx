@@ -19,14 +19,16 @@ import { SystemInformationCard } from '@/components/Cards/system-information-car
 import { DashboardHeader } from '@/components/Layout/dashboard-header';
 import { dashboard } from '@/routes';
 
-const statistics = [
-    { title: 'Total Arsip', value: '1.254', icon: Archive },
-    { title: 'Arsip Aktif', value: '82', icon: FolderOpen },
-    { title: 'Record Center', value: '14', icon: FileStack },
-    { title: 'Permohonan Aktif', value: '6', icon: ArchiveRestore },
-    { title: 'Arsip Retensi', value: '120', icon: BookOpen },
-    { title: 'Aktivitas Bulan Ini', value: '487', icon: TrendingUp },
-];
+type DashboardProps = {
+    statistics: {
+        totalArsip: string;
+        arsipAktif: string;
+        recordCenter: string;
+        permohonanAktif: string;
+        arsipRetensi: string;
+        aktivitasBulanIni: string;
+    };
+};
 
 const quickAccessItems = [
     { label: 'Repositori Arsip', href: '#', icon: Archive },
@@ -47,8 +49,17 @@ const systemInfo = [
     { label: 'Database', value: 'MySQL' },
 ];
 
-export default function Dashboard() {
+export default function Dashboard({ statistics }: DashboardProps) {
     const { auth } = usePage().props;
+
+    const statsList = [
+        { title: 'Total Arsip', value: statistics.totalArsip, icon: Archive },
+        { title: 'Arsip Aktif', value: statistics.arsipAktif, icon: FolderOpen },
+        { title: 'Record Center', value: statistics.recordCenter, icon: FileStack },
+        { title: 'Permohonan Aktif', value: statistics.permohonanAktif, icon: ArchiveRestore },
+        { title: 'Arsip Retensi', value: statistics.arsipRetensi, icon: BookOpen },
+        { title: 'Aktivitas Bulan Ini', value: statistics.aktivitasBulanIni, icon: TrendingUp },
+    ];
 
     return (
         <>
@@ -65,7 +76,7 @@ export default function Dashboard() {
                         <h2 className="text-sm font-semibold">Statistik</h2>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                        {statistics.map((stat) => (
+                        {statsList.map((stat) => (
                             <StatisticCard
                                 key={stat.title}
                                 title={stat.title}

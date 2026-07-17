@@ -13,7 +13,7 @@ class JenisDokumenFactory extends Factory
     /**
      * Counter untuk kode sekuensial.
      */
-    protected static int $sequence = 1;
+    protected static int $sequence = 1000;
 
     /**
      * Define the model's default state.

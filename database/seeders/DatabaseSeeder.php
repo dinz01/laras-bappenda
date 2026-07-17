@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([
+        $seeders = [
             PermissionSeeder::class,
             RoleSeeder::class,
             UnitOrganisasiSeeder::class,
@@ -32,6 +32,12 @@ class DatabaseSeeder extends Seeder
             JenisDokumenSeeder::class,
             RetensiArsipSeeder::class,
             UserSeeder::class,
-        ]);
+        ];
+
+        if (app()->environment('local', 'testing', 'development')) {
+            $seeders[] = DevelopmentSeeder::class;
+        }
+
+        $this->call($seeders);
     }
 }

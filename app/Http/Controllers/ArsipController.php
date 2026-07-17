@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreArsipRequest;
 use App\Http\Requests\UpdateArsipRequest;
+use App\Interfaces\SearchServiceInterface;
 use App\Models\Arsip;
 use App\Models\DokumenArsipVersion;
 use App\Models\JenisDokumen;
@@ -24,7 +25,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ArsipController extends Controller
 {
     public function __construct(
-        protected DocumentVersionService $documentVersionService
+        protected DocumentVersionService $documentVersionService,
+        protected SearchServiceInterface $searchService
     ) {}
 
     /**
@@ -34,39 +36,7 @@ class ArsipController extends Controller
     {
         Gate::authorize('viewAny', Arsip::class);
 
-        $query = Arsip::query()->with([
-            'klasifikasiArsip',
-            'lokasiArsip',
-            'statusArsip',
-            'unitOrganisasi',
-            'dokumen',
-        ]);
-
-        // Search
-        if ($request->has('search') && ! empty($request->search)) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('nomor_arsip', 'like', "%{$search}%")
-                    ->orWhere('judul', 'like', "%{$search}%")
-                    ->orWhereHas('klasifikasiArsip', function ($qk) use ($search) {
-                        $qk->where('kode', 'like', "%{$search}%")
-                            ->orWhere('nama', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        // Filters
-        if ($request->has('status_arsip_id') && ! empty($request->status_arsip_id)) {
-            $query->where('status_arsip_id', $request->status_arsip_id);
-        }
-
-        if ($request->has('unit_organisasi_id') && ! empty($request->unit_organisasi_id)) {
-            $query->where('unit_organisasi_id', $request->unit_organisasi_id);
-        }
-
-        if ($request->has('klasifikasi_arsip_id') && ! empty($request->klasifikasi_arsip_id)) {
-            $query->where('klasifikasi_arsip_id', $request->klasifikasi_arsip_id);
-        }
+        $query = $this->searchService->advancedSearch($request->all());
 
         $arsips = $query->paginate(10)->withQueryString();
 
@@ -80,7 +50,7 @@ class ArsipController extends Controller
             'klasifikasis' => $klasifikasis,
             'unitOrganisasis' => $unitOrganisasis,
             'statusArsips' => $statusArsips,
-            'filters' => $request->only(['search', 'status_arsip_id', 'unit_organisasi_id', 'klasifikasi_arsip_id']),
+            'filters' => $request->only(['search', 'status_arsip_id', 'unit_organisasi_id', 'klasifikasi_arsip_id', 'tahun']),
         ]);
     }
 

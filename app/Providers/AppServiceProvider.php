@@ -8,8 +8,8 @@ use App\Interfaces\SearchServiceInterface;
 use App\Interfaces\TteServiceInterface;
 use App\Services\NullAiService;
 use App\Services\NullOcrService;
-use App\Services\NullSearchService;
 use App\Services\NullTteService;
+use App\Services\SearchService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OcrServiceInterface::class, NullOcrService::class);
         $this->app->bind(AiServiceInterface::class, NullAiService::class);
         $this->app->bind(TteServiceInterface::class, NullTteService::class);
-        $this->app->bind(SearchServiceInterface::class, NullSearchService::class);
+        $this->app->bind(SearchServiceInterface::class, SearchService::class);
     }
 
     /**

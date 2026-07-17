@@ -3,35 +3,29 @@
 namespace App\Services;
 
 use App\Interfaces\SearchServiceInterface;
+use App\Models\Arsip;
+use Illuminate\Database\Eloquent\Builder;
 use RuntimeException;
 
 class NullSearchService implements SearchServiceInterface
 {
     /**
-     * Indeks dokumen ke mesin pencari.
+     * Cari arsip berdasarkan kata kunci.
      *
-     * @param  array<string, mixed>  $documents
+     * @return Builder<Arsip>
      */
-    public function index(string $index, array $documents): void
+    public function search(string $keyword): Builder
     {
         throw new RuntimeException('Fitur pencarian belum diimplementasikan.');
     }
 
     /**
-     * Cari dokumen pada mesin pencari.
+     * Cari arsip berdasarkan filter lanjutan.
      *
-     * @param  array<string, mixed>  $options
-     * @return array<string, mixed>
+     * @param  array<string, mixed>  $filters
+     * @return Builder<Arsip>
      */
-    public function search(string $index, string $query, array $options = []): array
-    {
-        throw new RuntimeException('Fitur pencarian belum diimplementasikan.');
-    }
-
-    /**
-     * Hapus dokumen dari indeks.
-     */
-    public function delete(string $index, int|string $id): void
+    public function advancedSearch(array $filters): Builder
     {
         throw new RuntimeException('Fitur pencarian belum diimplementasikan.');
     }

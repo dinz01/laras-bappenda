@@ -20,7 +20,7 @@ it('can create an archive using factory', function () {
     $arsip = Arsip::factory()->create();
 
     expect($arsip)->toBeInstanceOf(Arsip::class)
-        ->and($arsip->nomor_arsip)->toStartWith('ARS/2026/')
+        ->and($arsip->nomor_arsip)->toStartWith('ARS-')
         ->and($arsip->judul)->toBeString()
         ->and($arsip->tanggal_arsip)->toBeInstanceOf(CarbonInterface::class);
 });

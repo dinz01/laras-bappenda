@@ -32,11 +32,35 @@ class ArsipFactory extends Factory
      */
     public function definition(): array
     {
+        $date = fake()->dateTimeBetween('2023-01-01', '2026-12-31');
+        $year = $date->format('Y');
+        $formattedDate = $date->format('Y-m-d');
+
+        $indonesianTitles = [
+            'Surat Permohonan Kunjungan Kerja',
+            'Laporan Keuangan Bulanan',
+            'Surat Keputusan Kepala Dinas',
+            'Undangan Rapat Dinas',
+            'Surat Tugas Pelatihan Pegawai',
+            'Nota Dinas Pengajuan Anggaran',
+            'Laporan Penanggungjawaban Kegiatan',
+            'Surat Perjanjian Kerja Sama',
+            'Dokumen Perencanaan Strategis',
+            'Surat Edaran Sosialisasi Kebijakan',
+            'Berita Acara Serah Terima Jabatan',
+            'Daftar Inventaris Barang Daerah',
+            'Surat Keterangan Bebas Temuan',
+            'Rencana Kerja Anggaran SKPD',
+            'Dokumen Pelaksanaan Anggaran',
+        ];
+
+        $judul = fake()->randomElement($indonesianTitles).' '.fake()->company();
+
         return [
-            'nomor_arsip' => 'ARS/2026/'.str_pad((string) self::$sequence++, 5, '0', STR_PAD_LEFT),
-            'judul' => fake()->sentence(3),
+            'nomor_arsip' => 'ARS-'.$year.'-'.str_pad((string) self::$sequence++, 5, '0', STR_PAD_LEFT),
+            'judul' => $judul,
             'deskripsi' => fake()->optional()->paragraph(),
-            'tanggal_arsip' => fake()->dateTimeBetween('-3 years', 'now')->format('Y-m-d'),
+            'tanggal_arsip' => $formattedDate,
             'file_path' => fake()->optional()->lexify('arsip/doc-??????.pdf'),
 
             // Model Factory Associations

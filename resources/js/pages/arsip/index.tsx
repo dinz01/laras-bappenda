@@ -89,6 +89,7 @@ type IndexProps = {
         status_arsip_id?: string;
         unit_organisasi_id?: string;
         klasifikasi_arsip_id?: string;
+        tahun?: string;
     };
 };
 
@@ -166,7 +167,7 @@ export default function Index({
         }
     };
 
-    const hasFilters = filters.status_arsip_id || filters.unit_organisasi_id || filters.klasifikasi_arsip_id || filters.search;
+    const hasFilters = filters.status_arsip_id || filters.unit_organisasi_id || filters.klasifikasi_arsip_id || filters.tahun || filters.search;
 
     const clearFilters = () => {
         setSearch('');
@@ -254,6 +255,24 @@ export default function Index({
                                             {statusArsips.map((opt) => (
                                                 <SelectItem key={opt.id} value={opt.id.toString()}>
                                                     {opt.nama}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+
+                                    {/* Tahun Filter */}
+                                    <Select
+                                        value={filters.tahun || 'all'}
+                                        onValueChange={(val) => updateFilters({ tahun: val === 'all' ? null : val })}
+                                    >
+                                        <SelectTrigger className="h-9 w-[110px] border-border/60">
+                                            <SelectValue placeholder="Tahun" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Semua Tahun</SelectItem>
+                                            {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((yr) => (
+                                                <SelectItem key={yr} value={yr.toString()}>
+                                                    {yr}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

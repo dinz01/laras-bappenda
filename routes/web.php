@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\PenggunaController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\ArsipController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Master\JabatanController;
 use App\Http\Controllers\Master\JenisArsipController;
 use App\Http\Controllers\Master\KlasifikasiArsipController;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     // ── Repositori Arsip ──────────────────────────────────────────────────
     Route::get('arsip/{arsip}/download', [ArsipController::class, 'download'])->name('arsip.download');
