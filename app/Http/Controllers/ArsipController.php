@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreArsipRequest;
 use App\Http\Requests\UpdateArsipRequest;
 use App\Interfaces\SearchServiceInterface;
+use App\Jobs\ProcessOcrJob;
 use App\Models\Arsip;
 use App\Models\DokumenArsipVersion;
 use App\Models\JenisDokumen;
@@ -113,6 +114,8 @@ class ArsipController extends Controller
                 $uploadedFile->getMimeType() ?? 'application/octet-stream',
                 $uploadedById
             );
+
+            ProcessOcrJob::dispatch($dokumen);
         }
 
         return redirect()->route('arsip.index')
@@ -309,6 +312,8 @@ class ArsipController extends Controller
             $uploadedById
         );
 
+        ProcessOcrJob::dispatch($dokumen);
+
         return redirect()->route('arsip.show', $arsip)
             ->with('success', 'Dokumen berhasil diunggah.');
     }
@@ -368,6 +373,8 @@ class ArsipController extends Controller
             $uploadedById
         );
 
+        ProcessOcrJob::dispatch($dokumen);
+
         return redirect()->route('arsip.show', $arsip)
             ->with('success', 'Dokumen berhasil diperbarui.');
     }
@@ -403,5 +410,28 @@ class ArsipController extends Controller
             $version->path_file,
             $version->nama_file
         );
+    }
+
+    /**
+     * Reprocess OCR for the archive's document.
+     */
+    public function reprocessOcr(Arsip $arsip): RedirectResponse
+    {
+        Gate::authorize('update', $arsip);
+
+        $arsip->load('dokumen');
+
+        if (! $arsip->dokumen) {
+            return redirect()->back()->withErrors(['ocr' => 'Dokumen tidak ditemukan untuk diproses OCR.']);
+        }
+
+        if ($arsip->dokumen->ocr_status->isReprocessable()) {
+            ProcessOcrJob::dispatch($arsip->dokumen);
+
+            return redirect()->route('arsip.show', $arsip)
+                ->with('success', 'Proses ulang OCR berhasil diajukan.');
+        }
+
+        return redirect()->back()->withErrors(['ocr' => 'Dokumen sedang diproses OCR.']);
     }
 }

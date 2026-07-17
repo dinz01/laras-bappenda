@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('arsip/{arsip}/replace', [ArsipController::class, 'replaceFile'])->name('arsip.replace-file');
     Route::delete('arsip/{arsip}/file', [ArsipController::class, 'deleteFile'])->name('arsip.delete-file');
     Route::get('arsip/version/{version}/download', [ArsipController::class, 'downloadVersion'])->name('arsip.download-version');
+    Route::post('arsip/{arsip}/ocr-reprocess', [ArsipController::class, 'reprocessOcr'])->name('arsip.ocr-reprocess');
 
     Route::resource('arsip', ArsipController::class);
 

@@ -6,8 +6,8 @@ use App\Interfaces\AiServiceInterface;
 use App\Interfaces\OcrServiceInterface;
 use App\Interfaces\SearchServiceInterface;
 use App\Interfaces\TteServiceInterface;
+use App\Services\MockOcrService;
 use App\Services\NullAiService;
-use App\Services\NullOcrService;
 use App\Services\NullTteService;
 use App\Services\SearchService;
 use Carbon\CarbonImmutable;
@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(OcrServiceInterface::class, NullOcrService::class);
+        $this->app->bind(OcrServiceInterface::class, MockOcrService::class);
         $this->app->bind(AiServiceInterface::class, NullAiService::class);
         $this->app->bind(TteServiceInterface::class, NullTteService::class);
         $this->app->bind(SearchServiceInterface::class, SearchService::class);

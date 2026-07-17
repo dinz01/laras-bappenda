@@ -54,6 +54,12 @@ type DokumenArsip = {
     uploaded_at: string | null;
     uploader?: UserItem | null;
     versions?: DokumenArsipVersion[];
+    ocr_status: 'pending' | 'processing' | 'completed' | 'failed';
+    ocr_text?: string | null;
+    ocr_confidence?: number | null;
+    ocr_language?: string | null;
+    ocr_pages?: number | null;
+    ocr_processed_at?: string | null;
 };
 
 type Arsip = {
@@ -117,6 +123,32 @@ return 'danger' as const;
     return 'warning' as const;
 }
 
+function ocrStatusVariant(status?: string | null) {
+    if (!status) {
+        return 'warning' as const;
+    }
+
+    switch (status) {
+        case 'completed': return 'success' as const;
+        case 'processing': return 'info' as const;
+        case 'failed': return 'danger' as const;
+        default: return 'warning' as const;
+    }
+}
+
+function ocrStatusLabel(status?: string | null) {
+    if (!status) {
+        return 'Menunggu';
+    }
+
+    switch (status) {
+        case 'completed': return 'Selesai';
+        case 'processing': return 'Diproses';
+        case 'failed': return 'Gagal';
+        default: return 'Menunggu';
+    }
+}
+
 function formatBytes(bytes: number) {
     if (bytes < 1024) {
 return `${bytes} B`;
@@ -135,6 +167,16 @@ function isPreviewable(mimeType: string) {
 
 export default function Show({ arsip }: ShowProps) {
     const [replacingFile, setReplacingFile] = useState(false);
+    const [showFullText, setShowFullText] = useState(false);
+    const [processingOcr, setProcessingOcr] = useState(false);
+
+    const handleReprocessOcr = () => {
+        setProcessingOcr(true);
+        router.post(`/arsip/${arsip.id}/ocr-reprocess`, {}, {
+            preserveScroll: true,
+            onFinish: () => setProcessingOcr(false),
+        });
+    };
 
     const handleDelete = () => {
         if (confirm('Apakah Anda yakin ingin menghapus arsip ini?')) {
@@ -453,6 +495,87 @@ export default function Show({ arsip }: ShowProps) {
                                 <DetailRow label="Unit Organisasi" value={arsip.unit_organisasi?.nama} />
                             </div>
                         </ContentCard>
+
+                        {/* Hasil OCR */}
+                        {arsip.dokumen && (
+                            <ContentCard title="Hasil OCR" description="Ekstraksi teks otomatis dari berkas digital">
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-medium text-muted-foreground">Status OCR</span>
+                                        <StatusBadge variant={ocrStatusVariant(arsip.dokumen.ocr_status)}>
+                                            {ocrStatusLabel(arsip.dokumen.ocr_status)}
+                                        </StatusBadge>
+                                    </div>
+                                    
+                                    {arsip.dokumen.ocr_status === 'completed' && (
+                                        <>
+                                            <Separator className="border-border/40" />
+                                            <DetailRow 
+                                                label="Confidence" 
+                                                value={arsip.dokumen.ocr_confidence !== undefined && arsip.dokumen.ocr_confidence !== null 
+                                                    ? `${arsip.dokumen.ocr_confidence}%` 
+                                                    : '-'} 
+                                            />
+                                            <DetailRow 
+                                                label="Jumlah Halaman" 
+                                                value={arsip.dokumen.ocr_pages !== undefined && arsip.dokumen.ocr_pages !== null 
+                                                    ? `${arsip.dokumen.ocr_pages} Halaman` 
+                                                    : '-'} 
+                                            />
+                                            <DetailRow 
+                                                label="Bahasa" 
+                                                value={arsip.dokumen.ocr_language === 'id' ? 'Bahasa Indonesia (id)' : (arsip.dokumen.ocr_language || '-')} 
+                                            />
+                                            <DetailRow 
+                                                label="Tanggal Proses" 
+                                                value={arsip.dokumen.ocr_processed_at 
+                                                    ? new Date(arsip.dokumen.ocr_processed_at).toLocaleString('id-ID') 
+                                                    : '-'} 
+                                            />
+                                            
+                                            {arsip.dokumen.ocr_text && (
+                                                <>
+                                                    <Separator className="border-border/40" />
+                                                    <div className="space-y-1.5">
+                                                        <span className="text-xs font-medium text-muted-foreground">Hasil Ekstraksi (Preview)</span>
+                                                        <div className="rounded-md border border-border/60 bg-muted/30 p-3 text-xs text-foreground font-mono leading-relaxed break-words whitespace-pre-wrap max-h-40 overflow-y-auto">
+                                                            {showFullText 
+                                                                ? arsip.dokumen.ocr_text 
+                                                                : `${arsip.dokumen.ocr_text.slice(0, 300)}${arsip.dokumen.ocr_text.length > 300 ? '...' : ''}`}
+                                                        </div>
+                                                        {arsip.dokumen.ocr_text.length > 300 && (
+                                                            <Button 
+                                                                variant="link" 
+                                                                size="sm" 
+                                                                className="h-auto p-0 text-xs font-semibold text-primary hover:underline"
+                                                                onClick={() => setShowFullText(!showFullText)}
+                                                            >
+                                                                {showFullText ? 'Sembunyikan' : 'Lihat Selengkapnya'}
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {(arsip.dokumen.ocr_status === 'completed' || arsip.dokumen.ocr_status === 'failed') && (
+                                        <div className="pt-2">
+                                            <Button
+                                                onClick={handleReprocessOcr}
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full gap-2 border-border/60"
+                                                disabled={processingOcr}
+                                            >
+                                                <RefreshCw className={`h-3.5 w-3.5 ${processingOcr ? 'animate-spin' : ''}`} />
+                                                Proses Ulang OCR
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            </ContentCard>
+                        )}
 
                         {/* Informasi Sistem */}
                         <ContentCard title="Informasi Sistem" description="Data teknis dan pencatatan">
