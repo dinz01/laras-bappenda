@@ -240,7 +240,7 @@ export default function Show({ arsip, workflowHistory = [], allowedTransitions =
 return;
 }
 
-        if (confirm(`Apakah Anda yakin ingin melanjutkan workflow ke status: ${workflowStatusLabel(targetStatus)}?`)) {
+        if (confirm(`Apakah Anda yakin ingin melanjutkan ke tahap arsip: ${workflowStatusLabel(targetStatus)}?`)) {
             setProcessingWorkflow(true);
             router.post(`/arsip/${arsip.id}/workflow/advance`, {
                 target_status: targetStatus,
@@ -557,11 +557,11 @@ return;
 
                     {/* Kolom Sidebar */}
                     <div className="space-y-6">
-                        {/* Status Workflow */}
-                        <ContentCard title="Status Workflow" description="Siklus hidup dokumen arsip">
+                        {/* Tahap Arsip */}
+                        <ContentCard title="Tahap Arsip" description="Siklus hidup dokumen arsip">
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-medium text-muted-foreground">Status Saat Ini</span>
+                                    <span className="text-xs font-medium text-muted-foreground">Tahap Saat Ini</span>
                                     <StatusBadge variant={workflowStatusVariant(arsip.workflow_status)}>
                                         {workflowStatusLabel(arsip.workflow_status)}
                                     </StatusBadge>
@@ -579,12 +579,12 @@ return;
                                                 size="sm"
                                                 className="w-full gap-2 border-border/60"
                                             >
-                                                Lanjutkan Workflow
+                                                Lanjutkan Tahap
                                             </Button>
                                         ) : (
                                             <form onSubmit={handleAdvanceWorkflow} className="rounded-lg border border-border/60 p-3 space-y-3 bg-muted/20">
                                                 <div className="space-y-1">
-                                                    <label className="text-xs font-semibold text-muted-foreground">Pilih Status Tujuan</label>
+                                                    <label className="text-xs font-semibold text-muted-foreground">Pilih Tahap Tujuan</label>
                                                     <select
                                                         value={targetStatus}
                                                         onChange={(e) => setTargetStatus(e.target.value)}
@@ -631,7 +631,7 @@ return;
                                 {workflowHistory.length > 0 && (
                                     <div className="space-y-3">
                                         <Separator className="border-border/40" />
-                                        <span className="text-xs font-semibold text-muted-foreground">Riwayat Transisi</span>
+                                        <span className="text-xs font-semibold text-muted-foreground">Riwayat Tahap</span>
                                         <div className="relative pl-4 border-l border-border/80 space-y-4">
                                             {workflowHistory.map((history) => (
                                                 <div key={history.id} className="relative text-xs">
