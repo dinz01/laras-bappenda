@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\WorkflowStatus;
 use App\Http\Requests\StoreArsipRequest;
 use App\Http\Requests\UpdateArsipRequest;
 use App\Interfaces\SearchServiceInterface;
@@ -13,7 +14,9 @@ use App\Models\KlasifikasiArsip;
 use App\Models\LokasiArsip;
 use App\Models\StatusArsip;
 use App\Models\UnitOrganisasi;
+use App\Models\User;
 use App\Services\DocumentVersionService;
+use App\Services\WorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -27,7 +30,8 @@ class ArsipController extends Controller
 {
     public function __construct(
         protected DocumentVersionService $documentVersionService,
-        protected SearchServiceInterface $searchService
+        protected SearchServiceInterface $searchService,
+        protected WorkflowService $workflowService,
     ) {}
 
     /**
@@ -144,8 +148,13 @@ class ArsipController extends Controller
             'dokumen.versions.uploader',
         ]);
 
+        $workflowHistory = $this->workflowService->history($arsip);
+        $allowedTransitions = $this->workflowService->allowedTransitions($arsip);
+
         return Inertia::render('arsip/show', [
             'arsip' => $arsip,
+            'workflowHistory' => $workflowHistory,
+            'allowedTransitions' => $allowedTransitions,
         ]);
     }
 
@@ -433,5 +442,42 @@ class ArsipController extends Controller
         }
 
         return redirect()->back()->withErrors(['ocr' => 'Dokumen sedang diproses OCR.']);
+    }
+
+    /**
+     * Advance the workflow status of an archive.
+     */
+    public function advanceWorkflow(Request $request, Arsip $arsip): RedirectResponse
+    {
+        Gate::authorize('update', $arsip);
+
+        $request->validate([
+            'target_status' => ['required', 'string'],
+            'keterangan' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $targetStatus = WorkflowStatus::tryFrom($request->string('target_status')->value());
+
+        if ($targetStatus === null) {
+            return redirect()->back()->withErrors(['workflow' => 'Status workflow tidak valid.']);
+        }
+
+        if (! $this->workflowService->canTransition($arsip, $targetStatus)) {
+            return redirect()->back()->withErrors(['workflow' => 'Transisi workflow tidak diizinkan.']);
+        }
+
+        /** @var User $actor */
+        $actor = auth()->user();
+
+        $this->workflowService->transition(
+            arsip: $arsip,
+            target: $targetStatus,
+            keterangan: $request->string('keterangan')->value() ?: null,
+            actor: $actor,
+            request: $request,
+        );
+
+        return redirect()->route('arsip.show', $arsip)
+            ->with('success', "Workflow berhasil dilanjutkan ke status: {$targetStatus->label()}");
     }
 }

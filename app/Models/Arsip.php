@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\WorkflowStatus;
 use Database\Factories\ArsipFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -30,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $retensi_arsip_id
  * @property int|null $unit_organisasi_id
  * @property int|null $created_by
+ * @property WorkflowStatus $workflow_status
  * @property Carbon|null $deleted_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -44,6 +48,7 @@ use Illuminate\Support\Carbon;
  * @property-read UnitOrganisasi|null $unitOrganisasi
  * @property-read User|null $creator
  * @property-read DokumenArsip|null $dokumen
+ * @property-read Collection<int, ArsipWorkflowHistory> $workflowHistories
  *
  * @method static Builder<static> active()
  *
@@ -82,6 +87,7 @@ class Arsip extends Model
         'retensi_arsip_id',
         'unit_organisasi_id',
         'created_by',
+        'workflow_status',
     ];
 
     /**
@@ -93,6 +99,7 @@ class Arsip extends Model
     {
         return [
             'tanggal_arsip' => 'date',
+            'workflow_status' => WorkflowStatus::class,
         ];
     }
 
@@ -194,6 +201,16 @@ class Arsip extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Relasi ke Riwayat Workflow.
+     *
+     * @return HasMany<ArsipWorkflowHistory, $this>
+     */
+    public function workflowHistories(): HasMany
+    {
+        return $this->hasMany(ArsipWorkflowHistory::class, 'arsip_id')->latest();
     }
 
     /**

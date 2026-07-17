@@ -70,6 +70,7 @@ type Arsip = {
     tanggal_arsip: string;
     created_at: string;
     updated_at: string;
+    workflow_status: 'draft' | 'review' | 'approved' | 'active' | 'retention' | 'record_center' | 'destruction';
     klasifikasi_arsip?: MasterItem | null;
     lokasi_arsip?: MasterItem | null;
     jenis_dokumen?: MasterItem | null;
@@ -83,8 +84,24 @@ type Arsip = {
     dokumen?: DokumenArsip | null;
 };
 
+type WorkflowHistoryItem = {
+    id: number;
+    status_lama: string;
+    status_baru: string;
+    keterangan: string | null;
+    created_at: string;
+    user?: UserItem | null;
+};
+
+type AllowedTransition = {
+    value: string;
+    label: string;
+};
+
 type ShowProps = {
     arsip: Arsip;
+    workflowHistory: WorkflowHistoryItem[];
+    allowedTransitions: AllowedTransition[];
 };
 
 type DetailRowProps = {
@@ -149,6 +166,32 @@ function ocrStatusLabel(status?: string | null) {
     }
 }
 
+function workflowStatusVariant(status: string): 'secondary' | 'warning' | 'info' | 'success' | 'danger' {
+    switch (status) {
+        case 'draft': return 'secondary';
+        case 'review': return 'warning';
+        case 'approved': return 'info';
+        case 'active': return 'success';
+        case 'retention': return 'warning';
+        case 'record_center': return 'secondary';
+        case 'destruction': return 'danger';
+        default: return 'secondary';
+    }
+}
+
+function workflowStatusLabel(status: string): string {
+    switch (status) {
+        case 'draft': return 'Draft';
+        case 'review': return 'Review';
+        case 'approved': return 'Disetujui';
+        case 'active': return 'Arsip Aktif';
+        case 'retention': return 'Retensi';
+        case 'record_center': return 'Record Center';
+        case 'destruction': return 'Pemusnahan';
+        default: return status;
+    }
+}
+
 function formatBytes(bytes: number) {
     if (bytes < 1024) {
 return `${bytes} B`;
@@ -165,10 +208,22 @@ function isPreviewable(mimeType: string) {
     return ['application/pdf', 'image/jpg', 'image/jpeg', 'image/png'].includes(mimeType);
 }
 
-export default function Show({ arsip }: ShowProps) {
+export default function Show({ arsip, workflowHistory = [], allowedTransitions = [] }: ShowProps) {
     const [replacingFile, setReplacingFile] = useState(false);
     const [showFullText, setShowFullText] = useState(false);
     const [processingOcr, setProcessingOcr] = useState(false);
+
+    const [showAdvanceForm, setShowAdvanceForm] = useState(false);
+    const [targetStatus, setTargetStatus] = useState(allowedTransitions[0]?.value || '');
+    const [keteranganWorkflow, setKeteranganWorkflow] = useState('');
+    const [processingWorkflow, setProcessingWorkflow] = useState(false);
+
+    // Keep target status updated when transitions change
+    useState(() => {
+        if (allowedTransitions.length > 0) {
+            setTargetStatus(allowedTransitions[0].value);
+        }
+    });
 
     const handleReprocessOcr = () => {
         setProcessingOcr(true);
@@ -176,6 +231,29 @@ export default function Show({ arsip }: ShowProps) {
             preserveScroll: true,
             onFinish: () => setProcessingOcr(false),
         });
+    };
+
+    const handleAdvanceWorkflow = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!targetStatus) {
+return;
+}
+
+        if (confirm(`Apakah Anda yakin ingin melanjutkan workflow ke status: ${workflowStatusLabel(targetStatus)}?`)) {
+            setProcessingWorkflow(true);
+            router.post(`/arsip/${arsip.id}/workflow/advance`, {
+                target_status: targetStatus,
+                keterangan: keteranganWorkflow,
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setShowAdvanceForm(false);
+                    setKeteranganWorkflow('');
+                },
+                onFinish: () => setProcessingWorkflow(false),
+            });
+        }
     };
 
     const handleDelete = () => {
@@ -479,6 +557,124 @@ export default function Show({ arsip }: ShowProps) {
 
                     {/* Kolom Sidebar */}
                     <div className="space-y-6">
+                        {/* Status Workflow */}
+                        <ContentCard title="Status Workflow" description="Siklus hidup dokumen arsip">
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-medium text-muted-foreground">Status Saat Ini</span>
+                                    <StatusBadge variant={workflowStatusVariant(arsip.workflow_status)}>
+                                        {workflowStatusLabel(arsip.workflow_status)}
+                                    </StatusBadge>
+                                </div>
+
+                                {allowedTransitions.length > 0 && (
+                                    <div className="pt-1">
+                                        {!showAdvanceForm ? (
+                                            <Button
+                                                onClick={() => {
+                                                    setTargetStatus(allowedTransitions[0].value);
+                                                    setShowAdvanceForm(true);
+                                                }}
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full gap-2 border-border/60"
+                                            >
+                                                Lanjutkan Workflow
+                                            </Button>
+                                        ) : (
+                                            <form onSubmit={handleAdvanceWorkflow} className="rounded-lg border border-border/60 p-3 space-y-3 bg-muted/20">
+                                                <div className="space-y-1">
+                                                    <label className="text-xs font-semibold text-muted-foreground">Pilih Status Tujuan</label>
+                                                    <select
+                                                        value={targetStatus}
+                                                        onChange={(e) => setTargetStatus(e.target.value)}
+                                                        required
+                                                        className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        {allowedTransitions.map((t) => (
+                                                            <option key={t.value} value={t.value}>
+                                                                {t.label}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <label className="text-xs font-semibold text-muted-foreground">Keterangan (Opsional)</label>
+                                                    <textarea
+                                                        value={keteranganWorkflow}
+                                                        onChange={(e) => setKeteranganWorkflow(e.target.value)}
+                                                        rows={2}
+                                                        placeholder="Catatan perubahan status..."
+                                                        className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                                    />
+                                                </div>
+
+                                                <div className="flex items-center gap-2">
+                                                    <Button type="submit" size="sm" disabled={processingWorkflow}>
+                                                        Kirim
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setShowAdvanceForm(false)}
+                                                    >
+                                                        Batal
+                                                    </Button>
+                                                </div>
+                                            </form>
+                                        )}
+                                    </div>
+                                )}
+
+                                {workflowHistory.length > 0 && (
+                                    <div className="space-y-3">
+                                        <Separator className="border-border/40" />
+                                        <span className="text-xs font-semibold text-muted-foreground">Riwayat Transisi</span>
+                                        <div className="relative pl-4 border-l border-border/80 space-y-4">
+                                            {workflowHistory.map((history) => (
+                                                <div key={history.id} className="relative text-xs">
+                                                    {/* Timeline Bullet */}
+                                                    <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full border-2 border-background bg-border" />
+                                                    
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <span className="font-semibold text-foreground">
+                                                                {workflowStatusLabel(history.status_baru)}
+                                                            </span>
+                                                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                                                {new Date(history.created_at).toLocaleDateString('id-ID', {
+                                                                    day: 'numeric',
+                                                                    month: 'short',
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit'
+                                                                })}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                                                            <span>Dari {workflowStatusLabel(history.status_lama)}</span>
+                                                            {history.user && (
+                                                                <>
+                                                                    <span>·</span>
+                                                                    <span>oleh {history.user.name}</span>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                        {history.keterangan && (
+                                                            <p className="mt-0.5 rounded border border-border/40 bg-muted/30 px-2 py-1 italic text-[11px] leading-relaxed text-muted-foreground">
+                                                                "{history.keterangan}"
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </ContentCard>
+
                         {/* Informasi Lokasi */}
                         <ContentCard title="Informasi Lokasi" description="Tempat penyimpanan arsip fisik">
                             <div className="space-y-3">
