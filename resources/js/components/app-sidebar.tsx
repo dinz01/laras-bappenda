@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     Archive,
     ArchiveRestore,
@@ -33,6 +33,7 @@ import { dashboard } from '@/routes';
 import { index as auditLogIndex } from '@/routes/admin/audit-log';
 import { index as penggunaIndex } from '@/routes/admin/pengguna';
 import { index as permissionIndex } from '@/routes/admin/permission';
+import { index as recycleBinIndex } from '@/routes/admin/recycle-bin';
 import { index as roleIndex } from '@/routes/admin/role';
 import { index as arsipIndex } from '@/routes/arsip';
 import { index as jabatanIndex } from '@/routes/master/jabatan';
@@ -140,6 +141,20 @@ const administrasiNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage().props;
+    const userRoles = (auth?.user as { roles?: string[] } | null)?.roles ?? [];
+    const isSuperAdmin = userRoles.includes('Super Administrator');
+
+    const adminItems = [...administrasiNavItems];
+
+    if (isSuperAdmin) {
+        adminItems.push({
+            title: 'Riwayat Arsip Dihapus',
+            href: recycleBinIndex.url(),
+            icon: Trash2,
+        });
+    }
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -158,7 +173,7 @@ export function AppSidebar() {
                 <NavMain items={utamaNavItems} label="Utama" />
                 <NavMain items={pengelolaanNavItems} label="Pengelolaan" />
                 <NavMain items={masterNavItems} label="Master Data" />
-                <NavMain items={administrasiNavItems} label="Administrasi" />
+                <NavMain items={adminItems} label="Administrasi" />
             </SidebarContent>
 
             <SidebarFooter>

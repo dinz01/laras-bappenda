@@ -16,6 +16,14 @@ class ArsipPolicy
     }
 
     /**
+     * Determine whether the user can view the trash list.
+     */
+    public function viewTrash(User $user): bool
+    {
+        return $user->hasRole('Super Administrator');
+    }
+
+    /**
      * Determine whether the user can view the model.
      */
     public function view(User $user, Arsip $arsip): bool
@@ -48,18 +56,18 @@ class ArsipPolicy
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Hanya Super Admin yang dapat merestore arsip dari recycle bin.
      */
     public function restore(User $user, Arsip $arsip): bool
     {
-        return true;
+        return $user->hasRole('Super Administrator');
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Hanya Super Admin yang dapat menghapus arsip secara permanen.
      */
     public function forceDelete(User $user, Arsip $arsip): bool
     {
-        return true;
+        return $user->hasRole('Super Administrator');
     }
 }

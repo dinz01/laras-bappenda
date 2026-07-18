@@ -14,8 +14,8 @@ use Illuminate\Support\Carbon;
  *
  * @property int $id
  * @property int $arsip_id
- * @property string $status_lama
- * @property string $status_baru
+ * @property WorkflowStatus $status_lama
+ * @property WorkflowStatus $status_baru
  * @property int|null $user_id
  * @property string|null $keterangan
  * @property Carbon|null $created_at

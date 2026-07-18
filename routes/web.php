@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\PenggunaController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RecycleBinController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\ArsipController;
 use App\Http\Controllers\DashboardController;
@@ -56,6 +57,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('role', [RoleController::class, 'index'])->name('role.index');
         Route::get('permission', [PermissionController::class, 'index'])->name('permission.index');
         Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+
+        // Recycle Bin
+        Route::get('recycle-bin', [RecycleBinController::class, 'index'])->name('recycle-bin.index');
+        Route::post('recycle-bin/{id}/restore', [RecycleBinController::class, 'restore'])->name('recycle-bin.restore');
+        Route::delete('recycle-bin/{id}/force-delete', [RecycleBinController::class, 'forceDelete'])->name('recycle-bin.force-delete');
     });
 });
 

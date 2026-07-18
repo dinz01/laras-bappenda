@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateArsipRequest;
 use App\Interfaces\SearchServiceInterface;
 use App\Jobs\ProcessOcrJob;
 use App\Models\Arsip;
+use App\Models\AuditLog;
 use App\Models\DokumenArsipVersion;
 use App\Models\JenisDokumen;
 use App\Models\KlasifikasiArsip;
@@ -173,23 +174,26 @@ class ArsipController extends Controller
             ->with('success', 'Arsip berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Arsip $arsip): RedirectResponse
+    public function destroy(Request $request, Arsip $arsip): RedirectResponse
     {
         Gate::authorize('delete', $arsip);
 
-        // Delete associated files if any
-        if ($arsip->dokumen) {
-            Storage::disk('local')->delete($arsip->dokumen->path_penyimpanan);
-            $arsip->dokumen->delete();
-        }
+        // Catat audit log untuk soft delete
+        AuditLog::create([
+            'auditable_type' => Arsip::class,
+            'auditable_id' => $arsip->id,
+            'event' => 'arsip.deleted',
+            'old_values' => ['deleted_at' => null],
+            'new_values' => ['deleted_at' => now()->toDateTimeString()],
+            'user_id' => auth()->id(),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         $arsip->delete();
 
         return redirect()->route('arsip.index')
-            ->with('success', 'Arsip berhasil dihapus.');
+            ->with('success', 'Arsip berhasil dipindahkan ke tempat pembuangan sementara.');
     }
 
     /**
