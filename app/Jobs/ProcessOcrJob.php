@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Enums\NotificationType;
 use App\Enums\OcrStatus;
 use App\Interfaces\OcrServiceInterface;
 use App\Models\DokumenArsip;
+use App\Services\NotificationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -68,6 +70,17 @@ class ProcessOcrJob implements ShouldQueue
                 'processing_time_ms' => $result->processingTimeMs,
             ]);
 
+            if ($this->dokumen->uploader) {
+                $arsip = $this->dokumen->arsip;
+                resolve(NotificationService::class)->create(
+                    $this->dokumen->uploader,
+                    NotificationType::OcrSelesai,
+                    'OCR Selesai',
+                    "Proses OCR untuk dokumen \"{$this->dokumen->nama_original}\" (arsip: {$arsip->nomor_arsip}) telah selesai.",
+                    route('arsip.show', $arsip),
+                );
+            }
+
         } catch (Throwable $e) {
             $this->handleFailure($e);
             // Jangan lempar exception agar job tidak terus bertengger di failed_jobs
@@ -89,6 +102,17 @@ class ProcessOcrJob implements ShouldQueue
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString(),
         ]);
+
+        if ($this->dokumen->uploader) {
+            $arsip = $this->dokumen->arsip;
+            resolve(NotificationService::class)->create(
+                $this->dokumen->uploader,
+                NotificationType::OcrGagal,
+                'OCR Gagal',
+                "Proses OCR untuk dokumen \"{$this->dokumen->nama_original}\" (arsip: {$arsip->nomor_arsip}) gagal: ".$e->getMessage(),
+                route('arsip.show', $arsip),
+            );
+        }
     }
 
     /**

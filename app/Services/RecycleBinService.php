@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\NotificationType;
 use App\Models\Arsip;
 use App\Models\AuditLog;
 use App\Models\User;
@@ -13,6 +14,14 @@ use Illuminate\Support\Facades\Storage;
 
 class RecycleBinService
 {
+    protected NotificationService $notificationService;
+
+    public function __construct(
+        ?NotificationService $notificationService = null,
+    ) {
+        $this->notificationService = $notificationService ?? resolve(NotificationService::class);
+    }
+
     /**
      * Daftar arsip yang soft-deleted, diurutkan terbaru dihapus.
      *
@@ -43,6 +52,14 @@ class RecycleBinService
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
+
+        $this->notificationService->create(
+            $actor,
+            NotificationType::ArsipDipulihkan,
+            'Arsip Dipulihkan',
+            "Arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berhasil dipulihkan dari recycle bin.",
+            route('arsip.show', $arsip),
+        );
     }
 
     /**
@@ -68,6 +85,13 @@ class RecycleBinService
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
+
+        $this->notificationService->create(
+            $actor,
+            NotificationType::ArsipDihapusPermanen,
+            'Arsip Dihapus Permanen',
+            "Arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) telah dihapus secara permanen.",
+        );
 
         // Force delete akan cascade ke relasi melalui DB foreign key ON DELETE CASCADE
         $arsip->forceDelete();

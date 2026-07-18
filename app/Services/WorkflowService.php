@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\NotificationType;
 use App\Enums\WorkflowStatus;
 use App\Events\WorkflowTransitioned;
 use App\Models\Arsip;
@@ -15,6 +16,14 @@ use Illuminate\Http\Request;
 
 class WorkflowService
 {
+    protected NotificationService $notificationService;
+
+    public function __construct(
+        ?NotificationService $notificationService = null,
+    ) {
+        $this->notificationService = $notificationService ?? resolve(NotificationService::class);
+    }
+
     /**
      * Periksa apakah Arsip dapat bertransisi ke status target.
      */
@@ -69,6 +78,15 @@ class WorkflowService
 
         // 4. Dispatch event
         WorkflowTransitioned::dispatch($arsip, $statusLama, $target, $actor);
+
+        // 5. Kirim notifikasi
+        $this->notificationService->create(
+            $actor,
+            NotificationType::TahapBerubah,
+            'Tahap Arsip Berubah',
+            "Arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berpindah dari [{$statusLama->label()}] ke [{$target->label()}].",
+            route('arsip.show', $arsip),
+        );
 
         return $history;
     }

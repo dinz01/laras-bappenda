@@ -4,13 +4,23 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\NotificationType;
 use App\Models\DokumenArsip;
 use App\Models\DokumenArsipVersion;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class DocumentVersionService
 {
+    protected NotificationService $notificationService;
+
+    public function __construct(
+        ?NotificationService $notificationService = null,
+    ) {
+        $this->notificationService = $notificationService ?? resolve(NotificationService::class);
+    }
+
     /**
      * Create a new version of the document.
      */
@@ -32,7 +42,7 @@ class DocumentVersionService
         $latestVersion = $this->latestVersion($dokumen);
         $nextVersion = $latestVersion ? $latestVersion->versi + 1 : 1;
 
-        return DokumenArsipVersion::create([
+        $version = DokumenArsipVersion::create([
             'dokumen_arsip_id' => $dokumen->id,
             'versi' => $nextVersion,
             'nama_file' => $namaFile,
@@ -42,6 +52,22 @@ class DocumentVersionService
             'hash_file' => $hashFile,
             'uploaded_by' => $uploadedBy,
         ]);
+
+        if ($uploadedBy && $nextVersion > 1) {
+            $uploader = User::find($uploadedBy);
+            if ($uploader) {
+                $arsip = $dokumen->arsip;
+                $this->notificationService->create(
+                    $uploader,
+                    NotificationType::VersiDokumenBaru,
+                    'Versi Dokumen Baru Dibuat',
+                    "Versi {$nextVersion} untuk dokumen \"{$namaFile}\" (arsip: {$arsip->nomor_arsip}) berhasil dibuat.",
+                    route('arsip.show', $arsip),
+                );
+            }
+        }
+
+        return $version;
     }
 
     /**

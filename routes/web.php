@@ -14,6 +14,7 @@ use App\Http\Controllers\Master\LokasiArsipController;
 use App\Http\Controllers\Master\MediaArsipController;
 use App\Http\Controllers\Master\RetensiArsipController;
 use App\Http\Controllers\Master\UnitOrganisasiController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengelolaan\PemusnahanController;
 use App\Http\Controllers\Pengelolaan\PermohonanController;
 use App\Http\Controllers\Pengelolaan\RecordCenterController;
@@ -23,6 +24,12 @@ Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    // ── Notifications ─────────────────────────────────────────────────────
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
+    Route::get('notifications/{notification}/redirect', [NotificationController::class, 'redirect'])->name('notifications.redirect');
 
     // ── Repositori Arsip ──────────────────────────────────────────────────
     Route::get('arsip/{arsip}/download', [ArsipController::class, 'download'])->name('arsip.download');

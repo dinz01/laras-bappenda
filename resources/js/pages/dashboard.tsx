@@ -17,6 +17,7 @@ import {
     Building2,
     Tags,
     ChevronRight,
+    Bell,
 } from 'lucide-react';
 import { QuickAccessCard } from '@/components/Cards/quick-access-card';
 import { StatisticCard } from '@/components/Cards/statistic-card';
@@ -109,7 +110,7 @@ export default function Dashboard({
     mendekatiRetensi = [],
     recycleBinCount = 0,
 }: DashboardProps) {
-    const { auth } = usePage().props;
+    const { auth, notifications: sharedNotifications } = usePage().props;
     const userRoles = (auth?.user as { roles?: string[] } | null)?.roles ?? [];
     const isSuperAdmin = userRoles.includes('Super Administrator');
 
@@ -370,6 +371,34 @@ export default function Dashboard({
 
                     {/* Widget Retensi / Informasi Sistem */}
                     <div className="space-y-6">
+                        {/* Notifikasi Belum Dibaca */}
+                        <Card className="border-blue-500/20 bg-blue-500/5">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-sm font-semibold flex items-center gap-2 text-blue-500">
+                                    <Bell className="h-4 w-4" />
+                                    Notifikasi Belum Dibaca
+                                </CardTitle>
+                                <CardDescription className="text-xs text-blue-600/80">
+                                    Jumlah pemberitahuan baru yang belum Anda baca.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-3xl font-extrabold text-blue-600">
+                                        {sharedNotifications?.unread_count ?? 0}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">pemberitahuan</span>
+                                </div>
+                                <Link
+                                    href="/notifications"
+                                    className="mt-3.5 inline-flex items-center text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline gap-0.5"
+                                >
+                                    Lihat Notifikasi
+                                    <ChevronRight className="h-3 w-3" />
+                                </Link>
+                            </CardContent>
+                        </Card>
+
                         {/* Arsip Menunggu Penghapusan (Super Admin Only) */}
                         {isSuperAdmin && (
                             <Card className="border-rose-500/20 bg-rose-500/5">

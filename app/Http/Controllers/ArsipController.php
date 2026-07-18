@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationType;
 use App\Enums\WorkflowStatus;
 use App\Http\Requests\StoreArsipRequest;
 use App\Http\Requests\UpdateArsipRequest;
@@ -18,6 +19,7 @@ use App\Models\UnitOrganisasi;
 use App\Models\User;
 use App\Services\DocumentUploadService;
 use App\Services\DocumentVersionService;
+use App\Services\NotificationService;
 use App\Services\WorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +36,7 @@ class ArsipController extends Controller
         protected SearchServiceInterface $searchService,
         protected WorkflowService $workflowService,
         protected DocumentUploadService $documentUploadService,
+        protected NotificationService $notificationService,
     ) {}
 
     /**
@@ -96,6 +99,16 @@ class ArsipController extends Controller
                 (int) auth()->id()
             );
         }
+
+        /** @var User $user */
+        $user = $request->user();
+        $this->notificationService->create(
+            $user,
+            NotificationType::ArsipBaru,
+            'Arsip Berhasil Dibuat',
+            "Arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berhasil disimpan.",
+            route('arsip.show', $arsip),
+        );
 
         return redirect()->route('arsip.index')
             ->with('success', 'Arsip berhasil disimpan.');
@@ -168,6 +181,16 @@ class ArsipController extends Controller
                 $request->file('file'),
                 (int) auth()->id()
             );
+
+            /** @var User $user */
+            $user = $request->user();
+            $this->notificationService->create(
+                $user,
+                NotificationType::DokumenDiganti,
+                'Dokumen Berhasil Diganti',
+                "Dokumen arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berhasil diperbarui.",
+                route('arsip.show', $arsip),
+            );
         }
 
         return redirect()->route('arsip.show', $arsip)
@@ -191,6 +214,15 @@ class ArsipController extends Controller
         ]);
 
         $arsip->delete();
+
+        /** @var User $user */
+        $user = $request->user();
+        $this->notificationService->create(
+            $user,
+            NotificationType::ArsipDihapus,
+            'Arsip Dipindahkan ke Recycle Bin',
+            "Arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) dipindahkan ke recycle bin.",
+        );
 
         return redirect()->route('arsip.index')
             ->with('success', 'Arsip berhasil dipindahkan ke tempat pembuangan sementara.');
@@ -236,6 +268,16 @@ class ArsipController extends Controller
             (int) auth()->id()
         );
 
+        /** @var User $user */
+        $user = $request->user();
+        $this->notificationService->create(
+            $user,
+            NotificationType::DokumenDiunggah,
+            'Dokumen Berhasil Diunggah',
+            "Dokumen untuk arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berhasil diunggah.",
+            route('arsip.show', $arsip),
+        );
+
         return redirect()->route('arsip.show', $arsip)
             ->with('success', 'Dokumen berhasil diunggah.');
     }
@@ -255,6 +297,16 @@ class ArsipController extends Controller
             $arsip,
             $request->file('file'),
             (int) auth()->id()
+        );
+
+        /** @var User $user */
+        $user = $request->user();
+        $this->notificationService->create(
+            $user,
+            NotificationType::DokumenDiganti,
+            'Dokumen Berhasil Diganti',
+            "Dokumen arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berhasil diperbarui.",
+            route('arsip.show', $arsip),
         );
 
         return redirect()->route('arsip.show', $arsip)

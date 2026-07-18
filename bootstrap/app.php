@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\DeleteExpiredArchivesCommand;
+use App\Console\Commands\DeleteExpiredNotificationsCommand;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Console\Scheduling\Schedule;
@@ -36,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command(DeleteExpiredArchivesCommand::class)->hourly();
+        $schedule->command(DeleteExpiredNotificationsCommand::class)->daily();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
