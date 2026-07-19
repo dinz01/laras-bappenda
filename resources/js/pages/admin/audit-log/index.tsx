@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { Activity, CalendarDays, Eye, FileClock, ListFilter, Users, X } from 'lucide-react';
+import { Activity, CalendarDays, ChevronDown, Eye, FileClock, ListFilter, Users, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
@@ -9,6 +9,11 @@ import { PageHeader } from '@/components/Layout/page-header';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
     Dialog,
     DialogContent,
@@ -108,6 +113,54 @@ const userTypeOptions = [
     { value: 'user', label: 'User' },
 ];
 
+const eventLabels: Record<string, string> = {
+    'arsip.created': 'Arsip dibuat',
+    'arsip.updated': 'Arsip diperbarui',
+    'arsip.deleted': 'Arsip dipindahkan ke Riwayat Arsip',
+    'arsip.restored': 'Arsip dipulihkan',
+    'arsip.force_deleted': 'Arsip dihapus permanen',
+    'workflow.changed': 'Tahap arsip berubah',
+    'dokumen.uploaded': 'Dokumen diunggah',
+    'dokumen.replaced': 'Dokumen diganti',
+    'dokumen.version_created': 'Versi dokumen dibuat',
+    'ocr.completed': 'OCR selesai',
+    'ocr.failed': 'OCR gagal',
+};
+
+const fieldLabels: Record<string, string> = {
+    nomor_arsip: 'Nomor Arsip',
+    judul: 'Judul',
+    deskripsi: 'Keterangan',
+    tanggal_arsip: 'Tanggal Arsip',
+    klasifikasi_arsip_id: 'Klasifikasi',
+    lokasi_arsip_id: 'Lokasi',
+    jenis_dokumen_id: 'Jenis Dokumen',
+    media_arsip_id: 'Media',
+    kondisi_arsip_id: 'Kondisi',
+    status_arsip_id: 'Status Arsip',
+    tingkat_akses_arsip_id: 'Tingkat Akses',
+    retensi_arsip_id: 'Retensi',
+    unit_organisasi_id: 'Unit Organisasi',
+    workflow_status: 'Tahap Arsip',
+    deleted_at: 'Waktu Dihapus',
+    nama_original: 'Nama File',
+    ukuran: 'Ukuran File',
+    mime_type: 'Tipe File',
+    path_penyimpanan: 'Lokasi File',
+    uploaded_by: 'Pengunggah',
+    versi: 'Versi',
+    nama_file: 'Nama File',
+    path_file: 'Lokasi File',
+    ukuran_file: 'Ukuran File',
+    hash_file: 'Hash File',
+    ocr_status: 'Status OCR',
+    ocr_text: 'Teks OCR',
+    ocr_confidence: 'Akurasi OCR',
+    ocr_language: 'Bahasa OCR',
+    ocr_pages: 'Jumlah Halaman',
+    ocr_processed_at: 'Waktu Proses OCR',
+};
+
 function eventVariant(event: string): BadgeStatusVariant {
     if (['arsip.created', 'arsip.restored'].includes(event)) {
         return 'success';
@@ -128,12 +181,68 @@ function eventVariant(event: string): BadgeStatusVariant {
     return 'secondary';
 }
 
+function eventLabel(event: string): string {
+    return eventLabels[event] ?? event;
+}
+
 function prettyJson(value: JsonValue | null): string {
     if (value === null) {
         return '-';
     }
 
     return JSON.stringify(value, null, 2);
+}
+
+function isRecord(value: JsonValue | null): value is { [key: string]: JsonValue } {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isSimpleValue(value: JsonValue | undefined): boolean {
+    return value === undefined || value === null || ['string', 'number', 'boolean'].includes(typeof value);
+}
+
+function fieldLabel(field: string): string {
+    return fieldLabels[field] ?? field.replaceAll('_', ' ');
+}
+
+function formatValue(value: JsonValue | undefined): string {
+    if (value === undefined || value === null || value === '') {
+        return '-';
+    }
+
+    if (typeof value === 'boolean') {
+        return value ? 'Ya' : 'Tidak';
+    }
+
+    if (typeof value === 'number' || typeof value === 'string') {
+        return String(value);
+    }
+
+    return JSON.stringify(value, null, 2);
+}
+
+function changeItems(oldValues: JsonValue | null, newValues: JsonValue | null) {
+    if (!isRecord(oldValues) && !isRecord(newValues)) {
+        return [];
+    }
+
+    const oldRecord = isRecord(oldValues) ? oldValues : {};
+    const newRecord = isRecord(newValues) ? newValues : {};
+    const fields = Array.from(new Set([...Object.keys(oldRecord), ...Object.keys(newRecord)]));
+
+    return fields.map((field) => {
+        const oldValue = oldRecord[field];
+        const newValue = newRecord[field];
+        const isComplex = !isSimpleValue(oldValue) || !isSimpleValue(newValue);
+
+        return {
+            field,
+            label: fieldLabel(field),
+            oldValue,
+            newValue,
+            isComplex,
+        };
+    });
 }
 
 function cleanFilters(filters: Filters): Filters {
@@ -321,7 +430,6 @@ export default function AuditLogIndex({
                                                 <TableHead className="min-w-[170px] font-semibold">Event</TableHead>
                                                 <TableHead className="min-w-[120px] font-semibold">Modul</TableHead>
                                                 <TableHead className="min-w-[220px] font-semibold">Nomor Arsip</TableHead>
-                                                <TableHead className="min-w-[130px] font-semibold">IP Address</TableHead>
                                                 <TableHead className="w-[90px] text-right font-semibold">Aksi</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -343,7 +451,7 @@ export default function AuditLogIndex({
                                                     </TableCell>
                                                     <TableCell>
                                                         <StatusBadge variant={eventVariant(auditLog.event)}>
-                                                            {auditLog.event}
+                                                            {eventLabel(auditLog.event)}
                                                         </StatusBadge>
                                                     </TableCell>
                                                     <TableCell className="text-sm text-muted-foreground">
@@ -360,9 +468,6 @@ export default function AuditLogIndex({
                                                         ) : (
                                                             <span className="text-sm text-muted-foreground">-</span>
                                                         )}
-                                                    </TableCell>
-                                                    <TableCell className="font-mono text-xs text-muted-foreground">
-                                                        {auditLog.ip_address ?? '-'}
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <Button
@@ -419,24 +524,12 @@ export default function AuditLogIndex({
                     <DialogHeader>
                         <DialogTitle>Detail Audit Log</DialogTitle>
                         <DialogDescription>
-                            {selectedLog?.event ?? '-'} pada {selectedLog?.created_at_human ?? '-'}
+                            {selectedLog ? eventLabel(selectedLog.event) : '-'} pada {selectedLog?.created_at_human ?? '-'}
                         </DialogDescription>
                     </DialogHeader>
 
                     {selectedLog && (
-                        <div className="max-h-[70vh] space-y-5 overflow-y-auto pr-2">
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                <DetailItem label="Waktu" value={selectedLog.created_at_human ?? '-'} />
-                                <DetailItem label="Pengguna" value={selectedLog.user?.name ?? 'Sistem'} />
-                                <DetailItem label="Event" value={selectedLog.event} />
-                                <DetailItem label="Modul" value={selectedLog.module} />
-                                <DetailItem label="IP Address" value={selectedLog.ip_address ?? '-'} />
-                                <DetailItem label="User Agent" value={selectedLog.user_agent ?? '-'} />
-                            </div>
-
-                            <JsonBlock title="Old Values" value={selectedLog.old_values} />
-                            <JsonBlock title="New Values" value={selectedLog.new_values} />
-                        </div>
+                        <AuditLogDetail auditLog={selectedLog} />
                     )}
                 </DialogContent>
             </Dialog>
@@ -444,19 +537,107 @@ export default function AuditLogIndex({
     );
 }
 
-function DetailItem({ label, value }: { label: string; value: string }) {
+function AuditLogDetail({ auditLog }: { auditLog: AuditLog }) {
     return (
-        <div className="rounded-md border border-border/60 p-3">
+        <div className="max-h-[70vh] space-y-6 overflow-y-auto pr-2">
+            <section className="grid gap-3 sm:grid-cols-2">
+                <DetailItem label="Aktivitas" value={eventLabel(auditLog.event)} />
+                <DetailItem label="Tanggal" value={auditLog.created_at_human ?? '-'} />
+                <DetailItem label="Pengguna" value={auditLog.user?.name ?? 'Sistem'} />
+                <DetailItem label="Nomor Arsip" value={auditLog.archive?.nomor_arsip ?? '-'} />
+                <DetailItem className="sm:col-span-2" label="Judul Arsip" value={auditLog.archive?.judul ?? '-'} />
+            </section>
+
+            <ChangeSummary oldValues={auditLog.old_values} newValues={auditLog.new_values} />
+
+            <section className="space-y-3 border-t border-border/60 pt-4">
+                <div>
+                    <h3 className="text-sm font-semibold">Informasi Teknis</h3>
+                    <p className="text-xs text-muted-foreground">Data teknis untuk kebutuhan penelusuran lanjutan.</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <DetailItem label="IP Address" value={auditLog.ip_address ?? '-'} />
+                    <DetailItem label="Browser/User Agent" value={auditLog.user_agent ?? '-'} />
+                </div>
+            </section>
+        </div>
+    );
+}
+
+function DetailItem({ label, value, className = '' }: { label: string; value: string; className?: string }) {
+    return (
+        <div className={`rounded-md border border-border/60 p-3 ${className}`}>
             <p className="text-xs font-medium text-muted-foreground">{label}</p>
             <p className="mt-1 break-words text-sm">{value}</p>
         </div>
     );
 }
 
+function ChangeSummary({ oldValues, newValues }: { oldValues: JsonValue | null; newValues: JsonValue | null }) {
+    const changes = changeItems(oldValues, newValues);
+    const visibleChanges = changes.filter((change) => !change.isComplex);
+    const hasComplexChanges = changes.some((change) => change.isComplex);
+
+    return (
+        <section className="space-y-3">
+            <div>
+                <h3 className="text-sm font-semibold">Perubahan</h3>
+                <p className="text-xs text-muted-foreground">Ringkasan perubahan yang tercatat pada aktivitas ini.</p>
+            </div>
+
+            {visibleChanges.length > 0 ? (
+                <div className="space-y-3">
+                    {visibleChanges.map((change) => (
+                        <div key={change.field} className="rounded-md border border-border/60 p-3">
+                            <p className="text-sm font-semibold">{change.label}</p>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                <ValueBlock label="Sebelum" value={formatValue(change.oldValue)} />
+                                <ValueBlock label="Sesudah" value={formatValue(change.newValue)} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <p className="rounded-md border border-border/60 p-3 text-sm text-muted-foreground">
+                    Tidak ada perubahan sederhana yang dapat ditampilkan.
+                </p>
+            )}
+
+            {hasComplexChanges && <FullData oldValues={oldValues} newValues={newValues} />}
+        </section>
+    );
+}
+
+function ValueBlock({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="space-y-1 rounded-md bg-muted/40 p-3">
+            <p className="text-xs font-medium text-muted-foreground">{label}</p>
+            <p className="break-words text-sm whitespace-pre-wrap">{value}</p>
+        </div>
+    );
+}
+
+function FullData({ oldValues, newValues }: { oldValues: JsonValue | null; newValues: JsonValue | null }) {
+    return (
+        <Collapsible>
+            <CollapsibleTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-muted-foreground">
+                    <ChevronDown className="h-4 w-4" />
+                    Lihat Data Lengkap
+                </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-3 pt-2">
+                <JsonBlock title="Sebelum" value={oldValues} />
+                <JsonBlock title="Sesudah" value={newValues} />
+            </CollapsibleContent>
+        </Collapsible>
+    );
+}
+
 function JsonBlock({ title, value }: { title: string; value: JsonValue | null }) {
     return (
         <div className="space-y-2">
-            <p className="text-sm font-semibold">{title}</p>
+            <p className="text-xs font-semibold text-muted-foreground">{title}</p>
             <pre className="max-h-64 overflow-auto rounded-md border border-border/60 bg-muted/40 p-3 text-xs leading-relaxed">
                 {prettyJson(value)}
             </pre>
