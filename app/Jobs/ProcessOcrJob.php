@@ -8,6 +8,7 @@ use App\Enums\NotificationType;
 use App\Enums\OcrStatus;
 use App\Interfaces\OcrServiceInterface;
 use App\Models\DokumenArsip;
+use App\Services\AuditLogService;
 use App\Services\NotificationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -53,6 +54,9 @@ class ProcessOcrJob implements ShouldQueue
             // 2. Lakukan OCR analisis menggunakan service
             $result = $ocrService->analyze($this->dokumen->path_penyimpanan);
 
+            // Capture old values
+            $oldValues = $this->dokumen->only(['ocr_status', 'ocr_text', 'ocr_confidence', 'ocr_language', 'ocr_pages', 'ocr_processed_at']);
+
             // 3. Simpan hasil OCR ke database
             $this->dokumen->update([
                 'ocr_status' => OcrStatus::Completed,
@@ -62,6 +66,15 @@ class ProcessOcrJob implements ShouldQueue
                 'ocr_pages' => $result->pages,
                 'ocr_processed_at' => now(),
             ]);
+
+            resolve(AuditLogService::class)->log(
+                'ocr.completed',
+                $this->dokumen,
+                $oldValues,
+                $this->dokumen->only(['ocr_status', 'ocr_text', 'ocr_confidence', 'ocr_language', 'ocr_pages', 'ocr_processed_at']),
+                $this->dokumen->uploader,
+                null
+            );
 
             Log::info('OCR Completed', [
                 'dokumen_id' => $this->dokumen->id,
@@ -93,9 +106,24 @@ class ProcessOcrJob implements ShouldQueue
      */
     protected function handleFailure(Throwable $e): void
     {
+        if ($this->dokumen->ocr_status === OcrStatus::Failed) {
+            return;
+        }
+
+        $oldValues = $this->dokumen->only(['ocr_status']);
+
         $this->dokumen->update([
             'ocr_status' => OcrStatus::Failed,
         ]);
+
+        resolve(AuditLogService::class)->log(
+            'ocr.failed',
+            $this->dokumen,
+            $oldValues,
+            $this->dokumen->only(['ocr_status']),
+            $this->dokumen->uploader,
+            null
+        );
 
         Log::error('OCR Failed', [
             'dokumen_id' => $this->dokumen->id,

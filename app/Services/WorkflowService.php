@@ -9,7 +9,6 @@ use App\Enums\WorkflowStatus;
 use App\Events\WorkflowTransitioned;
 use App\Models\Arsip;
 use App\Models\ArsipWorkflowHistory;
-use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -18,10 +17,14 @@ class WorkflowService
 {
     protected NotificationService $notificationService;
 
+    protected AuditLogService $auditLogService;
+
     public function __construct(
         ?NotificationService $notificationService = null,
+        ?AuditLogService $auditLogService = null,
     ) {
         $this->notificationService = $notificationService ?? resolve(NotificationService::class);
+        $this->auditLogService = $auditLogService ?? resolve(AuditLogService::class);
     }
 
     /**
@@ -65,16 +68,14 @@ class WorkflowService
         ]);
 
         // 3. Catat audit log
-        AuditLog::create([
-            'auditable_type' => Arsip::class,
-            'auditable_id' => $arsip->id,
-            'event' => 'workflow.transitioned',
-            'old_values' => ['workflow_status' => $statusLama->value],
-            'new_values' => ['workflow_status' => $target->value],
-            'user_id' => $actor->id,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        $this->auditLogService->log(
+            'workflow.changed',
+            $arsip,
+            ['workflow_status' => $statusLama->value],
+            ['workflow_status' => $target->value],
+            $actor,
+            $request
+        );
 
         // 4. Dispatch event
         WorkflowTransitioned::dispatch($arsip, $statusLama, $target, $actor);

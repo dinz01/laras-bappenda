@@ -9,7 +9,6 @@ use App\Http\Requests\UpdateArsipRequest;
 use App\Interfaces\SearchServiceInterface;
 use App\Jobs\ProcessOcrJob;
 use App\Models\Arsip;
-use App\Models\AuditLog;
 use App\Models\DokumenArsipVersion;
 use App\Models\JenisDokumen;
 use App\Models\KlasifikasiArsip;
@@ -17,6 +16,7 @@ use App\Models\LokasiArsip;
 use App\Models\StatusArsip;
 use App\Models\UnitOrganisasi;
 use App\Models\User;
+use App\Services\AuditLogService;
 use App\Services\DocumentUploadService;
 use App\Services\DocumentVersionService;
 use App\Services\NotificationService;
@@ -37,6 +37,7 @@ class ArsipController extends Controller
         protected WorkflowService $workflowService,
         protected DocumentUploadService $documentUploadService,
         protected NotificationService $notificationService,
+        protected AuditLogService $auditLogService,
     ) {}
 
     /**
@@ -91,6 +92,30 @@ class ArsipController extends Controller
         $validated['created_by'] = auth()->id();
 
         $arsip = Arsip::create($validated);
+
+        $this->auditLogService->log(
+            'arsip.created',
+            $arsip,
+            null,
+            $arsip->only([
+                'nomor_arsip',
+                'judul',
+                'deskripsi',
+                'tanggal_arsip',
+                'klasifikasi_arsip_id',
+                'lokasi_arsip_id',
+                'jenis_dokumen_id',
+                'media_arsip_id',
+                'kondisi_arsip_id',
+                'status_arsip_id',
+                'tingkat_akses_arsip_id',
+                'retensi_arsip_id',
+                'unit_organisasi_id',
+                'workflow_status',
+            ]),
+            $request->user(),
+            $request
+        );
 
         if ($request->hasFile('file')) {
             $this->documentUploadService->upload(
@@ -173,7 +198,43 @@ class ArsipController extends Controller
         Gate::authorize('update', $arsip);
 
         $validated = $request->validated();
+
+        $fieldsToCheck = [
+            'nomor_arsip',
+            'judul',
+            'deskripsi',
+            'tanggal_arsip',
+            'klasifikasi_arsip_id',
+            'lokasi_arsip_id',
+            'jenis_dokumen_id',
+            'media_arsip_id',
+            'kondisi_arsip_id',
+            'status_arsip_id',
+            'tingkat_akses_arsip_id',
+            'retensi_arsip_id',
+            'unit_organisasi_id',
+            'workflow_status',
+        ];
+
+        $oldValues = $arsip->only($fieldsToCheck);
         $arsip->update($validated);
+
+        $changes = $arsip->getChanges();
+        $changedKeys = array_keys($changes);
+
+        if (! empty($changedKeys)) {
+            $oldValuesFiltered = array_intersect_key($oldValues, array_flip($changedKeys));
+            $newValuesFiltered = $arsip->only($changedKeys);
+
+            $this->auditLogService->log(
+                'arsip.updated',
+                $arsip,
+                $oldValuesFiltered,
+                $newValuesFiltered,
+                $request->user(),
+                $request
+            );
+        }
 
         if ($request->hasFile('file')) {
             $this->documentUploadService->replace(
@@ -202,16 +263,29 @@ class ArsipController extends Controller
         Gate::authorize('delete', $arsip);
 
         // Catat audit log untuk soft delete
-        AuditLog::create([
-            'auditable_type' => Arsip::class,
-            'auditable_id' => $arsip->id,
-            'event' => 'arsip.deleted',
-            'old_values' => ['deleted_at' => null],
-            'new_values' => ['deleted_at' => now()->toDateTimeString()],
-            'user_id' => auth()->id(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        $this->auditLogService->log(
+            'arsip.deleted',
+            $arsip,
+            $arsip->only([
+                'nomor_arsip',
+                'judul',
+                'deskripsi',
+                'tanggal_arsip',
+                'klasifikasi_arsip_id',
+                'lokasi_arsip_id',
+                'jenis_dokumen_id',
+                'media_arsip_id',
+                'kondisi_arsip_id',
+                'status_arsip_id',
+                'tingkat_akses_arsip_id',
+                'retensi_arsip_id',
+                'unit_organisasi_id',
+                'workflow_status',
+            ]),
+            null,
+            $request->user(),
+            $request
+        );
 
         $arsip->delete();
 

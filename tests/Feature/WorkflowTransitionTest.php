@@ -44,7 +44,7 @@ it('advances workflow status via http request and logs activity', function () {
         ->first();
 
     expect($auditLog)->not->toBeNull()
-        ->and($auditLog->event)->toBe('workflow.transitioned')
+        ->and($auditLog->event)->toBe('workflow.changed')
         ->and($auditLog->old_values['workflow_status'])->toBe('draft')
         ->and($auditLog->new_values['workflow_status'])->toBe('review')
         ->and($auditLog->user_id)->toBe($user->id);

@@ -6,7 +6,6 @@ namespace App\Services;
 
 use App\Enums\NotificationType;
 use App\Models\Arsip;
-use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -16,10 +15,14 @@ class RecycleBinService
 {
     protected NotificationService $notificationService;
 
+    protected AuditLogService $auditLogService;
+
     public function __construct(
         ?NotificationService $notificationService = null,
+        ?AuditLogService $auditLogService = null,
     ) {
         $this->notificationService = $notificationService ?? resolve(NotificationService::class);
+        $this->auditLogService = $auditLogService ?? resolve(AuditLogService::class);
     }
 
     /**
@@ -40,18 +43,18 @@ class RecycleBinService
      */
     public function restore(Arsip $arsip, User $actor, Request $request): void
     {
+        $oldDeletedAt = $arsip->deleted_at?->toDateTimeString();
+
         $arsip->restore();
 
-        AuditLog::create([
-            'auditable_type' => Arsip::class,
-            'auditable_id' => $arsip->id,
-            'event' => 'arsip.restored',
-            'old_values' => ['deleted_at' => $arsip->deleted_at?->toDateTimeString()],
-            'new_values' => ['deleted_at' => null],
-            'user_id' => $actor->id,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        $this->auditLogService->log(
+            'arsip.restored',
+            $arsip,
+            ['deleted_at' => $oldDeletedAt],
+            ['deleted_at' => null],
+            $actor,
+            $request
+        );
 
         $this->notificationService->create(
             $actor,
@@ -71,20 +74,18 @@ class RecycleBinService
         $this->deletePhysicalFiles($arsip);
 
         // Catat audit log SEBELUM force delete (agar id arsip masih ada)
-        AuditLog::create([
-            'auditable_type' => Arsip::class,
-            'auditable_id' => $arsip->id,
-            'event' => "arsip.force_deleted.{$via}",
-            'old_values' => [
+        $this->auditLogService->log(
+            'arsip.force_deleted',
+            $arsip,
+            [
                 'nomor_arsip' => $arsip->nomor_arsip,
                 'judul' => $arsip->judul,
                 'deleted_at' => $arsip->deleted_at?->toDateTimeString(),
             ],
-            'new_values' => null,
-            'user_id' => $actor->id,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+            null,
+            $actor,
+            $request
+        );
 
         $this->notificationService->create(
             $actor,
@@ -124,20 +125,18 @@ class RecycleBinService
             try {
                 $this->deletePhysicalFiles($arsip);
 
-                AuditLog::create([
-                    'auditable_type' => Arsip::class,
-                    'auditable_id' => $arsip->id,
-                    'event' => 'arsip.force_deleted.scheduler',
-                    'old_values' => [
+                $this->auditLogService->log(
+                    'arsip.force_deleted',
+                    $arsip,
+                    [
                         'nomor_arsip' => $arsip->nomor_arsip,
                         'judul' => $arsip->judul,
                         'deleted_at' => $arsip->deleted_at?->toDateTimeString(),
                     ],
-                    'new_values' => null,
-                    'user_id' => null,
-                    'ip_address' => null,
-                    'user_agent' => 'Scheduler',
-                ]);
+                    null,
+                    null,
+                    null
+                );
 
                 $arsip->forceDelete();
                 $deleted++;

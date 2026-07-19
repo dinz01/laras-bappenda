@@ -15,10 +15,14 @@ class DocumentVersionService
 {
     protected NotificationService $notificationService;
 
+    protected AuditLogService $auditLogService;
+
     public function __construct(
         ?NotificationService $notificationService = null,
+        ?AuditLogService $auditLogService = null,
     ) {
         $this->notificationService = $notificationService ?? resolve(NotificationService::class);
+        $this->auditLogService = $auditLogService ?? resolve(AuditLogService::class);
     }
 
     /**
@@ -52,6 +56,24 @@ class DocumentVersionService
             'hash_file' => $hashFile,
             'uploaded_by' => $uploadedBy,
         ]);
+
+        $this->auditLogService->log(
+            'dokumen.version_created',
+            $version,
+            null,
+            $version->only([
+                'dokumen_arsip_id',
+                'versi',
+                'nama_file',
+                'path_file',
+                'ukuran_file',
+                'mime_type',
+                'hash_file',
+                'uploaded_by',
+            ]),
+            $uploadedBy ? User::find($uploadedBy) : null,
+            request()
+        );
 
         if ($uploadedBy && $nextVersion > 1) {
             $uploader = User::find($uploadedBy);

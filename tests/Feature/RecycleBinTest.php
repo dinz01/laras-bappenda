@@ -157,7 +157,7 @@ it('force deletes archive, cleans files, and cascades relations', function () {
     $this->assertDatabaseHas('audit_logs', [
         'auditable_type' => Arsip::class,
         'auditable_id' => $arsip->id,
-        'event' => 'arsip.force_deleted.manual',
+        'event' => 'arsip.force_deleted',
         'user_id' => $superAdmin->id,
     ]);
 });
@@ -187,7 +187,6 @@ it('automatically force deletes archives older than 24 hours via scheduler comma
     $this->assertDatabaseHas('audit_logs', [
         'auditable_type' => Arsip::class,
         'auditable_id' => $arsipExpired->id,
-        'event' => 'arsip.force_deleted.scheduler',
-        'user_agent' => 'Scheduler',
+        'event' => 'arsip.force_deleted',
     ]);
 });
