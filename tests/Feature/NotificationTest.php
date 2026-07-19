@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Notification;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -21,14 +22,21 @@ test('unauthenticated users are redirected to login', function () {
 });
 
 test('authenticated user can view notification center page', function () {
-    Notification::factory()->count(3)->unread()->create(['user_id' => $this->user->id]);
+    $createdAt = CarbonImmutable::parse('2026-07-19 21:20:00', config('app.timezone'));
+    Notification::factory()->unread()->create([
+        'user_id' => $this->user->id,
+        'created_at' => $createdAt,
+        'updated_at' => $createdAt,
+    ]);
 
     $this->actingAs($this->user)
         ->get(route('notifications.index'))
         ->assertStatus(200)
         ->assertInertia(fn ($page) => $page
             ->component('notifications/index')
-            ->has('notifications')
+            ->has('notifications.data', 1)
+            ->where('notifications.data.0.created_at', '2026-07-19T21:20:00+07:00')
+            ->where('notifications.data.0.created_at_human', '19 Jul 2026 21:20 WIB')
             ->has('filters')
             ->has('types')
         );

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Arsip;
 use App\Services\RecycleBinService;
+use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -36,8 +37,8 @@ class RecycleBinController extends Controller
                 'judul' => $a->judul,
                 'unit_organisasi' => $a->unitOrganisasi->nama ?? '-',
                 'dihapus_oleh' => $a->creator->name ?? '-',
-                'deleted_at' => $a->deleted_at?->toDateTimeString(),
-                'sisa_waktu_detik' => max(0, (int) now()->diffInSeconds($a->deleted_at?->addHours(24) ?? now(), false)),
+                'deleted_at' => AppDateTime::dateTime($a->deleted_at),
+                'sisa_waktu_detik' => max(0, (int) now()->diffInSeconds($a->deleted_at?->copy()->addHours(24) ?? now(), false)),
             ]),
         ]);
     }

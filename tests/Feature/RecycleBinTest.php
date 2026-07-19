@@ -7,6 +7,7 @@ use App\Models\DokumenArsip;
 use App\Models\DokumenArsipVersion;
 use App\Models\StatusArsip;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
@@ -36,6 +37,11 @@ it('restricts recycle bin actions to Super Administrator role', function () {
 
     $arsip = Arsip::factory()->create();
     $arsip->delete(); // Soft delete
+    $deletedAt = CarbonImmutable::parse('2026-07-19 21:20:00', config('app.timezone'));
+    $arsip->forceFill([
+        'deleted_at' => $deletedAt,
+        'updated_at' => $deletedAt,
+    ])->save();
 
     // 1. Regular User cannot view recycle bin
     $this->actingAs($regularUser)
@@ -56,7 +62,10 @@ it('restricts recycle bin actions to Super Administrator role', function () {
     $this->actingAs($superAdmin)
         ->get(route('admin.recycle-bin.index'))
         ->assertStatus(200)
-        ->assertInertia(fn ($page) => $page->component('admin/recycle-bin/index'));
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/recycle-bin/index')
+            ->where('arsips.data.0.deleted_at', '19 Jul 2026 21:20 WIB')
+        );
 });
 
 it('performs soft delete and records audit log', function () {

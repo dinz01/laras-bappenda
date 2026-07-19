@@ -1,9 +1,13 @@
 <?php
 
+use App\Enums\WorkflowStatus;
 use App\Models\Arsip;
+use App\Models\ArsipWorkflowHistory;
 use App\Models\DokumenArsip;
+use App\Models\DokumenArsipVersion;
 use App\Models\KlasifikasiArsip;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -105,13 +109,47 @@ it('allows storing an archive without file', function () {
 });
 
 it('allows viewing archive details', function () {
-    $arsip = Arsip::factory()->create();
+    $createdAt = CarbonImmutable::parse('2026-07-19 21:20:00', config('app.timezone'));
+    $arsip = Arsip::factory()->create([
+        'created_at' => $createdAt,
+        'updated_at' => $createdAt,
+    ]);
+    $dokumen = DokumenArsip::factory()->create([
+        'arsip_id' => $arsip->id,
+        'uploaded_at' => $createdAt,
+        'ocr_processed_at' => $createdAt,
+        'created_at' => $createdAt,
+        'updated_at' => $createdAt,
+    ]);
+    DokumenArsipVersion::factory()->create([
+        'dokumen_arsip_id' => $dokumen->id,
+        'created_at' => $createdAt,
+        'updated_at' => $createdAt,
+    ]);
+    $history = ArsipWorkflowHistory::create([
+        'arsip_id' => $arsip->id,
+        'status_lama' => WorkflowStatus::Draft->value,
+        'status_baru' => WorkflowStatus::Review->value,
+        'user_id' => $this->user->id,
+    ]);
+    $history->forceFill([
+        'created_at' => $createdAt,
+        'updated_at' => $createdAt,
+    ])->save();
 
     $response = $this->actingAs($this->user)
         ->get(route('arsip.show', $arsip));
 
     $response->assertOk()
-        ->assertInertia(fn ($page) => $page->component('arsip/show')->has('arsip'));
+        ->assertInertia(fn ($page) => $page
+            ->component('arsip/show')
+            ->where('arsip.created_at', '19 Jul 2026 21:20 WIB')
+            ->where('arsip.updated_at', '19 Jul 2026 21:20 WIB')
+            ->where('arsip.dokumen.uploaded_at', '19 Jul 2026 21:20 WIB')
+            ->where('arsip.dokumen.ocr_processed_at', '19 Jul 2026 21:20 WIB')
+            ->where('arsip.dokumen.versions.0.created_at', '19 Jul 2026 21:20 WIB')
+            ->where('workflowHistory.0.created_at', '19 Jul 2026 21:20 WIB')
+        );
 });
 
 it('allows viewing edit form', function () {

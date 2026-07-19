@@ -146,7 +146,7 @@ export default function RecycleBinIndex({ arsips }: RecycleBinProps) {
                                                     <TableCell>{arsip.unit_organisasi}</TableCell>
                                                     <TableCell className="text-muted-foreground">{arsip.dihapus_oleh}</TableCell>
                                                     <TableCell className="text-xs text-muted-foreground">
-                                                        {new Date(arsip.deleted_at).toLocaleString('id-ID')}
+                                                        {arsip.deleted_at}
                                                     </TableCell>
                                                     <TableCell>
                                                         <Countdown initialSeconds={arsip.sisa_waktu_detik} />

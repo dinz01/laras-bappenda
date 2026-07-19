@@ -371,11 +371,7 @@ return;
                                                     <>
                                                         <span>·</span>
                                                         <span>
-                                                            Diunggah {new Date(arsip.dokumen.uploaded_at).toLocaleDateString('id-ID', {
-                                                                day: 'numeric',
-                                                                month: 'long',
-                                                                year: 'numeric',
-                                                            })}
+                                                            Diunggah {arsip.dokumen.uploaded_at}
                                                         </span>
                                                     </>
                                                 )}
@@ -495,11 +491,7 @@ return;
                                                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                                                         <span className="inline-flex items-center gap-1">
                                                             <Clock className="h-3 w-3" />
-                                                            {new Date(ver.created_at).toLocaleDateString('id-ID', {
-                                                                day: 'numeric',
-                                                                month: 'short',
-                                                                year: 'numeric',
-                                                            })}
+                                                            {ver.created_at}
                                                         </span>
                                                         {ver.uploader && (
                                                             <span className="inline-flex items-center gap-1">
@@ -644,12 +636,7 @@ return;
                                                                 {workflowStatusLabel(history.status_baru)}
                                                             </span>
                                                             <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                                                {new Date(history.created_at).toLocaleDateString('id-ID', {
-                                                                    day: 'numeric',
-                                                                    month: 'short',
-                                                                    hour: '2-digit',
-                                                                    minute: '2-digit'
-                                                                })}
+                                                                {history.created_at}
                                                             </span>
                                                         </div>
                                                         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
@@ -724,9 +711,7 @@ return;
                                             />
                                             <DetailRow 
                                                 label="Tanggal Proses" 
-                                                value={arsip.dokumen.ocr_processed_at 
-                                                    ? new Date(arsip.dokumen.ocr_processed_at).toLocaleString('id-ID') 
-                                                    : '-'} 
+                                                value={arsip.dokumen.ocr_processed_at ?? '-'}
                                             />
                                             
                                             {arsip.dokumen.ocr_text && (
@@ -777,8 +762,8 @@ return;
                         <ContentCard title="Informasi Sistem" description="Data teknis dan pencatatan">
                             <div className="space-y-3">
                                 <DetailRow label="Dibuat oleh" value={arsip.creator?.name} />
-                                <DetailRow label="Tanggal dibuat" value={new Date(arsip.created_at).toLocaleString('id-ID')} />
-                                <DetailRow label="Diperbarui" value={new Date(arsip.updated_at).toLocaleString('id-ID')} />
+                                <DetailRow label="Tanggal dibuat" value={arsip.created_at} />
+                                <DetailRow label="Diperbarui" value={arsip.updated_at} />
                             </div>
                         </ContentCard>
 

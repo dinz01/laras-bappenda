@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\WorkflowStatus;
 use App\Models\Arsip;
 use App\Models\ArsipWorkflowHistory;
+use App\Support\AppDateTime;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -180,7 +181,7 @@ class DashboardService
                 'judul' => $h->arsip->judul,
                 'aktivitas' => 'Tahap berubah ke '.$h->status_baru->label(),
                 'user' => $h->user ? $h->user->name : 'Sistem',
-                'tanggal' => $h->created_at ? $h->created_at->toDateTimeString() : '',
+                'tanggal' => AppDateTime::dateTime($h->created_at) ?? '',
                 'sort_key' => $h->created_at ? $h->created_at->timestamp : 0,
             ]);
 
@@ -196,7 +197,7 @@ class DashboardService
                 'judul' => $a->judul,
                 'aktivitas' => 'Arsip dibuat',
                 'user' => $a->creator ? $a->creator->name : 'Sistem',
-                'tanggal' => $a->created_at ? $a->created_at->toDateTimeString() : '',
+                'tanggal' => AppDateTime::dateTime($a->created_at) ?? '',
                 'sort_key' => $a->created_at ? $a->created_at->timestamp : 0,
             ]);
 

@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateArsipRequest;
 use App\Interfaces\SearchServiceInterface;
 use App\Jobs\ProcessOcrJob;
 use App\Models\Arsip;
+use App\Models\ArsipWorkflowHistory;
 use App\Models\DokumenArsipVersion;
 use App\Models\JenisDokumen;
 use App\Models\KlasifikasiArsip;
@@ -21,6 +22,7 @@ use App\Services\DocumentUploadService;
 use App\Services\DocumentVersionService;
 use App\Services\NotificationService;
 use App\Services\WorkflowService;
+use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -165,8 +167,10 @@ class ArsipController extends Controller
         $allowedTransitions = $this->workflowService->allowedTransitions($arsip);
 
         return Inertia::render('arsip/show', [
-            'arsip' => $arsip,
-            'workflowHistory' => $workflowHistory,
+            'arsip' => $this->formatArsipForShow($arsip),
+            'workflowHistory' => $workflowHistory
+                ->map(fn (ArsipWorkflowHistory $history): array => $this->formatWorkflowHistoryForShow($history))
+                ->all(),
             'allowedTransitions' => $allowedTransitions,
         ]);
     }
@@ -478,5 +482,46 @@ class ArsipController extends Controller
 
         return redirect()->route('arsip.show', $arsip)
             ->with('success', "Tahap arsip berhasil dilanjutkan ke: {$targetStatus->label()}");
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formatArsipForShow(Arsip $arsip): array
+    {
+        $data = $arsip->toArray();
+        $data['tanggal_arsip'] = AppDateTime::date($arsip->tanggal_arsip);
+        $data['created_at'] = AppDateTime::dateTime($arsip->created_at);
+        $data['updated_at'] = AppDateTime::dateTime($arsip->updated_at);
+
+        if ($arsip->dokumen !== null) {
+            $data['dokumen']['uploaded_at'] = AppDateTime::dateTime($arsip->dokumen->uploaded_at);
+            $data['dokumen']['ocr_processed_at'] = AppDateTime::dateTime($arsip->dokumen->ocr_processed_at);
+            $data['dokumen']['created_at'] = AppDateTime::dateTime($arsip->dokumen->created_at);
+            $data['dokumen']['updated_at'] = AppDateTime::dateTime($arsip->dokumen->updated_at);
+            $data['dokumen']['versions'] = $arsip->dokumen->versions
+                ->map(function (DokumenArsipVersion $version): array {
+                    $versionData = $version->toArray();
+                    $versionData['created_at'] = AppDateTime::dateTime($version->created_at);
+                    $versionData['updated_at'] = AppDateTime::dateTime($version->updated_at);
+
+                    return $versionData;
+                })
+                ->all();
+        }
+
+        return $data;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formatWorkflowHistoryForShow(ArsipWorkflowHistory $history): array
+    {
+        $data = $history->toArray();
+        $data['created_at'] = AppDateTime::dateTime($history->created_at);
+        $data['updated_at'] = AppDateTime::dateTime($history->updated_at);
+
+        return $data;
     }
 }

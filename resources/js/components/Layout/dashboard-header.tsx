@@ -1,11 +1,16 @@
+import { usePage } from '@inertiajs/react';
 import type { User } from '@/types';
 
 interface DashboardHeaderProps {
     user: User;
 }
 
-function getGreeting(): string {
-    const hour = new Date().getHours();
+function getGreeting(timeZone: string): string {
+    const hour = Number(new Intl.DateTimeFormat('id-ID', {
+        hour: '2-digit',
+        hour12: false,
+        timeZone,
+    }).format(new Date()));
 
     if (hour >= 5 && hour < 12) {
         return 'Selamat Pagi';
@@ -18,18 +23,20 @@ function getGreeting(): string {
     }
 }
 
-function getFormattedDate(): string {
+function getFormattedDate(timeZone: string): string {
     return new Date().toLocaleDateString('id-ID', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric',
+        timeZone,
     });
 }
 
 export function DashboardHeader({ user }: DashboardHeaderProps) {
-    const greeting = getGreeting();
-    const today = getFormattedDate();
+    const { appTimezone } = usePage().props;
+    const greeting = getGreeting(appTimezone);
+    const today = getFormattedDate(appTimezone);
 
     return (
         <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">

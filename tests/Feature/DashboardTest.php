@@ -3,9 +3,11 @@
 use App\Enums\WorkflowStatus;
 use App\Models\Arsip;
 use App\Models\ArsipWorkflowHistory;
+use App\Models\Notification;
 use App\Models\StatusArsip;
 use App\Models\User;
 use App\Services\DashboardService;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -51,11 +53,14 @@ it('retrieves recent dashboard activities sorted by date', function () {
     $service = new DashboardService;
 
     $user = User::factory()->create(['name' => 'John Doe']);
+    $createdAt = CarbonImmutable::parse('2026-07-19 21:20:00', config('app.timezone'));
 
     // Create an archive (which will be in recent activities as Created)
     $arsip = Arsip::factory()->create([
         'judul' => 'Arsip Penting',
         'created_by' => $user->id,
+        'created_at' => $createdAt,
+        'updated_at' => $createdAt,
     ]);
 
     $activities = $service->recentActivities();
@@ -65,7 +70,8 @@ it('retrieves recent dashboard activities sorted by date', function () {
     $activity = $activities->first();
     expect($activity['judul'])->toBe('Arsip Penting')
         ->and($activity['user'])->toBe('John Doe')
-        ->and($activity['aktivitas'])->toBe('Arsip dibuat');
+        ->and($activity['aktivitas'])->toBe('Arsip dibuat')
+        ->and($activity['tanggal'])->toBe('19 Jul 2026 21:20 WIB');
 });
 
 it('handles soft-deleted archives in recent activities without crashing', function () {
@@ -101,6 +107,15 @@ it('handles soft-deleted archives in recent activities without crashing', functi
 
 it('loads dashboard page with successful Inertia props for authenticated user', function () {
     $user = User::factory()->create();
+    $createdAt = CarbonImmutable::parse('2026-07-19 21:20:00', config('app.timezone'));
+    $notification = Notification::factory()->create([
+        'user_id' => $user->id,
+    ]);
+    $notification->forceFill([
+        'created_at' => $createdAt,
+        'updated_at' => $createdAt,
+    ])->save();
+
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));
@@ -115,5 +130,7 @@ it('loads dashboard page with successful Inertia props for authenticated user', 
         ->has('topKlasifikasi')
         ->has('recentActivities')
         ->has('mendekatiRetensi')
+        ->where('notifications.latest.0.created_at', '2026-07-19T21:20:00+07:00')
+        ->where('notifications.latest.0.created_at_human', '19 Jul 2026 21:20 WIB')
     );
 });

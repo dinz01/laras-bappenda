@@ -48,7 +48,7 @@ type NotificationsProps = {
     types: Array<{ value: string; label: string }>;
 };
 
-function timeAgo(dateString: string | null): string {
+function timeAgo(dateString: string | null, fallback: string | null): string {
     if (!dateString) {
         return '-';
     }
@@ -71,7 +71,7 @@ function timeAgo(dateString: string | null): string {
         return `${hours} jam lalu`;
     }
 
-    return new Date(dateString).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    return fallback ?? dateString;
 }
 
 const colorMap: Record<string, string> = {
@@ -236,7 +236,7 @@ export default function NotificationsIndex({ notifications, filters, types }: No
                                                         </span>
                                                     </TableCell>
                                                     <TableCell className="text-xs text-muted-foreground">
-                                                        {timeAgo(notif.created_at)}
+                                                        {timeAgo(notif.created_at, notif.created_at_human)}
                                                     </TableCell>
                                                     <TableCell>
                                                         <Badge variant={notif.is_read ? 'secondary' : 'default'} className="text-xs">

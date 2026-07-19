@@ -10,6 +10,7 @@ export type NotificationItem = {
     url: string | null;
     is_read: boolean;
     created_at: string | null;
+    created_at_human: string | null;
 };
 
 export type SharedNotifications = {
@@ -28,6 +29,7 @@ declare module '@inertiajs/core' {
     export interface InertiaConfig {
         sharedPageProps: {
             name: string;
+            appTimezone: string;
             auth: Auth;
             sidebarOpen: boolean;
             notifications: SharedNotifications;

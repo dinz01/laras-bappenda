@@ -9,6 +9,7 @@ use App\Models\DokumenArsip;
 use App\Models\DokumenArsipVersion;
 use App\Models\KlasifikasiArsip;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -20,7 +21,7 @@ beforeEach(function () {
     Storage::fake('local');
     Role::findOrCreate('Super Administrator');
 
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create(['name' => 'Admin Audit']);
     $this->user->assignRole('Super Administrator');
 });
 
@@ -224,4 +225,133 @@ it('logs workflow.changed when advancing status', function () {
     $log = AuditLog::where('event', 'workflow.changed')->first();
     expect($log->old_values['workflow_status'])->toBe('draft')
         ->and($log->new_values['workflow_status'])->toBe('review');
+});
+
+it('renders audit log index with paginated logs and statistics', function () {
+    $arsip = Arsip::factory()->create([
+        'nomor_arsip' => 'AUD-2026-001',
+        'judul' => 'Audit Laporan Keuangan',
+    ]);
+    $createdAt = CarbonImmutable::parse('2026-07-19 21:20:00', config('app.timezone'));
+
+    $auditLog = AuditLog::create([
+        'auditable_type' => Arsip::class,
+        'auditable_id' => $arsip->id,
+        'event' => 'arsip.created',
+        'old_values' => null,
+        'new_values' => ['nomor_arsip' => $arsip->nomor_arsip],
+        'user_id' => $this->user->id,
+        'ip_address' => '127.0.0.1',
+        'user_agent' => 'Pest Browser',
+    ]);
+    $auditLog->forceFill([
+        'created_at' => $createdAt,
+        'updated_at' => $createdAt,
+    ])->save();
+
+    $this->actingAs($this->user)
+        ->get(route('admin.audit-log.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/audit-log/index')
+            ->has('auditLogs.data', 1)
+            ->where('auditLogs.data.0.event', 'arsip.created')
+            ->where('auditLogs.data.0.archive.nomor_arsip', 'AUD-2026-001')
+            ->where('auditLogs.data.0.ip_address', '127.0.0.1')
+            ->where('auditLogs.data.0.user_agent', 'Pest Browser')
+            ->where('auditLogs.data.0.created_at', '2026-07-19T21:20:00+07:00')
+            ->where('auditLogs.data.0.created_at_human', '19 Jul 2026 21:20 WIB')
+            ->where('statistics.total', 1)
+        );
+});
+
+it('searches audit logs by user archive and event', function (string $search) {
+    $matchingUser = User::factory()->create(['name' => 'Rani Auditor']);
+    $matchingArsip = Arsip::factory()->create([
+        'nomor_arsip' => 'SEARCH-AUD-001',
+        'judul' => 'Dokumen Audit Khusus',
+    ]);
+    $otherArsip = Arsip::factory()->create([
+        'nomor_arsip' => 'OTHER-001',
+        'judul' => 'Dokumen Lain',
+    ]);
+
+    AuditLog::create([
+        'auditable_type' => Arsip::class,
+        'auditable_id' => $matchingArsip->id,
+        'event' => 'arsip.updated',
+        'old_values' => ['judul' => 'Lama'],
+        'new_values' => ['judul' => 'Baru'],
+        'user_id' => $matchingUser->id,
+    ]);
+
+    AuditLog::create([
+        'auditable_type' => Arsip::class,
+        'auditable_id' => $otherArsip->id,
+        'event' => 'arsip.deleted',
+        'old_values' => ['judul' => 'Dokumen Lain'],
+        'new_values' => null,
+        'user_id' => $this->user->id,
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('admin.audit-log.index', ['search' => $search]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/audit-log/index')
+            ->has('auditLogs.data', 1)
+            ->where('auditLogs.data.0.event', 'arsip.updated')
+            ->where('filters.search', $search)
+        );
+})->with([
+    'user name' => 'Rani',
+    'archive number' => 'SEARCH-AUD',
+    'archive title' => 'Khusus',
+    'event' => 'arsip.updated',
+]);
+
+it('filters audit logs by category user type and date range', function () {
+    $today = CarbonImmutable::parse('2026-07-19 10:00:00');
+    $yesterday = $today->subDay();
+    $arsip = Arsip::factory()->create();
+
+    AuditLog::create([
+        'auditable_type' => Arsip::class,
+        'auditable_id' => $arsip->id,
+        'event' => 'dokumen.uploaded',
+        'old_values' => null,
+        'new_values' => ['nama_file' => 'today.pdf'],
+        'user_id' => $this->user->id,
+        'created_at' => $today,
+        'updated_at' => $today,
+    ]);
+
+    AuditLog::create([
+        'auditable_type' => Arsip::class,
+        'auditable_id' => $arsip->id,
+        'event' => 'arsip.created',
+        'old_values' => null,
+        'new_values' => ['judul' => 'System'],
+        'user_id' => null,
+        'created_at' => $yesterday,
+        'updated_at' => $yesterday,
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('admin.audit-log.index', [
+            'event_category' => 'dokumen',
+            'user_type' => 'user',
+            'date_from' => '2026-07-19',
+            'date_until' => '2026-07-19',
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/audit-log/index')
+            ->has('auditLogs.data', 1)
+            ->where('auditLogs.data.0.event', 'dokumen.uploaded')
+            ->where('filters.event_category', 'dokumen')
+            ->where('filters.user_type', 'user')
+            ->where('filters.date_from', '2026-07-19')
+            ->where('filters.date_until', '2026-07-19')
+        );
 });

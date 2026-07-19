@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\NotificationType;
 use App\Models\Arsip;
 use App\Models\User;
+use App\Support\AppDateTime;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Storage;
@@ -43,7 +44,7 @@ class RecycleBinService
      */
     public function restore(Arsip $arsip, User $actor, Request $request): void
     {
-        $oldDeletedAt = $arsip->deleted_at?->toDateTimeString();
+        $oldDeletedAt = AppDateTime::dateTime($arsip->deleted_at);
 
         $arsip->restore();
 
@@ -80,7 +81,7 @@ class RecycleBinService
             [
                 'nomor_arsip' => $arsip->nomor_arsip,
                 'judul' => $arsip->judul,
-                'deleted_at' => $arsip->deleted_at?->toDateTimeString(),
+                'deleted_at' => AppDateTime::dateTime($arsip->deleted_at),
             ],
             null,
             $actor,
@@ -131,7 +132,7 @@ class RecycleBinService
                     [
                         'nomor_arsip' => $arsip->nomor_arsip,
                         'judul' => $arsip->judul,
-                        'deleted_at' => $arsip->deleted_at?->toDateTimeString(),
+                        'deleted_at' => AppDateTime::dateTime($arsip->deleted_at),
                     ],
                     null,
                     null,

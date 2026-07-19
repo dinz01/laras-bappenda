@@ -15,7 +15,7 @@ import {
 } from '@/routes/notifications';
 import type { NotificationItem } from '@/types/global';
 
-function timeAgo(dateString: string | null): string {
+function timeAgo(dateString: string | null, fallback: string | null): string {
     if (!dateString) {
 return '-';
 }
@@ -40,7 +40,7 @@ return `${hours} jam lalu`;
 
     const days = Math.floor(hours / 24);
 
-    return `${days} hari lalu`;
+    return days < 7 ? `${days} hari lalu` : fallback ?? dateString;
 }
 
 export type NotificationBellProps = {
@@ -129,7 +129,7 @@ export function NotificationBell({
                                             <span className="h-2 w-2 rounded-full bg-blue-500" />
                                         )}
                                         <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                            {timeAgo(notif.created_at)}
+                                            {timeAgo(notif.created_at, notif.created_at_human)}
                                         </span>
                                     </div>
                                 </div>

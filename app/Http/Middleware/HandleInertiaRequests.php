@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\NotificationService;
+use App\Support\AppDateTime;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -56,7 +57,8 @@ class HandleInertiaRequests extends Middleware
                         'type_color' => $n->type->color(),
                         'url' => $n->url,
                         'is_read' => $n->is_read,
-                        'created_at' => $n->created_at?->toDateTimeString(),
+                        'created_at' => AppDateTime::iso($n->created_at),
+                        'created_at_human' => AppDateTime::dateTime($n->created_at),
                     ])->values()->all(),
                 ];
             } catch (\Throwable) {
@@ -67,6 +69,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'appTimezone' => config('app.timezone'),
             'auth' => [
                 'user' => $user ? array_merge($user->toArray(), [
                     'roles' => $user->getRoleNames(),

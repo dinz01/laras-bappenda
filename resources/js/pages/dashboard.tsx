@@ -353,7 +353,7 @@ export default function Dashboard({
                                                         {act.judul} <span className="text-[10px] text-muted-foreground">({act.nomor_arsip})</span>
                                                     </Link>
                                                     <span className="text-[10px] text-muted-foreground shrink-0 whitespace-nowrap">
-                                                        {formatTanggal(act.tanggal)}
+                                                        {act.tanggal}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -474,25 +474,6 @@ export default function Dashboard({
 
 function numberFormat(val: number): string {
     return new Intl.NumberFormat('id-ID').format(val);
-}
-
-function formatTanggal(tanggalStr: string): string {
-    if (!tanggalStr) {
-return '';
-}
-
-    try {
-        const d = new Date(tanggalStr);
-
-        return d.toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    } catch {
-        return tanggalStr;
-    }
 }
 
 Dashboard.layout = {

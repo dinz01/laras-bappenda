@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationType;
 use App\Models\Notification;
 use App\Services\NotificationService;
+use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -41,7 +42,8 @@ class NotificationController extends Controller
                 'type_color' => $n->type->color(),
                 'url' => $n->url,
                 'is_read' => $n->is_read,
-                'created_at' => $n->created_at?->toDateTimeString(),
+                'created_at' => AppDateTime::iso($n->created_at),
+                'created_at_human' => AppDateTime::dateTime($n->created_at),
             ]),
             'filters' => $filters,
             'types' => array_map(fn (NotificationType $t) => [
