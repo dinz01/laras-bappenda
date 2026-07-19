@@ -49,7 +49,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── Master Data ───────────────────────────────────────────────────────
     Route::prefix('master')->name('master.')->group(function () {
-        Route::get('unit-organisasi', [UnitOrganisasiController::class, 'index'])->name('unit-organisasi.index');
+        Route::resource('unit-organisasi', UnitOrganisasiController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['unit-organisasi' => 'unitOrganisasi']);
         Route::get('jabatan', [JabatanController::class, 'index'])->name('jabatan.index');
         Route::get('klasifikasi-arsip', [KlasifikasiArsipController::class, 'index'])->name('klasifikasi-arsip.index');
         Route::get('lokasi-arsip', [LokasiArsipController::class, 'index'])->name('lokasi-arsip.index');

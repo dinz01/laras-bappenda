@@ -21,10 +21,12 @@ use Illuminate\Support\Carbon;
  * @property int|null $parent_id
  * @property int $urutan
  * @property string $status
+ * @property int|null $arsips_count
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read UnitOrganisasi|null $parent
  * @property-read Collection<int, UnitOrganisasi> $children
+ * @property-read Collection<int, Arsip> $arsips
  *
  * @method static Builder<static> active()
  * @method static Builder<static> root()
@@ -87,6 +89,16 @@ class UnitOrganisasi extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    /**
+     * Relasi ke arsip yang menggunakan unit organisasi ini.
+     *
+     * @return HasMany<Arsip, $this>
+     */
+    public function arsips(): HasMany
+    {
+        return $this->hasMany(Arsip::class, 'unit_organisasi_id');
     }
 
     /**
