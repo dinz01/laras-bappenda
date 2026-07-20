@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -21,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read UnitOrganisasi|null $unitOrganisasi
  * @property-read Collection<int, User> $users
  *
  * @method static Builder<static> active()
@@ -72,6 +74,16 @@ class Jabatan extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class, 'jabatan_id');
+    }
+
+    /**
+     * Relasi ke unit organisasi.
+     *
+     * @return BelongsTo<UnitOrganisasi, $this>
+     */
+    public function unitOrganisasi(): BelongsTo
+    {
+        return $this->belongsTo(UnitOrganisasi::class, 'level');
     }
 
     /**
