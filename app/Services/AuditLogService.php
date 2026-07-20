@@ -151,11 +151,11 @@ class AuditLogService
         }
 
         if (! empty($filters['date_from'])) {
-            $query->whereDate('created_at', '>=', (string) $filters['date_from']);
+            $query->where('created_at', '>=', Carbon::parse((string) $filters['date_from'], (string) config('app.timezone'))->startOfDay());
         }
 
         if (! empty($filters['date_until'])) {
-            $query->whereDate('created_at', '<=', (string) $filters['date_until']);
+            $query->where('created_at', '<=', Carbon::parse((string) $filters['date_until'], (string) config('app.timezone'))->endOfDay());
         }
     }
 
