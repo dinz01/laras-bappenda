@@ -10,6 +10,7 @@ use App\Models\JenisArsip;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,41 +24,9 @@ class JenisArsipController extends Controller
     {
         $search = $request->string('search')->trim()->toString();
 
-        $jenisArsips = JenisArsip::query()
-            ->when($search !== '', function ($query) use ($search): void {
-                $query->where(function ($query) use ($search): void {
-                    $query
-                        ->where('kode', 'like', "%{$search}%")
-                        ->orWhere('nama', 'like', "%{$search}%")
-                        ->orWhere('deskripsi', 'like', "%{$search}%");
-                });
-            })
-            ->orderBy('nama')
-            ->paginate(10)
-            ->withQueryString()
-            ->through(fn (JenisArsip $jenisArsip): array => [
-                'id' => $jenisArsip->id,
-                'kode' => $jenisArsip->kode,
-                'nama' => $jenisArsip->nama,
-                'deskripsi' => $jenisArsip->deskripsi,
-                'status' => $jenisArsip->status,
-                'created_at' => AppDateTime::dateTime($jenisArsip->created_at),
-                'updated_at' => AppDateTime::dateTime($jenisArsip->updated_at),
-            ]);
-
-        $startOfMonth = Carbon::now((string) config('app.timezone'))->startOfMonth();
-        $endOfMonth = Carbon::now((string) config('app.timezone'))->endOfMonth();
-
-        $stats = [
-            'total_jenis_arsip' => JenisArsip::count(),
-            'aktif' => JenisArsip::where('status', 'active')->count(),
-            'nonaktif' => JenisArsip::where('status', 'inactive')->count(),
-            'dibuat_bulan_ini' => JenisArsip::whereBetween('created_at', [$startOfMonth, $endOfMonth])->count(),
-        ];
-
         return Inertia::render('master/jenis-arsip/index', [
-            'jenisArsips' => $jenisArsips,
-            'stats' => $stats,
+            'jenisArsips' => $this->paginatedJenisArsips($search),
+            'stats' => $this->statistics(),
             'filters' => [
                 'search' => $search,
             ],
@@ -89,9 +58,64 @@ class JenisArsipController extends Controller
      */
     public function destroy(JenisArsip $jenisArsip): RedirectResponse
     {
+        $usageCount = $this->usageCount($jenisArsip);
+
+        if ($usageCount > 0) {
+            return back()->withErrors([
+                'jenis_arsip' => "Jenis arsip tidak dapat dihapus karena masih digunakan oleh {$usageCount} data.",
+            ]);
+        }
+
         $jenisArsip->delete();
 
         return back()->with('success', 'Jenis arsip berhasil dihapus.');
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, array<string, mixed>>
+     */
+    private function paginatedJenisArsips(string $search): LengthAwarePaginator
+    {
+        $jenisArsips = JenisArsip::query()
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query
+                        ->where('kode', 'like', "%{$search}%")
+                        ->orWhere('nama', 'like', "%{$search}%")
+                        ->orWhere('deskripsi', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('nama')
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn (JenisArsip $jenisArsip): array => [
+                'id' => $jenisArsip->id,
+                'kode' => $jenisArsip->kode,
+                'nama' => $jenisArsip->nama,
+                'deskripsi' => $jenisArsip->deskripsi,
+                'status' => $jenisArsip->status,
+                'created_at' => AppDateTime::dateTime($jenisArsip->created_at),
+                'updated_at' => AppDateTime::dateTime($jenisArsip->updated_at),
+            ]);
+
+        return $jenisArsips;
+    }
+
+    /**
+     * @return array{total_jenis_arsip: int, aktif: int, nonaktif: int, dibuat_bulan_ini: int}
+     */
+    private function statistics(): array
+    {
+        $now = Carbon::now((string) config('app.timezone'));
+        $startOfMonth = $now->copy()->startOfMonth();
+        $endOfMonth = $now->copy()->endOfMonth();
+
+        return [
+            'total_jenis_arsip' => JenisArsip::count(),
+            'aktif' => JenisArsip::where('status', 'active')->count(),
+            'nonaktif' => JenisArsip::where('status', 'inactive')->count(),
+            'dibuat_bulan_ini' => JenisArsip::whereBetween('created_at', [$startOfMonth, $endOfMonth])->count(),
+        ];
     }
 
     /**
@@ -107,5 +131,10 @@ class JenisArsipController extends Controller
             'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
             'status' => (string) $validated['status'],
         ];
+    }
+
+    private function usageCount(JenisArsip $jenisArsip): int
+    {
+        return 0;
     }
 }

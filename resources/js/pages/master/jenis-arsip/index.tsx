@@ -313,6 +313,7 @@ export default function JenisArsipIndex({
     const [selectedJenisArsip, setSelectedJenisArsip] = useState<JenisArsip | null>(null);
     const [detailJenisArsip, setDetailJenisArsip] = useState<JenisArsip | null>(null);
     const [deleteJenisArsip, setDeleteJenisArsip] = useState<JenisArsip | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
     const updateFilters = (newParams: Record<string, string | null | undefined>) => {
@@ -372,10 +373,14 @@ export default function JenisArsipIndex({
         }
 
         setDeleting(true);
+        setDeleteError(null);
 
         router.delete(destroy({ jenisArsip: deleteJenisArsip.id }).url, {
             preserveScroll: true,
             onSuccess: () => setDeleteJenisArsip(null),
+            onError: (errors) => {
+                setDeleteError(errors.jenis_arsip || 'Jenis arsip gagal dihapus.');
+            },
             onFinish: () => setDeleting(false),
         });
     };
@@ -502,7 +507,10 @@ export default function JenisArsipIndex({
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem
-                                                                    onClick={() => setDeleteJenisArsip(jenisArsip)}
+                                                                    onClick={() => {
+                                                                        setDeleteError(null);
+                                                                        setDeleteJenisArsip(jenisArsip);
+                                                                    }}
                                                                     className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
@@ -567,10 +575,13 @@ export default function JenisArsipIndex({
             <DetailDialog jenisArsip={detailJenisArsip} onOpenChange={(open) => !open && setDetailJenisArsip(null)} />
             <ConfirmDialog
                 isOpen={deleteJenisArsip !== null}
-                onClose={() => setDeleteJenisArsip(null)}
+                onClose={() => {
+                    setDeleteError(null);
+                    setDeleteJenisArsip(null);
+                }}
                 onConfirm={confirmDelete}
                 title="Hapus Jenis Arsip"
-                description={`Hapus jenis arsip "${deleteJenisArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+                description={deleteError || `Hapus jenis arsip "${deleteJenisArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive

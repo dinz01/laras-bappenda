@@ -36,7 +36,12 @@ class StoreJenisArsipRequest extends FormRequest
                 'max:50',
                 Rule::unique('jenis_arsip', 'kode')->ignore($jenisArsipId),
             ],
-            'nama' => ['required', 'string', 'max:255'],
+            'nama' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('jenis_arsip', 'nama')->ignore($jenisArsipId),
+            ],
             'deskripsi' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
