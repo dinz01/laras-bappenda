@@ -56,7 +56,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->only(['index', 'store', 'update', 'destroy']);
         Route::get('klasifikasi-arsip', [KlasifikasiArsipController::class, 'index'])->name('klasifikasi-arsip.index');
         Route::get('lokasi-arsip', [LokasiArsipController::class, 'index'])->name('lokasi-arsip.index');
-        Route::get('jenis-arsip', [JenisArsipController::class, 'index'])->name('jenis-arsip.index');
+        Route::resource('jenis-arsip', JenisArsipController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['jenis-arsip' => 'jenisArsip']);
         Route::get('media-arsip', [MediaArsipController::class, 'index'])->name('media-arsip.index');
         Route::get('retensi-arsip', [RetensiArsipController::class, 'index'])->name('retensi-arsip.index');
     });

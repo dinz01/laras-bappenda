@@ -52,7 +52,7 @@ class JabatanController extends Controller
             'bulan_ini' => Jabatan::whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->count(),
-            ];
+        ];
 
         return Inertia::render('master/jabatan/index', [
             'jabatans' => $jabatans,
