@@ -72,7 +72,7 @@ class JenisArsipController extends Controller
     }
 
     /**
-     * @return LengthAwarePaginator<int, array<string, mixed>>
+     * @return LengthAwarePaginator<int, mixed>
      */
     private function paginatedJenisArsips(string $search): LengthAwarePaginator
     {
