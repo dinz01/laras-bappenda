@@ -63,7 +63,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('jenis-arsip', JenisArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['jenis-arsip' => 'jenisArsip']);
-        Route::get('media-arsip', [MediaArsipController::class, 'index'])->name('media-arsip.index');
+        Route::resource('media-arsip', MediaArsipController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['media-arsip' => 'mediaArsip']);
         Route::resource('retensi-arsip', RetensiArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['retensi-arsip' => 'retensiArsip']);
