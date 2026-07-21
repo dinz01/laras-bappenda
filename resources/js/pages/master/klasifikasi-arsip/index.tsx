@@ -495,8 +495,8 @@ export default function KlasifikasiArsipIndex({
                                                 <TableHead className="w-[130px] font-semibold">Kode</TableHead>
                                                 <TableHead className="font-semibold">Nama</TableHead>
                                                 <TableHead className="font-semibold">Deskripsi</TableHead>
-                                                <TableHead className="w-[110px] text-center font-semibold">R. Aktif</TableHead>
-                                                <TableHead className="w-[120px] text-center font-semibold">R. Inaktif</TableHead>
+                                                <TableHead className="w-[110px] text-center font-semibold">Retensi Aktif</TableHead>
+                                                <TableHead className="w-[120px] text-center font-semibold">Retensi Inaktif</TableHead>
                                                 <TableHead className="w-[110px] font-semibold">Status</TableHead>
                                                 <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
                                                 <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>

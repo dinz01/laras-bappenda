@@ -13,6 +13,7 @@ use App\Http\Controllers\Master\KlasifikasiArsipController;
 use App\Http\Controllers\Master\LokasiArsipController;
 use App\Http\Controllers\Master\MediaArsipController;
 use App\Http\Controllers\Master\RetensiArsipController;
+use App\Http\Controllers\Master\SifatArsipController;
 use App\Http\Controllers\Master\UnitOrganisasiController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengelolaan\PemusnahanController;
@@ -65,6 +66,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('retensi-arsip', RetensiArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['retensi-arsip' => 'retensiArsip']);
+        Route::resource('sifat-arsip', SifatArsipController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['sifat-arsip' => 'sifatArsip']);
     });
 
     // ── Administrasi ──────────────────────────────────────────────────────

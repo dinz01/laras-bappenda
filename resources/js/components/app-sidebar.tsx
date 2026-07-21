@@ -10,6 +10,7 @@ import {
     FileText,
     FolderOpen,
     LayoutDashboard,
+    Lock,
     MapPin,
     ScrollText,
     ShieldCheck,
@@ -42,6 +43,7 @@ import { index as klasifikasiArsipIndex } from '@/routes/master/klasifikasi-arsi
 import { index as lokasiArsipIndex } from '@/routes/master/lokasi-arsip';
 import { index as mediaArsipIndex } from '@/routes/master/media-arsip';
 import { index as retensiArsipIndex } from '@/routes/master/retensi-arsip';
+import { index as sifatArsipIndex } from '@/routes/master/sifat-arsip';
 import { index as unitOrganisasiIndex } from '@/routes/master/unit-organisasi';
 import { index as pemusnahanIndex } from '@/routes/pemusnahan';
 import { index as permohonanIndex } from '@/routes/permohonan';
@@ -114,6 +116,11 @@ const masterNavItems: NavItem[] = [
         title: 'Media Arsip',
         href: mediaArsipIndex.url(),
         icon: ScrollText,
+    },
+    {
+        title: 'Sifat Arsip',
+        href: sifatArsipIndex.url(),
+        icon: Lock,
     },
 ];
 
