@@ -5,16 +5,140 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreRetensiArsipRequest;
+use App\Models\RetensiArsip;
+use App\Support\AppDateTime;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RetensiArsipController extends Controller
 {
     /**
-     * Display a listing of the retensi arsip (master data).
+     * Display a listing of the retensi arsip.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return Inertia::render('master/retensi-arsip/index');
+        $search = $request->string('search')->trim()->toString();
+
+        return Inertia::render('master/retensi-arsip/index', [
+            'retensiArsips' => $this->paginatedRetensiArsips($search),
+            'stats' => $this->statistics(),
+            'filters' => [
+                'search' => $search,
+            ],
+        ]);
+    }
+
+    /**
+     * Store a newly created retensi arsip.
+     */
+    public function store(StoreRetensiArsipRequest $request): RedirectResponse
+    {
+        RetensiArsip::create($this->validatedData($request));
+
+        return back()->with('success', 'Retensi arsip berhasil ditambahkan.');
+    }
+
+    /**
+     * Update the specified retensi arsip.
+     */
+    public function update(StoreRetensiArsipRequest $request, RetensiArsip $retensiArsip): RedirectResponse
+    {
+        $retensiArsip->update($this->validatedData($request));
+
+        return back()->with('success', 'Retensi arsip berhasil diperbarui.');
+    }
+
+    /**
+     * Remove the specified retensi arsip.
+     */
+    public function destroy(RetensiArsip $retensiArsip): RedirectResponse
+    {
+        $usageCount = $this->usageCount($retensiArsip);
+
+        if ($usageCount > 0) {
+            return back()->withErrors([
+                'retensi_arsip' => "Retensi arsip tidak dapat dihapus karena masih digunakan oleh {$usageCount} data.",
+            ]);
+        }
+
+        $retensiArsip->delete();
+
+        return back()->with('success', 'Retensi arsip berhasil dihapus.');
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, mixed>
+     */
+    private function paginatedRetensiArsips(string $search): LengthAwarePaginator
+    {
+        $retensiArsips = RetensiArsip::query()
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query
+                        ->where('kode', 'like', "%{$search}%")
+                        ->orWhere('nama', 'like', "%{$search}%")
+                        ->orWhere('keterangan', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('nama')
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn (RetensiArsip $retensiArsip): array => [
+                'id' => $retensiArsip->id,
+                'kode' => $retensiArsip->kode,
+                'nama' => $retensiArsip->nama,
+                'retensi_aktif' => $retensiArsip->retensi_aktif,
+                'retensi_inaktif' => $retensiArsip->retensi_inaktif,
+                'keterangan' => $retensiArsip->keterangan,
+                'status' => $retensiArsip->status,
+                'created_at' => AppDateTime::dateTime($retensiArsip->created_at),
+                'updated_at' => AppDateTime::dateTime($retensiArsip->updated_at),
+            ]);
+
+        return $retensiArsips;
+    }
+
+    /**
+     * @return array{total_retensi_arsip: int, aktif: int, nonaktif: int, dibuat_bulan_ini: int}
+     */
+    private function statistics(): array
+    {
+        $now = Carbon::now((string) config('app.timezone'));
+        $startOfMonth = $now->copy()->startOfMonth();
+        $endOfMonth = $now->copy()->endOfMonth();
+
+        return [
+            'total_retensi_arsip' => RetensiArsip::count(),
+            'aktif' => RetensiArsip::where('status', 'active')->count(),
+            'nonaktif' => RetensiArsip::where('status', 'inactive')->count(),
+            'dibuat_bulan_ini' => RetensiArsip::whereBetween('created_at', [$startOfMonth, $endOfMonth])->count(),
+        ];
+    }
+
+    /**
+     * @return array{kode: string, nama: string, retensi_aktif: int, retensi_inaktif: int, keterangan: string|null, status: string}
+     */
+    private function validatedData(StoreRetensiArsipRequest $request): array
+    {
+        $validated = $request->validated();
+
+        return [
+            'kode' => (string) $validated['kode'],
+            'nama' => (string) $validated['nama'],
+            'retensi_aktif' => (int) $validated['retensi_aktif'],
+            'retensi_inaktif' => (int) $validated['retensi_inaktif'],
+            'keterangan' => isset($validated['keterangan']) ? (string) $validated['keterangan'] : null,
+            'status' => (string) $validated['status'],
+        ];
+    }
+
+    private function usageCount(RetensiArsip $retensiArsip): int
+    {
+        return 0;
     }
 }
