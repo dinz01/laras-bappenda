@@ -16,6 +16,7 @@ $routes = [
     'master.sifat-arsip.index',
     'master.status-arsip.index',
     'master.tingkat-akses-arsip.index',
+    'master.tingkat-perkembangan-arsip.index',
     'admin.pengguna.index',
     'admin.role.index',
     'admin.permission.index',

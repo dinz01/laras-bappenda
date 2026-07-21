@@ -16,6 +16,7 @@ use App\Http\Controllers\Master\RetensiArsipController;
 use App\Http\Controllers\Master\SifatArsipController;
 use App\Http\Controllers\Master\StatusArsipController;
 use App\Http\Controllers\Master\TingkatAksesArsipController;
+use App\Http\Controllers\Master\TingkatPerkembanganArsipController;
 use App\Http\Controllers\Master\UnitOrganisasiController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengelolaan\PemusnahanController;
@@ -81,6 +82,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('tingkat-akses-arsip', TingkatAksesArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['tingkat-akses-arsip' => 'tingkatAksesArsip']);
+        Route::resource('tingkat-perkembangan-arsip', TingkatPerkembanganArsipController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['tingkat-perkembangan-arsip' => 'tingkatPerkembanganArsip']);
     });
 
     // ── Administrasi ──────────────────────────────────────────────────────

@@ -8,6 +8,7 @@ import {
     FileKey2,
     FileStack,
     Key,
+    Layers,
     FileText,
     Flag,
     FolderOpen,
@@ -48,6 +49,7 @@ import { index as retensiArsipIndex } from '@/routes/master/retensi-arsip';
 import { index as sifatArsipIndex } from '@/routes/master/sifat-arsip';
 import { index as statusArsipIndex } from '@/routes/master/status-arsip';
 import { index as tingkatAksesArsipIndex } from '@/routes/master/tingkat-akses-arsip';
+import { index as tingkatPerkembanganArsipIndex } from '@/routes/master/tingkat-perkembangan-arsip';
 import { index as unitOrganisasiIndex } from '@/routes/master/unit-organisasi';
 import { index as pemusnahanIndex } from '@/routes/pemusnahan';
 import { index as permohonanIndex } from '@/routes/permohonan';
@@ -135,6 +137,11 @@ const masterNavItems: NavItem[] = [
         title: 'Tingkat Akses Arsip',
         href: tingkatAksesArsipIndex.url(),
         icon: Key,
+    },
+    {
+        title: 'Tingkat Perkembangan Arsip',
+        href: tingkatPerkembanganArsipIndex.url(),
+        icon: Layers,
     },
 ];
 
