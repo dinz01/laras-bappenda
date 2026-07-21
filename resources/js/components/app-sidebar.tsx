@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    Activity,
     Archive,
     ArchiveRestore,
     BookOpen,
@@ -50,6 +51,7 @@ import { index as sifatArsipIndex } from '@/routes/master/sifat-arsip';
 import { index as statusArsipIndex } from '@/routes/master/status-arsip';
 import { index as tingkatAksesArsipIndex } from '@/routes/master/tingkat-akses-arsip';
 import { index as tingkatPerkembanganArsipIndex } from '@/routes/master/tingkat-perkembangan-arsip';
+import { index as kondisiArsipIndex } from '@/routes/master/kondisi-arsip';
 import { index as unitOrganisasiIndex } from '@/routes/master/unit-organisasi';
 import { index as pemusnahanIndex } from '@/routes/pemusnahan';
 import { index as permohonanIndex } from '@/routes/permohonan';
@@ -142,6 +144,11 @@ const masterNavItems: NavItem[] = [
         title: 'Tingkat Perkembangan Arsip',
         href: tingkatPerkembanganArsipIndex.url(),
         icon: Layers,
+    },
+    {
+        title: 'Kondisi Arsip',
+        href: kondisiArsipIndex.url(),
+        icon: Activity,
     },
 ];
 

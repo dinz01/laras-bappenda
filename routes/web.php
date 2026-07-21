@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Master\JabatanController;
 use App\Http\Controllers\Master\JenisArsipController;
 use App\Http\Controllers\Master\KlasifikasiArsipController;
+use App\Http\Controllers\Master\KondisiArsipController;
 use App\Http\Controllers\Master\LokasiArsipController;
 use App\Http\Controllers\Master\MediaArsipController;
 use App\Http\Controllers\Master\RetensiArsipController;
@@ -85,6 +86,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('tingkat-perkembangan-arsip', TingkatPerkembanganArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['tingkat-perkembangan-arsip' => 'tingkatPerkembanganArsip']);
+        Route::resource('kondisi-arsip', KondisiArsipController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['kondisi-arsip' => 'kondisiArsip']);
     });
 
     // ── Administrasi ──────────────────────────────────────────────────────
