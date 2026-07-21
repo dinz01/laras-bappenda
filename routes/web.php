@@ -14,6 +14,7 @@ use App\Http\Controllers\Master\LokasiArsipController;
 use App\Http\Controllers\Master\MediaArsipController;
 use App\Http\Controllers\Master\RetensiArsipController;
 use App\Http\Controllers\Master\SifatArsipController;
+use App\Http\Controllers\Master\StatusArsipController;
 use App\Http\Controllers\Master\UnitOrganisasiController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Pengelolaan\PemusnahanController;
@@ -69,6 +70,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('sifat-arsip', SifatArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['sifat-arsip' => 'sifatArsip']);
+        Route::resource('status-arsip', StatusArsipController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['status-arsip' => 'statusArsip']);
     });
 
     // ── Administrasi ──────────────────────────────────────────────────────

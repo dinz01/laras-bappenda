@@ -14,6 +14,7 @@ $routes = [
     'master.media-arsip.index',
     'master.retensi-arsip.index',
     'master.sifat-arsip.index',
+    'master.status-arsip.index',
     'admin.pengguna.index',
     'admin.role.index',
     'admin.permission.index',

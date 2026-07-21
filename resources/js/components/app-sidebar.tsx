@@ -8,6 +8,7 @@ import {
     FileKey2,
     FileStack,
     FileText,
+    Flag,
     FolderOpen,
     LayoutDashboard,
     Lock,
@@ -44,6 +45,7 @@ import { index as lokasiArsipIndex } from '@/routes/master/lokasi-arsip';
 import { index as mediaArsipIndex } from '@/routes/master/media-arsip';
 import { index as retensiArsipIndex } from '@/routes/master/retensi-arsip';
 import { index as sifatArsipIndex } from '@/routes/master/sifat-arsip';
+import { index as statusArsipIndex } from '@/routes/master/status-arsip';
 import { index as unitOrganisasiIndex } from '@/routes/master/unit-organisasi';
 import { index as pemusnahanIndex } from '@/routes/pemusnahan';
 import { index as permohonanIndex } from '@/routes/permohonan';
@@ -121,6 +123,11 @@ const masterNavItems: NavItem[] = [
         title: 'Sifat Arsip',
         href: sifatArsipIndex.url(),
         icon: Lock,
+    },
+    {
+        title: 'Status Arsip',
+        href: statusArsipIndex.url(),
+        icon: Flag,
     },
 ];
 
