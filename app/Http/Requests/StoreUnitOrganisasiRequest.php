@@ -6,6 +6,7 @@ use App\Models\UnitOrganisasi;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreUnitOrganisasiRequest extends FormRequest
 {
@@ -43,8 +44,59 @@ class StoreUnitOrganisasiRequest extends FormRequest
                 Rule::unique('unit_organisasi', 'nama')->ignore($unitOrganisasiId),
             ],
             'singkatan' => ['nullable', 'string', 'max:50'],
+            'parent_id' => ['nullable', 'integer', 'exists:unit_organisasi,id'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function ($validator): void {
+            $parentId = $this->input('parent_id');
+            $unitOrganisasi = $this->route('unitOrganisasi');
+
+            if ($parentId === null || $parentId === '') {
+                return;
+            }
+
+            $parentId = (int) $parentId;
+
+            // Cannot set self as parent
+            if ($unitOrganisasi instanceof UnitOrganisasi && $unitOrganisasi->id === $parentId) {
+                $validator->errors()->add('parent_id', 'Unit tidak boleh menjadi parent dari dirinya sendiri.');
+
+                return;
+            }
+
+            // Cannot set descendant as parent (circular reference)
+            if ($unitOrganisasi instanceof UnitOrganisasi) {
+                $descendantIds = $this->getDescendantIds($unitOrganisasi);
+
+                if (in_array($parentId, $descendantIds, true)) {
+                    $validator->errors()->add('parent_id', 'Tidak boleh memilih unit turunan sebagai parent (circular reference).');
+                }
+            }
+        });
+    }
+
+    /**
+     * Recursively get all descendant IDs of a unit.
+     *
+     * @return list<int>
+     */
+    private function getDescendantIds(UnitOrganisasi $unit): array
+    {
+        $ids = [];
+
+        foreach ($unit->children as $child) {
+            $ids[] = $child->id;
+            $ids = array_merge($ids, $this->getDescendantIds($child));
+        }
+
+        return $ids;
     }
 
     /**
@@ -58,6 +110,7 @@ class StoreUnitOrganisasiRequest extends FormRequest
             'kode' => 'kode',
             'nama' => 'nama unit organisasi',
             'singkatan' => 'singkatan',
+            'parent_id' => 'parent unit',
             'status' => 'status',
         ];
     }
