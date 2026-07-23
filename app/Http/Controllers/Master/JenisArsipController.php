@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreJenisArsipRequest;
+use App\Http\Requests\UpdateJenisArsipRequest;
 use App\Models\JenisArsip;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
@@ -46,7 +47,7 @@ class JenisArsipController extends Controller
     /**
      * Update the specified jenis arsip.
      */
-    public function update(StoreJenisArsipRequest $request, JenisArsip $jenisArsip): RedirectResponse
+    public function update(UpdateJenisArsipRequest $request, JenisArsip $jenisArsip): RedirectResponse
     {
         $jenisArsip->update($this->validatedData($request));
 
@@ -121,7 +122,7 @@ class JenisArsipController extends Controller
     /**
      * @return array{kode: string, nama: string, deskripsi: string|null, status: string}
      */
-    private function validatedData(StoreJenisArsipRequest $request): array
+    private function validatedData(StoreJenisArsipRequest|UpdateJenisArsipRequest $request): array
     {
         $validated = $request->validated();
 
@@ -135,6 +136,6 @@ class JenisArsipController extends Controller
 
     private function usageCount(JenisArsip $jenisArsip): int
     {
-        return 0;
+        return $jenisArsip->arsip()->count();
     }
 }

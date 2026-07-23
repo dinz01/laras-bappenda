@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -19,11 +20,11 @@ use Illuminate\Support\Carbon;
  * @property string $kode
  * @property string $nama
  * @property string|null $deskripsi
- * @property int $retensi_aktif
- * @property int $retensi_inaktif
+ * @property int|null $retensi_arsip_id
  * @property string $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read RetensiArsip|null $retensiArsip
  * @property-read Collection<int, Arsip> $arsips
  *
  * @method static Builder<static> active()
@@ -51,8 +52,7 @@ class KlasifikasiArsip extends Model
         'kode',
         'nama',
         'deskripsi',
-        'retensi_aktif',
-        'retensi_inaktif',
+        'retensi_arsip_id',
         'status',
     ];
 
@@ -78,6 +78,16 @@ class KlasifikasiArsip extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
+    }
+
+    /**
+     * Relasi ke master retensi arsip.
+     *
+     * @return BelongsTo<RetensiArsip, $this>
+     */
+    public function retensiArsip(): BelongsTo
+    {
+        return $this->belongsTo(RetensiArsip::class, 'retensi_arsip_id');
     }
 
     /**

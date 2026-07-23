@@ -18,11 +18,9 @@ use Illuminate\Support\Carbon;
  * @property string $kode
  * @property string $nama
  * @property string|null $singkatan
- * @property int $level
  * @property string $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read UnitOrganisasi|null $unitOrganisasi
  * @property-read Collection<int, User> $users
  *
  * @method static Builder<static> active()
@@ -50,21 +48,8 @@ class Jabatan extends Model
         'kode',
         'nama',
         'singkatan',
-        'level',
         'status',
     ];
-
-    /**
-     * Attribute casting.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'level' => 'integer',
-        ];
-    }
 
     /**
      * Relasi ke seluruh user yang menduduki jabatan ini.
@@ -74,16 +59,6 @@ class Jabatan extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class, 'jabatan_id');
-    }
-
-    /**
-     * Relasi ke unit organisasi.
-     *
-     * @return BelongsTo<UnitOrganisasi, $this>
-     */
-    public function unitOrganisasi(): BelongsTo
-    {
-        return $this->belongsTo(UnitOrganisasi::class, 'level');
     }
 
     /**

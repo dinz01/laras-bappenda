@@ -94,6 +94,8 @@ class RetensiArsipController extends Controller
                 'nama' => $retensiArsip->nama,
                 'retensi_aktif' => $retensiArsip->retensi_aktif,
                 'retensi_inaktif' => $retensiArsip->retensi_inaktif,
+                'nasib_akhir' => $retensiArsip->nasib_akhir,
+                'metode_penyusutan_arsip_id' => $retensiArsip->metode_penyusutan_arsip_id,
                 'keterangan' => $retensiArsip->keterangan,
                 'status' => $retensiArsip->status,
                 'created_at' => AppDateTime::dateTime($retensiArsip->created_at),
@@ -121,7 +123,7 @@ class RetensiArsipController extends Controller
     }
 
     /**
-     * @return array{kode: string, nama: string, retensi_aktif: int, retensi_inaktif: int, keterangan: string|null, status: string}
+     * @return array{kode: string, nama: string, retensi_aktif: int, retensi_inaktif: int, nasib_akhir: string|null, metode_penyusutan_arsip_id: int|null, keterangan: string|null, status: string}
      */
     private function validatedData(StoreRetensiArsipRequest $request): array
     {
@@ -132,6 +134,8 @@ class RetensiArsipController extends Controller
             'nama' => (string) $validated['nama'],
             'retensi_aktif' => (int) $validated['retensi_aktif'],
             'retensi_inaktif' => (int) $validated['retensi_inaktif'],
+            'nasib_akhir' => isset($validated['nasib_akhir']) ? (string) $validated['nasib_akhir'] : null,
+            'metode_penyusutan_arsip_id' => isset($validated['metode_penyusutan_arsip_id']) ? (int) $validated['metode_penyusutan_arsip_id'] : null,
             'keterangan' => isset($validated['keterangan']) ? (string) $validated['keterangan'] : null,
             'status' => (string) $validated['status'],
         ];

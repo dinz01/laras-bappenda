@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\JenisArsip;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,23 +23,18 @@ class StoreJenisArsipRequest extends FormRequest
      */
     public function rules(): array
     {
-        $jenisArsip = $this->route('jenisArsip');
-        $jenisArsipId = $jenisArsip instanceof JenisArsip
-            ? $jenisArsip->id
-            : null;
-
         return [
             'kode' => [
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('jenis_arsip', 'kode')->ignore($jenisArsipId),
+                Rule::unique('jenis_arsip', 'kode'),
             ],
             'nama' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('jenis_arsip', 'nama')->ignore($jenisArsipId),
+                Rule::unique('jenis_arsip', 'nama'),
             ],
             'deskripsi' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['active', 'inactive'])],

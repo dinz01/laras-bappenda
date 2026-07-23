@@ -11,7 +11,9 @@ use App\Jobs\ProcessOcrJob;
 use App\Models\Arsip;
 use App\Models\ArsipWorkflowHistory;
 use App\Models\DokumenArsipVersion;
-use App\Models\JenisDokumen;
+use App\Models\JenisArsip;
+use App\Models\SifatArsip;
+use App\Models\TingkatPerkembanganArsip;
 use App\Models\KlasifikasiArsip;
 use App\Models\LokasiArsip;
 use App\Models\StatusArsip;
@@ -76,7 +78,9 @@ class ArsipController extends Controller
 
         return Inertia::render('arsip/create', [
             'klasifikasis' => KlasifikasiArsip::active()->get(['id', 'kode', 'nama']),
-            'jenisDokumens' => JenisDokumen::active()->get(['id', 'kode', 'nama']),
+            'jenisArsips' => JenisArsip::active()->get(['id', 'kode', 'nama']),
+            'sifatArsips' => SifatArsip::active()->get(['id', 'kode', 'nama']),
+            'tingkatPerkembanganArsips' => TingkatPerkembanganArsip::active()->get(['id', 'kode', 'nama']),
             'unitOrganisasis' => UnitOrganisasi::active()->get(['id', 'kode', 'nama']),
             'lokasiArsips' => LokasiArsip::active()->get(['id', 'kode', 'nama']),
             'statusArsips' => StatusArsip::active()->get(['id', 'kode', 'nama']),
@@ -106,7 +110,9 @@ class ArsipController extends Controller
                 'tanggal_arsip',
                 'klasifikasi_arsip_id',
                 'lokasi_arsip_id',
-                'jenis_dokumen_id',
+                'jenis_arsip_id',
+                'sifat_arsip_id',
+                'tingkat_perkembangan_arsip_id',
                 'media_arsip_id',
                 'kondisi_arsip_id',
                 'status_arsip_id',
@@ -151,7 +157,9 @@ class ArsipController extends Controller
         $arsip->load([
             'klasifikasiArsip',
             'lokasiArsip',
-            'jenisDokumen',
+            'jenisArsip',
+            'sifatArsip',
+            'tingkatPerkembanganArsip',
             'mediaArsip',
             'kondisiArsip',
             'statusArsip',
@@ -187,7 +195,9 @@ class ArsipController extends Controller
         return Inertia::render('arsip/edit', [
             'arsip' => $arsip,
             'klasifikasis' => KlasifikasiArsip::active()->get(['id', 'kode', 'nama']),
-            'jenisDokumens' => JenisDokumen::active()->get(['id', 'kode', 'nama']),
+            'jenisArsips' => JenisArsip::active()->get(['id', 'kode', 'nama']),
+            'sifatArsips' => SifatArsip::active()->get(['id', 'kode', 'nama']),
+            'tingkatPerkembanganArsips' => TingkatPerkembanganArsip::active()->get(['id', 'kode', 'nama']),
             'unitOrganisasis' => UnitOrganisasi::active()->get(['id', 'kode', 'nama']),
             'lokasiArsips' => LokasiArsip::active()->get(['id', 'kode', 'nama']),
             'statusArsips' => StatusArsip::active()->get(['id', 'kode', 'nama']),
@@ -210,7 +220,9 @@ class ArsipController extends Controller
             'tanggal_arsip',
             'klasifikasi_arsip_id',
             'lokasi_arsip_id',
-            'jenis_dokumen_id',
+            'jenis_arsip_id',
+            'sifat_arsip_id',
+            'tingkat_perkembangan_arsip_id',
             'media_arsip_id',
             'kondisi_arsip_id',
             'status_arsip_id',
@@ -277,7 +289,9 @@ class ArsipController extends Controller
                 'tanggal_arsip',
                 'klasifikasi_arsip_id',
                 'lokasi_arsip_id',
-                'jenis_dokumen_id',
+                'jenis_arsip_id',
+                'sifat_arsip_id',
+                'tingkat_perkembangan_arsip_id',
                 'media_arsip_id',
                 'kondisi_arsip_id',
                 'status_arsip_id',

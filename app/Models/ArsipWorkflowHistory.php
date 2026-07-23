@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property int $arsip_id
  * @property WorkflowStatus $status_lama
  * @property WorkflowStatus $status_baru
+ * @property string|null $action
  * @property int|null $user_id
  * @property string|null $keterangan
  * @property Carbon|null $created_at
@@ -41,6 +42,7 @@ class ArsipWorkflowHistory extends Model
         'arsip_id',
         'status_lama',
         'status_baru',
+        'action',
         'user_id',
         'keterangan',
     ];

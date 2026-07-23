@@ -36,7 +36,6 @@ class UnitOrganisasiFactory extends Factory
             'nama' => fake()->randomElement($units),
             'singkatan' => strtoupper(fake()->lexify('??')),
             'parent_id' => null,
-            'urutan' => fake()->numberBetween(1, 10),
             'status' => 'active',
         ];
     }

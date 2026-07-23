@@ -26,8 +26,7 @@ class KlasifikasiArsipFactory extends Factory
             'kode' => 'KA-'.str_pad((string) self::$sequence++, 5, '0', STR_PAD_LEFT),
             'nama' => fake()->sentence(3),
             'deskripsi' => fake()->paragraph(),
-            'retensi_aktif' => fake()->numberBetween(1, 10),
-            'retensi_inaktif' => fake()->numberBetween(1, 20),
+            'retensi_arsip_id' => \App\Models\RetensiArsip::factory(),
             'status' => 'active',
         ];
     }

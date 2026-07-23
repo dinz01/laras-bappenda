@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string $event
  * @property array<string, mixed>|null $old_values
  * @property array<string, mixed>|null $new_values
+ * @property string|null $change_reason
  * @property int|null $user_id
  * @property string|null $ip_address
  * @property string|null $user_agent
@@ -46,6 +47,7 @@ class AuditLog extends Model
         'event',
         'old_values',
         'new_values',
+        'change_reason',
         'user_id',
         'ip_address',
         'user_agent',

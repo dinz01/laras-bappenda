@@ -44,6 +44,8 @@ class StoreRetensiArsipRequest extends FormRequest
             ],
             'retensi_aktif' => ['required', 'integer', 'min:0'],
             'retensi_inaktif' => ['required', 'integer', 'min:0'],
+            'nasib_akhir' => ['nullable', 'string', 'max:100'],
+            'metode_penyusutan_arsip_id' => ['nullable', 'exists:metode_penyusutan_arsip,id'],
             'keterangan' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
@@ -61,6 +63,8 @@ class StoreRetensiArsipRequest extends FormRequest
             'nama' => 'nama retensi arsip',
             'retensi_aktif' => 'retensi aktif',
             'retensi_inaktif' => 'retensi inaktif',
+            'nasib_akhir' => 'nasib akhir',
+            'metode_penyusutan_arsip_id' => 'metode penyusutan arsip',
             'keterangan' => 'keterangan',
             'status' => 'status',
         ];

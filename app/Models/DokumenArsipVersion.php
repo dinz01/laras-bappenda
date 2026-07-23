@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property int $ukuran_file
  * @property string $mime_type
  * @property string $hash_file
+ * @property string|null $catatan_perubahan
  * @property int|null $uploaded_by
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -54,6 +55,7 @@ class DokumenArsipVersion extends Model
         'ukuran_file',
         'mime_type',
         'hash_file',
+        'catatan_perubahan',
         'uploaded_by',
     ];
 

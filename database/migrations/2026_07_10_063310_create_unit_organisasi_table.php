@@ -25,7 +25,6 @@ return new class extends Migration
                 ->constrained('unit_organisasi')
                 ->nullOnDelete();
 
-            $table->integer('urutan')->default(0);
             $table->string('status', 20)->default('active')->index();
             $table->timestamps();
         });

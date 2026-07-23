@@ -22,6 +22,7 @@ return new class extends Migration
             $table->unsignedBigInteger('ukuran_file');
             $table->string('mime_type');
             $table->string('hash_file');
+            $table->text('catatan_perubahan')->nullable();
             $table->foreignId('uploaded_by')
                 ->nullable()
                 ->constrained('users')

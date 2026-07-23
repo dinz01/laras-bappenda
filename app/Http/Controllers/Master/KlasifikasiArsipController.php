@@ -93,8 +93,14 @@ class KlasifikasiArsipController extends Controller
                 'kode' => $klasifikasiArsip->kode,
                 'nama' => $klasifikasiArsip->nama,
                 'deskripsi' => $klasifikasiArsip->deskripsi,
-                'retensi_aktif' => $klasifikasiArsip->retensi_aktif,
-                'retensi_inaktif' => $klasifikasiArsip->retensi_inaktif,
+                'retensi_arsip_id' => $klasifikasiArsip->retensi_arsip_id,
+                'retensi_arsip' => $klasifikasiArsip->retensiArsip ? [
+                    'id' => $klasifikasiArsip->retensiArsip->id,
+                    'kode' => $klasifikasiArsip->retensiArsip->kode,
+                    'nama' => $klasifikasiArsip->retensiArsip->nama,
+                    'retensi_aktif' => $klasifikasiArsip->retensiArsip->retensi_aktif,
+                    'retensi_inaktif' => $klasifikasiArsip->retensiArsip->retensi_inaktif,
+                ] : null,
                 'status' => $klasifikasiArsip->status,
                 'created_at' => AppDateTime::dateTime($klasifikasiArsip->created_at),
                 'updated_at' => AppDateTime::dateTime($klasifikasiArsip->updated_at),
@@ -119,7 +125,7 @@ class KlasifikasiArsipController extends Controller
     }
 
     /**
-     * @return array{kode: string, nama: string, deskripsi: string|null, retensi_aktif: int, retensi_inaktif: int, status: string}
+     * @return array{kode: string, nama: string, deskripsi: string|null, retensi_arsip_id: int|null, status: string}
      */
     private function validatedData(StoreKlasifikasiArsipRequest $request): array
     {
@@ -129,8 +135,7 @@ class KlasifikasiArsipController extends Controller
             'kode' => (string) $validated['kode'],
             'nama' => (string) $validated['nama'],
             'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
-            'retensi_aktif' => (int) $validated['retensi_aktif'],
-            'retensi_inaktif' => (int) $validated['retensi_inaktif'],
+            'retensi_arsip_id' => isset($validated['retensi_arsip_id']) && $validated['retensi_arsip_id'] !== null ? (int) $validated['retensi_arsip_id'] : null,
             'status' => (string) $validated['status'],
         ];
     }

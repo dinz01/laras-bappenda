@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('arsip_id')->constrained('arsip')->cascadeOnDelete();
             $table->string('status_lama', 30);
             $table->string('status_baru', 30);
+            $table->string('action', 50)->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->text('keterangan')->nullable();
             $table->timestamps();

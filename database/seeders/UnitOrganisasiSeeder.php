@@ -18,7 +18,6 @@ class UnitOrganisasiSeeder extends Seeder
                 'nama' => 'Sekretariat',
                 'singkatan' => 'SEKR',
                 'parent_id' => null,
-                'urutan' => 1,
                 'status' => 'active',
             ],
             [
@@ -26,7 +25,6 @@ class UnitOrganisasiSeeder extends Seeder
                 'nama' => 'Bidang Pendataan',
                 'singkatan' => 'DATA',
                 'parent_id' => null,
-                'urutan' => 2,
                 'status' => 'active',
             ],
             [
@@ -34,7 +32,6 @@ class UnitOrganisasiSeeder extends Seeder
                 'nama' => 'Bidang Penetapan',
                 'singkatan' => 'TAP',
                 'parent_id' => null,
-                'urutan' => 3,
                 'status' => 'active',
             ],
             [
@@ -42,7 +39,6 @@ class UnitOrganisasiSeeder extends Seeder
                 'nama' => 'Bidang Penagihan',
                 'singkatan' => 'TAG',
                 'parent_id' => null,
-                'urutan' => 4,
                 'status' => 'active',
             ],
             [
@@ -50,7 +46,6 @@ class UnitOrganisasiSeeder extends Seeder
                 'nama' => 'Bidang Pengembangan',
                 'singkatan' => 'BANG',
                 'parent_id' => null,
-                'urutan' => 5,
                 'status' => 'active',
             ],
             [
@@ -58,7 +53,6 @@ class UnitOrganisasiSeeder extends Seeder
                 'nama' => 'Bidang Perencanaan',
                 'singkatan' => 'RENC',
                 'parent_id' => null,
-                'urutan' => 6,
                 'status' => 'active',
             ],
         ];

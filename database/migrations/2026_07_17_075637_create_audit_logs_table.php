@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('event', 100);
             $table->json('old_values')->nullable();
             $table->json('new_values')->nullable();
+            $table->text('change_reason')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();

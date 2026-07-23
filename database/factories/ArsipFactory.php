@@ -3,14 +3,16 @@
 namespace Database\Factories;
 
 use App\Models\Arsip;
-use App\Models\JenisDokumen;
+use App\Models\JenisArsip;
 use App\Models\KlasifikasiArsip;
 use App\Models\KondisiArsip;
 use App\Models\LokasiArsip;
 use App\Models\MediaArsip;
 use App\Models\RetensiArsip;
+use App\Models\SifatArsip;
 use App\Models\StatusArsip;
 use App\Models\TingkatAksesArsip;
+use App\Models\TingkatPerkembanganArsip;
 use App\Models\UnitOrganisasi;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -61,16 +63,17 @@ class ArsipFactory extends Factory
             'judul' => $judul,
             'deskripsi' => fake()->optional()->paragraph(),
             'tanggal_arsip' => $formattedDate,
-            'file_path' => fake()->optional()->lexify('arsip/doc-??????.pdf'),
 
             // Model Factory Associations
+            'jenis_arsip_id' => JenisArsip::factory(),
             'klasifikasi_arsip_id' => KlasifikasiArsip::factory(),
+            'sifat_arsip_id' => SifatArsip::factory(),
             'lokasi_arsip_id' => LokasiArsip::factory(),
-            'jenis_dokumen_id' => JenisDokumen::factory(),
             'media_arsip_id' => MediaArsip::factory(),
             'kondisi_arsip_id' => KondisiArsip::factory(),
             'status_arsip_id' => StatusArsip::factory(),
             'tingkat_akses_arsip_id' => TingkatAksesArsip::factory(),
+            'tingkat_perkembangan_arsip_id' => TingkatPerkembanganArsip::factory(),
             'retensi_arsip_id' => RetensiArsip::factory(),
             'unit_organisasi_id' => UnitOrganisasi::factory(),
             'created_by' => User::factory(),

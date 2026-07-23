@@ -2,6 +2,7 @@
 
 use App\Models\Arsip;
 use App\Models\KlasifikasiArsip;
+use App\Models\RetensiArsip;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -30,13 +31,14 @@ it('renders klasifikasi arsip index with correct props', function () {
 });
 
 it('stores a new klasifikasi arsip', function () {
+    $retensi = RetensiArsip::factory()->create();
+
     $this->actingAs($this->user)
         ->post(route('master.klasifikasi-arsip.store'), [
             'kode' => 'KA-TEST',
             'nama' => 'Test Klasifikasi',
             'deskripsi' => 'Deskripsi test',
-            'retensi_aktif' => 5,
-            'retensi_inaktif' => 10,
+            'retensi_arsip_id' => $retensi->id,
             'status' => 'active',
         ])
         ->assertRedirect();
@@ -50,19 +52,19 @@ it('stores a new klasifikasi arsip', function () {
 it('validates required fields on store', function () {
     $this->actingAs($this->user)
         ->post(route('master.klasifikasi-arsip.store'), [])
-        ->assertSessionHasErrors(['kode', 'nama', 'retensi_aktif', 'retensi_inaktif', 'status']);
+        ->assertSessionHasErrors(['kode', 'nama', 'status']);
 });
 
 it('updates a klasifikasi arsip', function () {
     $klasifikasiArsip = KlasifikasiArsip::factory()->create();
+    $retensi = RetensiArsip::factory()->create();
 
     $this->actingAs($this->user)
         ->put(route('master.klasifikasi-arsip.update', $klasifikasiArsip), [
             'kode' => $klasifikasiArsip->kode,
             'nama' => 'Nama Diperbarui',
             'deskripsi' => null,
-            'retensi_aktif' => 3,
-            'retensi_inaktif' => 7,
+            'retensi_arsip_id' => $retensi->id,
             'status' => 'inactive',
         ])
         ->assertRedirect();

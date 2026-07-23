@@ -19,6 +19,11 @@ return new class extends Migration
             $table->string('nama');
             $table->integer('retensi_aktif')->default(0);
             $table->integer('retensi_inaktif')->default(0);
+            $table->string('nasib_akhir', 100)->nullable();
+            $table->foreignId('metode_penyusutan_arsip_id')
+                ->nullable()
+                ->constrained('metode_penyusutan_arsip')
+                ->restrictOnDelete();
             $table->text('keterangan')->nullable();
             $table->string('status', 20)->default('active')->index();
             $table->timestamps();

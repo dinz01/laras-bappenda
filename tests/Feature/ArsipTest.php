@@ -1,14 +1,16 @@
 <?php
 
 use App\Models\Arsip;
-use App\Models\JenisDokumen;
+use App\Models\JenisArsip;
 use App\Models\KlasifikasiArsip;
 use App\Models\KondisiArsip;
 use App\Models\LokasiArsip;
 use App\Models\MediaArsip;
 use App\Models\RetensiArsip;
+use App\Models\SifatArsip;
 use App\Models\StatusArsip;
 use App\Models\TingkatAksesArsip;
+use App\Models\TingkatPerkembanganArsip;
 use App\Models\UnitOrganisasi;
 use App\Models\User;
 use Carbon\CarbonInterface;
@@ -25,12 +27,14 @@ it('can create an archive using factory', function () {
         ->and($arsip->tanggal_arsip)->toBeInstanceOf(CarbonInterface::class);
 });
 
-it('has correct elonquent relationships', function () {
+it('has correct eloquent relationships', function () {
     $arsip = Arsip::factory()->create();
 
     expect($arsip->klasifikasiArsip)->toBeInstanceOf(KlasifikasiArsip::class)
         ->and($arsip->lokasiArsip)->toBeInstanceOf(LokasiArsip::class)
-        ->and($arsip->jenisDokumen)->toBeInstanceOf(JenisDokumen::class)
+        ->and($arsip->jenisArsip)->toBeInstanceOf(JenisArsip::class)
+        ->and($arsip->sifatArsip)->toBeInstanceOf(SifatArsip::class)
+        ->and($arsip->tingkatPerkembanganArsip)->toBeInstanceOf(TingkatPerkembanganArsip::class)
         ->and($arsip->mediaArsip)->toBeInstanceOf(MediaArsip::class)
         ->and($arsip->kondisiArsip)->toBeInstanceOf(KondisiArsip::class)
         ->and($arsip->statusArsip)->toBeInstanceOf(StatusArsip::class)
@@ -45,7 +49,7 @@ it('can filter active archives using active scope', function () {
     $statusInaktif = StatusArsip::factory()->create(['kode' => 'SA-00002']);
 
     $aktifArsip = Arsip::factory()->create(['status_arsip_id' => $statusAktif->id]);
-    $inaktifArsip = Arsip::factory()->create(['status_arsip_id' => $statusInaktif->id]);
+    Arsip::factory()->create(['status_arsip_id' => $statusInaktif->id]);
 
     $activeArchives = Arsip::active()->get();
 

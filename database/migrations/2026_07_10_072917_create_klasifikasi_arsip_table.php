@@ -18,8 +18,10 @@ return new class extends Migration
             $table->string('kode', 50)->unique();
             $table->string('nama');
             $table->text('deskripsi')->nullable();
-            $table->unsignedSmallInteger('retensi_aktif')->default(0);
-            $table->unsignedSmallInteger('retensi_inaktif')->default(0);
+            $table->foreignId('retensi_arsip_id')
+                ->nullable()
+                ->constrained('retensi_arsip')
+                ->restrictOnDelete();
             $table->string('status', 20)->default('active')->index();
             $table->timestamps();
         });

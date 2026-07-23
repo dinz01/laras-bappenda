@@ -21,7 +21,6 @@ class JabatanFactory extends Factory
             'kode' => 'JBT-'.fake()->unique()->numerify('#####'),
             'nama' => fake()->jobTitle(),
             'singkatan' => strtoupper(fake()->lexify('????')),
-            'level' => fake()->numberBetween(0, 10),
             'status' => 'active',
         ];
     }

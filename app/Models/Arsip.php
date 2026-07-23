@@ -22,14 +22,15 @@ use Illuminate\Support\Carbon;
  * @property string $judul
  * @property string|null $deskripsi
  * @property Carbon $tanggal_arsip
- * @property string|null $file_path
+ * @property int|null $jenis_arsip_id
  * @property int $klasifikasi_arsip_id
+ * @property int|null $sifat_arsip_id
  * @property int|null $lokasi_arsip_id
- * @property int|null $jenis_dokumen_id
  * @property int|null $media_arsip_id
  * @property int|null $kondisi_arsip_id
  * @property int|null $status_arsip_id
  * @property int|null $tingkat_akses_arsip_id
+ * @property int|null $tingkat_perkembangan_arsip_id
  * @property int|null $retensi_arsip_id
  * @property int|null $unit_organisasi_id
  * @property int|null $created_by
@@ -37,13 +38,15 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read JenisArsip|null $jenisArsip
  * @property-read KlasifikasiArsip $klasifikasiArsip
+ * @property-read SifatArsip|null $sifatArsip
  * @property-read LokasiArsip|null $lokasiArsip
- * @property-read JenisDokumen|null $jenisDokumen
  * @property-read MediaArsip|null $mediaArsip
  * @property-read KondisiArsip|null $kondisiArsip
  * @property-read StatusArsip|null $statusArsip
  * @property-read TingkatAksesArsip|null $tingkatAksesArsip
+ * @property-read TingkatPerkembanganArsip|null $tingkatPerkembanganArsip
  * @property-read RetensiArsip|null $retensiArsip
  * @property-read UnitOrganisasi|null $unitOrganisasi
  * @property-read User|null $creator
@@ -76,14 +79,15 @@ class Arsip extends Model
         'judul',
         'deskripsi',
         'tanggal_arsip',
-        'file_path',
+        'jenis_arsip_id',
         'klasifikasi_arsip_id',
+        'sifat_arsip_id',
         'lokasi_arsip_id',
-        'jenis_dokumen_id',
         'media_arsip_id',
         'kondisi_arsip_id',
         'status_arsip_id',
         'tingkat_akses_arsip_id',
+        'tingkat_perkembangan_arsip_id',
         'retensi_arsip_id',
         'unit_organisasi_id',
         'created_by',
@@ -124,13 +128,23 @@ class Arsip extends Model
     }
 
     /**
-     * Relasi ke Jenis Dokumen.
+     * Relasi ke Jenis Arsip.
      *
-     * @return BelongsTo<JenisDokumen, $this>
+     * @return BelongsTo<JenisArsip, $this>
      */
-    public function jenisDokumen(): BelongsTo
+    public function jenisArsip(): BelongsTo
     {
-        return $this->belongsTo(JenisDokumen::class, 'jenis_dokumen_id');
+        return $this->belongsTo(JenisArsip::class, 'jenis_arsip_id');
+    }
+
+    /**
+     * Relasi ke Sifat Arsip.
+     *
+     * @return BelongsTo<SifatArsip, $this>
+     */
+    public function sifatArsip(): BelongsTo
+    {
+        return $this->belongsTo(SifatArsip::class, 'sifat_arsip_id');
     }
 
     /**
@@ -171,6 +185,16 @@ class Arsip extends Model
     public function tingkatAksesArsip(): BelongsTo
     {
         return $this->belongsTo(TingkatAksesArsip::class, 'tingkat_akses_arsip_id');
+    }
+
+    /**
+     * Relasi ke Tingkat Perkembangan Arsip.
+     *
+     * @return BelongsTo<TingkatPerkembanganArsip, $this>
+     */
+    public function tingkatPerkembanganArsip(): BelongsTo
+    {
+        return $this->belongsTo(TingkatPerkembanganArsip::class, 'tingkat_perkembangan_arsip_id');
     }
 
     /**

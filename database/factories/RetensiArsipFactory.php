@@ -27,6 +27,8 @@ class RetensiArsipFactory extends Factory
             'nama' => fake()->sentence(2),
             'retensi_aktif' => fake()->numberBetween(1, 10),
             'retensi_inaktif' => fake()->numberBetween(1, 25),
+            'nasib_akhir' => fake()->randomElement(['Musnah', 'Permanen', 'Dinilai Kembali']),
+            'metode_penyusutan_arsip_id' => null,
             'keterangan' => fake()->optional()->sentence(),
             'status' => 'active',
         ];

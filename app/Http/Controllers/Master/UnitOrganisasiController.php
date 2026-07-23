@@ -67,21 +67,12 @@ class UnitOrganisasiController extends Controller
             )->count(),
         ];
 
-        $parentOptions = UnitOrganisasi::root()
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(fn (UnitOrganisasi $unit): array => [
-                'id' => $unit->id,
-                'nama' => $unit->nama,
-            ]);
-
         return Inertia::render('master/unit-organisasi/index', [
             'units' => $units,
             'stats' => $stats,
             'filters' => [
                 'search' => $search,
             ],
-            'parentOptions' => $parentOptions,
         ]);
     }
 

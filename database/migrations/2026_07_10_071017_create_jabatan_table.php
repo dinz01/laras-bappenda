@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('kode', 50)->unique();
             $table->string('nama');
             $table->string('singkatan', 50)->nullable();
-            $table->integer('level')->default(0);
             $table->string('status', 20)->default('active')->index();
             $table->timestamps();
         });

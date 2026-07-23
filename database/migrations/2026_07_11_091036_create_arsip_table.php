@@ -19,21 +19,25 @@ return new class extends Migration
             $table->string('judul');
             $table->text('deskripsi')->nullable();
             $table->date('tanggal_arsip');
-            $table->string('file_path')->nullable();
 
             // Relasi ke Master References
+            $table->foreignId('jenis_arsip_id')
+                ->nullable()
+                ->constrained('jenis_arsip')
+                ->nullOnDelete();
+
             $table->foreignId('klasifikasi_arsip_id')
                 ->constrained('klasifikasi_arsip')
                 ->restrictOnDelete();
 
+            $table->foreignId('sifat_arsip_id')
+                ->nullable()
+                ->constrained('sifat_arsip')
+                ->nullOnDelete();
+
             $table->foreignId('lokasi_arsip_id')
                 ->nullable()
                 ->constrained('lokasi_arsip')
-                ->nullOnDelete();
-
-            $table->foreignId('jenis_dokumen_id')
-                ->nullable()
-                ->constrained('jenis_dokumen')
                 ->nullOnDelete();
 
             $table->foreignId('media_arsip_id')
@@ -54,6 +58,11 @@ return new class extends Migration
             $table->foreignId('tingkat_akses_arsip_id')
                 ->nullable()
                 ->constrained('tingkat_akses_arsip')
+                ->nullOnDelete();
+
+            $table->foreignId('tingkat_perkembangan_arsip_id')
+                ->nullable()
+                ->constrained('tingkat_perkembangan_arsip')
                 ->nullOnDelete();
 
             $table->foreignId('retensi_arsip_id')

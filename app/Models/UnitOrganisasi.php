@@ -19,7 +19,6 @@ use Illuminate\Support\Carbon;
  * @property string $nama
  * @property string|null $singkatan
  * @property int|null $parent_id
- * @property int $urutan
  * @property string $status
  * @property int|null $arsips_count
  * @property Carbon|null $created_at
@@ -55,21 +54,9 @@ class UnitOrganisasi extends Model
         'nama',
         'singkatan',
         'parent_id',
-        'urutan',
         'status',
     ];
 
-    /**
-     * Attribute casting.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'urutan' => 'integer',
-        ];
-    }
 
     /**
      * Relasi ke parent unit organisasi.

@@ -55,7 +55,6 @@ type Unit = {
     nama: string;
     singkatan: string | null;
     parent_id: number | null;
-    urutan: number;
     status: 'active' | 'inactive';
     depth: number;
     children_count: number;
@@ -114,7 +113,7 @@ function UnitFormDialog({
     open,
     mode,
     unit,
-    parentOptions,
+    parentOptions = [],
     prefilledParentId,
     onOpenChange,
 }: {
@@ -371,7 +370,7 @@ export default function UnitOrganisasiIndex({
     units,
     stats,
     filters = {},
-    parentOptions,
+    parentOptions = [],
 }: IndexProps) {
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
@@ -602,6 +601,15 @@ export default function UnitOrganisasiIndex({
                         ) : (
                             <div className="overflow-hidden rounded-md border border-border/60">
                                 <div className="divide-y divide-border/50">
+                                    <div className="flex items-center gap-2 bg-muted/40 pl-2 pr-4 py-2.5">
+                                        <span className="w-4 shrink-0" />
+                                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                                            <span className="w-[80px] shrink-0 text-sm font-semibold">Kode</span>
+                                            <span className="text-sm font-semibold">Nama</span>
+                                        </div>
+                                        <span className="w-[100px] shrink-0 text-sm font-semibold">Status</span>
+                                        <span className="w-7 shrink-0 text-right text-sm font-semibold">Aksi</span>
+                                    </div>
                                     {visibleUnits.map((unit) => {
                                         const key = getNodeKey(unit);
                                         const hasChildren = childrenMap.get(key) !== undefined && childrenMap.get(key)!.length > 0;
@@ -610,10 +618,10 @@ export default function UnitOrganisasiIndex({
                                         return (
                                             <div
                                                 key={key}
-                                                className="flex items-center gap-2 px-4 py-2.5 transition-colors hover:bg-muted/30"
-                                                style={{ paddingLeft: `${16 + unit.depth * INDENT_PX}px` }}
+                                                className="flex items-center gap-2 pr-4 py-2.5 transition-colors hover:bg-muted/30"
+                                                style={{ paddingLeft: `${8 + unit.depth * INDENT_PX}px` }}
                                             >
-                                                <div className="flex w-5 shrink-0 items-center justify-center">
+                                                <div className="flex w-4 shrink-0 items-center justify-center">
                                                     {hasChildren ? (
                                                         <button
                                                             type="button"
@@ -646,16 +654,11 @@ export default function UnitOrganisasiIndex({
                                                     )}
                                                 </div>
 
-                                                <span className="shrink-0 text-xs text-muted-foreground w-[90px] text-right">
-                                                    {unit.created_at || '-'}
-                                                </span>
-
-                                                <StatusBadge
-                                                    variant={statusVariant(unit.status)}
-                                                    className="shrink-0"
-                                                >
-                                                    {statusLabel(unit.status)}
-                                                </StatusBadge>
+                                                <div className="w-[100px] shrink-0">
+                                                    <StatusBadge variant={statusVariant(unit.status)} className="w-fit">
+                                                        {statusLabel(unit.status)}
+                                                    </StatusBadge>
+                                                </div>
 
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>

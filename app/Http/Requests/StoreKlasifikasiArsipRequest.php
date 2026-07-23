@@ -43,8 +43,7 @@ class StoreKlasifikasiArsipRequest extends FormRequest
                 Rule::unique('klasifikasi_arsip', 'nama')->ignore($klasifikasiArsipId),
             ],
             'deskripsi' => ['nullable', 'string'],
-            'retensi_aktif' => ['required', 'integer', 'min:0'],
-            'retensi_inaktif' => ['required', 'integer', 'min:0'],
+            'retensi_arsip_id' => ['nullable', 'exists:retensi_arsip,id'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }
@@ -60,8 +59,7 @@ class StoreKlasifikasiArsipRequest extends FormRequest
             'kode' => 'kode',
             'nama' => 'nama klasifikasi arsip',
             'deskripsi' => 'deskripsi',
-            'retensi_aktif' => 'retensi aktif',
-            'retensi_inaktif' => 'retensi inaktif',
+            'retensi_arsip_id' => 'retensi arsip',
             'status' => 'status',
         ];
     }

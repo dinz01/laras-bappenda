@@ -6,6 +6,7 @@ use Database\Factories\JenisArsipFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -56,6 +57,16 @@ class JenisArsip extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
+    }
+
+    /**
+     * Relasi ke Arsip.
+     *
+     * @return HasMany<Arsip, $this>
+     */
+    public function arsip(): HasMany
+    {
+        return $this->hasMany(Arsip::class, 'jenis_arsip_id');
     }
 
     /**
