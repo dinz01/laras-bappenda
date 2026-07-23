@@ -57,7 +57,6 @@ class UnitOrganisasi extends Model
         'status',
     ];
 
-
     /**
      * Relasi ke parent unit organisasi.
      *

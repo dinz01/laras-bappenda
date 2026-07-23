@@ -25,6 +25,7 @@ it('renders klasifikasi arsip index with correct props', function () {
         ->assertInertia(fn ($page) => $page
             ->component('master/klasifikasi-arsip/index')
             ->has('klasifikasiArsips')
+            ->has('retensiArsips')
             ->has('stats')
             ->has('filters')
         );

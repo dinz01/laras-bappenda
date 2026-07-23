@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\KlasifikasiArsip;
+use App\Models\RetensiArsip;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -26,7 +27,7 @@ class KlasifikasiArsipFactory extends Factory
             'kode' => 'KA-'.str_pad((string) self::$sequence++, 5, '0', STR_PAD_LEFT),
             'nama' => fake()->sentence(3),
             'deskripsi' => fake()->paragraph(),
-            'retensi_arsip_id' => \App\Models\RetensiArsip::factory(),
+            'retensi_arsip_id' => RetensiArsip::factory(),
             'status' => 'active',
         ];
     }

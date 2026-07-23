@@ -4,8 +4,11 @@ namespace App\Models;
 
 use Database\Factories\RetensiArsipFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -23,7 +26,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read MetodePenyusutanArsip|null $metodePenyusutanArsip
- * @property-read \Illuminate\Database\Eloquent\Collection<int, KlasifikasiArsip> $klasifikasiArsip
+ * @property-read Collection<int, KlasifikasiArsip> $klasifikasiArsip
  *
  * @method static Builder<static> active()
  *
@@ -70,9 +73,9 @@ class RetensiArsip extends Model
     /**
      * Relasi ke Metode Penyusutan Arsip.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<MetodePenyusutanArsip, $this>
+     * @return BelongsTo<MetodePenyusutanArsip, $this>
      */
-    public function metodePenyusutanArsip(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function metodePenyusutanArsip(): BelongsTo
     {
         return $this->belongsTo(MetodePenyusutanArsip::class, 'metode_penyusutan_arsip_id');
     }
@@ -80,9 +83,9 @@ class RetensiArsip extends Model
     /**
      * Relasi ke Klasifikasi Arsip.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<KlasifikasiArsip, $this>
+     * @return HasMany<KlasifikasiArsip, $this>
      */
-    public function klasifikasiArsip(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function klasifikasiArsip(): HasMany
     {
         return $this->hasMany(KlasifikasiArsip::class, 'retensi_arsip_id');
     }

@@ -64,8 +64,7 @@ class KlasifikasiArsip extends Model
     protected function casts(): array
     {
         return [
-            'retensi_aktif' => 'integer',
-            'retensi_inaktif' => 'integer',
+            'retensi_arsip_id' => 'integer',
         ];
     }
 

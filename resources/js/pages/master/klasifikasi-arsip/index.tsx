@@ -54,13 +54,21 @@ import {
 import { dashboard } from '@/routes';
 import { destroy, index, store, update } from '@/routes/master/klasifikasi-arsip';
 
+type RetensiArsipOption = {
+    id: number;
+    kode: string;
+    nama: string;
+    retensi_aktif: number;
+    retensi_inaktif: number;
+};
+
 type KlasifikasiArsip = {
     id: number;
     kode: string;
     nama: string;
     deskripsi: string | null;
-    retensi_aktif: number;
-    retensi_inaktif: number;
+    retensi_arsip_id: number | null;
+    retensi_arsip: RetensiArsipOption | null;
     status: 'active' | 'inactive';
     created_at: string | null;
     updated_at: string | null;
@@ -93,6 +101,7 @@ type Stats = {
 
 type IndexProps = {
     klasifikasiArsips: PaginatedKlasifikasiArsips;
+    retensiArsips: RetensiArsipOption[];
     stats: Stats;
     filters: {
         search?: string;
@@ -103,8 +112,7 @@ type KlasifikasiArsipFormData = {
     kode: string;
     nama: string;
     deskripsi: string;
-    retensi_aktif: number;
-    retensi_inaktif: number;
+    retensi_arsip_id: string;
     status: 'active' | 'inactive';
 };
 
@@ -112,8 +120,7 @@ const emptyForm: KlasifikasiArsipFormData = {
     kode: '',
     nama: '',
     deskripsi: '',
-    retensi_aktif: 0,
-    retensi_inaktif: 0,
+    retensi_arsip_id: '',
     status: 'active',
 };
 
@@ -129,11 +136,13 @@ function KlasifikasiArsipFormDialog({
     open,
     mode,
     klasifikasiArsip,
+    retensiArsips,
     onOpenChange,
 }: {
     open: boolean;
     mode: 'create' | 'edit';
     klasifikasiArsip: KlasifikasiArsip | null;
+    retensiArsips: RetensiArsipOption[];
     onOpenChange: (open: boolean) => void;
 }) {
     const form = useForm<KlasifikasiArsipFormData>(emptyForm);
@@ -147,8 +156,7 @@ function KlasifikasiArsipFormDialog({
             kode: klasifikasiArsip.kode,
             nama: klasifikasiArsip.nama,
             deskripsi: klasifikasiArsip.deskripsi ?? '',
-            retensi_aktif: klasifikasiArsip.retensi_aktif,
-            retensi_inaktif: klasifikasiArsip.retensi_inaktif,
+            retensi_arsip_id: klasifikasiArsip.retensi_arsip_id ? String(klasifikasiArsip.retensi_arsip_id) : '',
             status: klasifikasiArsip.status,
         } : emptyForm);
         form.clearErrors();
@@ -233,6 +241,26 @@ function KlasifikasiArsipFormDialog({
                     </div>
 
                     <div className="space-y-2">
+                        <Label htmlFor="retensi_arsip_id">Master Retensi Arsip</Label>
+                        <Select
+                            value={form.data.retensi_arsip_id}
+                            onValueChange={(value: string) => form.setData('retensi_arsip_id', value)}
+                        >
+                            <SelectTrigger id="retensi_arsip_id" className="w-full">
+                                <SelectValue placeholder="Pilih aturan retensi arsip..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {retensiArsips.map((retensi) => (
+                                    <SelectItem key={retensi.id} value={String(retensi.id)}>
+                                        {retensi.nama} ({retensi.kode} — Aktif: {retensi.retensi_aktif} th, Inaktif: {retensi.retensi_inaktif} th)
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <InputError message={form.errors.retensi_arsip_id} />
+                    </div>
+
+                    <div className="space-y-2">
                         <Label htmlFor="deskripsi">Deskripsi</Label>
                         <Input
                             id="deskripsi"
@@ -241,34 +269,6 @@ function KlasifikasiArsipFormDialog({
                             placeholder="Deskripsi klasifikasi arsip"
                         />
                         <InputError message={form.errors.deskripsi} />
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="retensi_aktif">Retensi Aktif (tahun)</Label>
-                            <Input
-                                id="retensi_aktif"
-                                type="number"
-                                min={0}
-                                value={form.data.retensi_aktif}
-                                onChange={(event) => form.setData('retensi_aktif', parseInt(event.target.value, 10) || 0)}
-                                placeholder="0"
-                            />
-                            <InputError message={form.errors.retensi_aktif} />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="retensi_inaktif">Retensi Inaktif (tahun)</Label>
-                            <Input
-                                id="retensi_inaktif"
-                                type="number"
-                                min={0}
-                                value={form.data.retensi_inaktif}
-                                onChange={(event) => form.setData('retensi_inaktif', parseInt(event.target.value, 10) || 0)}
-                                placeholder="0"
-                            />
-                            <InputError message={form.errors.retensi_inaktif} />
-                        </div>
                     </div>
 
                     <DialogFooter className="pt-2">
@@ -312,8 +312,20 @@ function DetailDialog({
                         <DetailRow label="Kode" value={klasifikasiArsip.kode} mono />
                         <DetailRow label="Nama" value={klasifikasiArsip.nama} />
                         <DetailRow label="Deskripsi" value={klasifikasiArsip.deskripsi || '-'} />
-                        <DetailRow label="Retensi Aktif" value={`${klasifikasiArsip.retensi_aktif} tahun`} />
-                        <DetailRow label="Retensi Inaktif" value={`${klasifikasiArsip.retensi_inaktif} tahun`} />
+                        <DetailRow
+                            label="Master Retensi"
+                            value={
+                                klasifikasiArsip.retensi_arsip
+                                    ? `${klasifikasiArsip.retensi_arsip.nama} (${klasifikasiArsip.retensi_arsip.kode})`
+                                    : '-'
+                            }
+                        />
+                        {klasifikasiArsip.retensi_arsip && (
+                            <>
+                                <DetailRow label="Retensi Aktif" value={`${klasifikasiArsip.retensi_arsip.retensi_aktif} tahun`} />
+                                <DetailRow label="Retensi Inaktif" value={`${klasifikasiArsip.retensi_arsip.retensi_inaktif} tahun`} />
+                            </>
+                        )}
                         <DetailRow label="Dibuat Pada" value={klasifikasiArsip.created_at || '-'} />
                         <DetailRow label="Diperbarui Pada" value={klasifikasiArsip.updated_at || '-'} />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
@@ -342,6 +354,7 @@ function DetailRow({ label, value, mono = false }: { label: string; value: strin
 
 export default function KlasifikasiArsipIndex({
     klasifikasiArsips,
+    retensiArsips = [],
     stats,
     filters = {},
 }: IndexProps) {
@@ -495,8 +508,7 @@ export default function KlasifikasiArsipIndex({
                                                 <TableHead className="w-[130px] font-semibold">Kode</TableHead>
                                                 <TableHead className="font-semibold">Nama</TableHead>
                                                 <TableHead className="font-semibold">Deskripsi</TableHead>
-                                                <TableHead className="w-[110px] text-center font-semibold">Retensi Aktif</TableHead>
-                                                <TableHead className="w-[120px] text-center font-semibold">Retensi Inaktif</TableHead>
+                                                <TableHead className="w-[200px] font-semibold">Retensi Arsip</TableHead>
                                                 <TableHead className="w-[110px] font-semibold">Status</TableHead>
                                                 <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
                                                 <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
@@ -514,11 +526,17 @@ export default function KlasifikasiArsipIndex({
                                                     <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
                                                         {klasifikasiArsip.deskripsi || '-'}
                                                     </TableCell>
-                                                    <TableCell className="text-center text-sm">
-                                                        {klasifikasiArsip.retensi_aktif} thn
-                                                    </TableCell>
-                                                    <TableCell className="text-center text-sm">
-                                                        {klasifikasiArsip.retensi_inaktif} thn
+                                                    <TableCell className="text-sm">
+                                                        {klasifikasiArsip.retensi_arsip ? (
+                                                            <div>
+                                                                <span className="font-medium">{klasifikasiArsip.retensi_arsip.nama}</span>
+                                                                <span className="block text-xs text-muted-foreground">
+                                                                    Aktif: {klasifikasiArsip.retensi_arsip.retensi_aktif} th | Inaktif: {klasifikasiArsip.retensi_arsip.retensi_inaktif} th
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-muted-foreground">-</span>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell>
                                                         <StatusBadge variant={statusVariant(klasifikasiArsip.status)} className="w-fit">
@@ -616,6 +634,7 @@ export default function KlasifikasiArsipIndex({
                 open={formOpen}
                 mode={formMode}
                 klasifikasiArsip={selectedKlasifikasiArsip}
+                retensiArsips={retensiArsips}
                 onOpenChange={setFormOpen}
             />
             <DetailDialog klasifikasiArsip={detailKlasifikasiArsip} onOpenChange={(open) => !open && setDetailKlasifikasiArsip(null)} />

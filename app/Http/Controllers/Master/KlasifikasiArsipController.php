@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreKlasifikasiArsipRequest;
 use App\Models\KlasifikasiArsip;
+use App\Models\RetensiArsip;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,7 @@ class KlasifikasiArsipController extends Controller
 
         return Inertia::render('master/klasifikasi-arsip/index', [
             'klasifikasiArsips' => $this->paginatedKlasifikasiArsips($search),
+            'retensiArsips' => RetensiArsip::active()->get(['id', 'kode', 'nama', 'retensi_aktif', 'retensi_inaktif']),
             'stats' => $this->statistics(),
             'filters' => [
                 'search' => $search,
@@ -77,6 +79,7 @@ class KlasifikasiArsipController extends Controller
     private function paginatedKlasifikasiArsips(string $search): LengthAwarePaginator
     {
         return KlasifikasiArsip::query()
+            ->with('retensiArsip')
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
                     $query
