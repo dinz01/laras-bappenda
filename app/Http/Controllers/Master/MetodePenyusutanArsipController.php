@@ -102,7 +102,7 @@ class MetodePenyusutanArsipController extends Controller
     }
 
     /**
-     * @return array{total_metode_penyusutan_arsip: int, aktif: int, nonaktif: int, dibuat_bulan_ini: int}StoreJabatanRequest
+     * @return array{total_metode_penyusutan_arsip: int, aktif: int, nonaktif: int, dibuat_bulan_ini: int}
      */
     private function statistics(): array
     {

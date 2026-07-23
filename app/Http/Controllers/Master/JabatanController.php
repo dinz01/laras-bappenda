@@ -40,7 +40,6 @@ class JabatanController extends Controller
                 'nama' => $jabatan->nama,
                 'singkatan' => $jabatan->singkatan,
                 'status' => $jabatan->status,
-                'level' => $jabatan->level,
                 'created_at' => AppDateTime::dateTime($jabatan->created_at),
                 'updated_at' => AppDateTime::dateTime($jabatan->updated_at),
             ]);
@@ -95,7 +94,7 @@ class JabatanController extends Controller
     }
 
     /**
-     * @return array{kode: string, nama: string, level: int, status: string}
+     * @return array{kode: string, nama: string, singkatan: string|null, status: string}
      */
     private function validatedData(StoreJabatanRequest $request): array
     {
@@ -105,7 +104,6 @@ class JabatanController extends Controller
             'kode' => (string) $validated['kode'],
             'nama' => (string) $validated['nama'],
             'singkatan' => $validated['singkatan'],
-            'level' => (int) $validated['level'],
             'status' => (string) $validated['status'],
         ];
     }

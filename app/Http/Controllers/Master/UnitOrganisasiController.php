@@ -212,7 +212,7 @@ class UnitOrganisasiController extends Controller
 
     /**
      * @param  array<int, int>  $depthMap
-     * @return array{id: int, kode: string, nama: string, singkatan: string|null, parent_id: int|null, urutan: int, status: string, depth: int, children_count: int, created_at: string|null, updated_at: string|null}
+     * @return array{id: int, kode: string, nama: string, singkatan: string|null, parent_id: int|null, status: string, depth: int, children_count: int, created_at: string|null, updated_at: string|null}
      */
     private function transformUnit(UnitOrganisasi $unit, array $depthMap): array
     {
@@ -222,7 +222,6 @@ class UnitOrganisasiController extends Controller
             'nama' => $unit->nama,
             'singkatan' => $unit->singkatan,
             'parent_id' => $unit->parent_id,
-            'urutan' => $unit->urutan,
             'status' => $unit->status,
             'depth' => $depthMap[$unit->id] ?? 0,
             'children_count' => $unit->children->count(),

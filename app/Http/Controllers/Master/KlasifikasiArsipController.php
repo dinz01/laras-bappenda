@@ -135,7 +135,7 @@ class KlasifikasiArsipController extends Controller
             'kode' => (string) $validated['kode'],
             'nama' => (string) $validated['nama'],
             'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
-            'retensi_arsip_id' => isset($validated['retensi_arsip_id']) && $validated['retensi_arsip_id'] !== null ? (int) $validated['retensi_arsip_id'] : null,
+            'retensi_arsip_id' => isset($validated['retensi_arsip_id']) ? (int) $validated['retensi_arsip_id'] : null,
             'status' => (string) $validated['status'],
         ];
     }

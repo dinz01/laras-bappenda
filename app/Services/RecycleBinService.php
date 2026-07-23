@@ -154,10 +154,6 @@ class RecycleBinService
      */
     private function deletePhysicalFiles(Arsip $arsip): void
     {
-        if ($arsip->file_path !== null) {
-            Storage::disk('local')->delete($arsip->file_path);
-        }
-
         $dokumen = $arsip->dokumen;
         if ($dokumen) {
             if ($dokumen->path_penyimpanan) {

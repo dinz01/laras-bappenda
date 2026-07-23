@@ -43,7 +43,6 @@ class StoreJabatanRequest extends FormRequest
                 Rule::unique('jabatan', 'nama')->ignore($jabatanId),
             ],
             'singkatan' => ['nullable', 'string', 'max:50'],
-            'level' => ['required', 'integer', 'min:0'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }
@@ -59,7 +58,6 @@ class StoreJabatanRequest extends FormRequest
             'kode' => 'kode',
             'nama' => 'nama jabatan',
             'singkatan' => 'singkatan',
-            'level' => 'level',
             'status' => 'status',
         ];
     }

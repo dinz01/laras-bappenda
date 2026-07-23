@@ -23,7 +23,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read MetodePenyusutanArsip|null $metodePenyusutanArsip
- * @property-read Collection<int, KlasifikasiArsip> $klasifikasiArsip
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, KlasifikasiArsip> $klasifikasiArsip
  *
  * @method static Builder<static> active()
  *
