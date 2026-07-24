@@ -24,7 +24,7 @@ return new class extends Migration
             $table->foreignId('jenis_arsip_id')
                 ->nullable()
                 ->constrained('jenis_arsip')
-                ->nullOnDelete();
+                ->restrictOnDelete();
 
             $table->foreignId('klasifikasi_arsip_id')
                 ->constrained('klasifikasi_arsip')
@@ -33,47 +33,47 @@ return new class extends Migration
             $table->foreignId('sifat_arsip_id')
                 ->nullable()
                 ->constrained('sifat_arsip')
-                ->nullOnDelete();
+                ->restrictOnDelete();
 
             $table->foreignId('lokasi_arsip_id')
                 ->nullable()
                 ->constrained('lokasi_arsip')
-                ->nullOnDelete();
+                ->restrictOnDelete();
 
             $table->foreignId('media_arsip_id')
                 ->nullable()
                 ->constrained('media_arsip')
-                ->nullOnDelete();
+                ->restrictOnDelete();
 
             $table->foreignId('kondisi_arsip_id')
                 ->nullable()
                 ->constrained('kondisi_arsip')
-                ->nullOnDelete();
+                ->restrictOnDelete();
 
             $table->foreignId('status_arsip_id')
                 ->nullable()
                 ->constrained('status_arsip')
-                ->nullOnDelete();
+                ->restrictOnDelete();
 
             $table->foreignId('tingkat_akses_arsip_id')
                 ->nullable()
                 ->constrained('tingkat_akses_arsip')
-                ->nullOnDelete();
+                ->restrictOnDelete();
 
             $table->foreignId('tingkat_perkembangan_arsip_id')
                 ->nullable()
                 ->constrained('tingkat_perkembangan_arsip')
-                ->nullOnDelete();
+                ->restrictOnDelete();
 
             $table->foreignId('retensi_arsip_id')
                 ->nullable()
                 ->constrained('retensi_arsip')
-                ->nullOnDelete();
+                ->restrictOnDelete();
 
             $table->foreignId('unit_organisasi_id')
                 ->nullable()
                 ->constrained('unit_organisasi')
-                ->nullOnDelete();
+                ->restrictOnDelete();
 
             // Relasi ke Pencipta Arsip (User)
             $table->foreignId('created_by')
