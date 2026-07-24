@@ -135,6 +135,6 @@ class TingkatAksesArsipController extends Controller
 
     private function usageCount(TingkatAksesArsip $tingkatAksesArsip): int
     {
-        return 0;
+        return $tingkatAksesArsip->arsips()->count();
     }
 }
