@@ -21,6 +21,20 @@ return new class extends Migration
             $table->string('status', 20)->default('active')->index();
             $table->timestamps();
         });
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->foreignId('unit_organisasi_id')
+                ->nullable()
+                ->after('nama_lengkap')
+                ->constrained('unit_organisasi')
+                ->nullOnDelete();
+
+            $table->foreignId('jabatan_id')
+                ->nullable()
+                ->after('unit_organisasi_id')
+                ->constrained('jabatan')
+                ->nullOnDelete();
+        });
     }
 
     /**
@@ -28,6 +42,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropForeign(['jabatan_id']);
+            $table->dropForeign(['unit_organisasi_id']);
+            $table->dropColumn(['jabatan_id', 'unit_organisasi_id']);
+        });
+
         Schema::dropIfExists('jabatan');
     }
 };

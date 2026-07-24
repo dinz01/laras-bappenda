@@ -59,10 +59,9 @@ type Jabatan = {
     kode: string;
     nama: string;
     singkatan: string | null;
-    level: number;
     status: 'active' | 'inactive';
     created_at: string | null;
-    updated_at: string | null;  
+    updated_at: string | null;
 };
 
 type PaginationLink = {
@@ -102,7 +101,6 @@ type JabatanFormData = {
     kode: string;
     nama: string;
     singkatan: string;
-    level: string;
     status: 'active' | 'inactive';
 };
 
@@ -110,7 +108,6 @@ const emptyForm: JabatanFormData = {
     kode: '',
     nama: '',
     singkatan: '',
-    level: '',
     status: 'active',
 };
 
@@ -144,7 +141,6 @@ function JabatanFormDialog({
             kode: jabatan.kode,
             nama: jabatan.nama,
             singkatan: jabatan.singkatan ?? '',
-            level: jabatan.level.toString(),
             status: jabatan.status,
         } : emptyForm);
         form.clearErrors();
@@ -228,31 +224,16 @@ function JabatanFormDialog({
                         <InputError message={form.errors.nama} />
                     </div>
 
-                   <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="singkatan">Singkatan</Label>
-                            <Input
-                                id="singkatan"
-                                value={form.data.singkatan}
-                                onChange={(e) => form.setData('singkatan', e.target.value)}
-                                placeholder="Contoh: KABID"
-                                maxLength={50}
-                            />
-                            <InputError message={form.errors.singkatan} />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="level">Level</Label>
-                            <Input
-                                id="level"
-                                type="number"
-                                min={0}
-                                value={form.data.level}
-                                onChange={(e) => form.setData('level', e.target.value)}
-                                placeholder="0"
-                            />
-                            <InputError message={form.errors.level} />
-                        </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="singkatan">Singkatan</Label>
+                        <Input
+                            id="singkatan"
+                            value={form.data.singkatan}
+                            onChange={(e) => form.setData('singkatan', e.target.value)}
+                            placeholder="Contoh: KABID"
+                            maxLength={50}
+                        />
+                        <InputError message={form.errors.singkatan} />
                     </div>
 
                     <DialogFooter className="pt-2">
@@ -287,7 +268,7 @@ function DetailDialog({
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">Detail Jabatan</DialogTitle>
                     <DialogDescription className="text-xs">
-                        Informasi lengkap jabatan dan pemakaian arsip.
+                        Informasi lengkap jabatan.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -296,7 +277,6 @@ function DetailDialog({
                         <DetailRow label="Kode" value={jabatan.kode} mono />
                         <DetailRow label="Nama Jabatan" value={jabatan.nama} />
                         <DetailRow label="Singkatan" value={jabatan.singkatan || '-'} />
-                        <DetailRow label="Level" value={jabatan.level.toString()} />
                         <DetailRow label="Dibuat Pada" value={jabatan.created_at || '-'} />
                         <DetailRow label="Diperbarui Pada" value={jabatan.updated_at || '-'} />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
@@ -327,7 +307,7 @@ export default function JabatanIndex({
     jabatans,
     stats,
     filters = {},
-}: IndexProps){
+}: IndexProps) {
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
@@ -444,7 +424,7 @@ export default function JabatanIndex({
                     <ContentCard title="Dibuat Bulan Ini">
                         <StatValue value={stats.bulan_ini} />
                     </ContentCard>
-                    </div>
+                </div>
 
                 <ContentCard title="Daftar Jabatan" description="Data jabatan yang tersedia dalam struktur organisasi">
                     <div className="space-y-4">
@@ -480,7 +460,6 @@ export default function JabatanIndex({
                                                 <TableHead className="w-[130px] font-semibold">Kode</TableHead>
                                                 <TableHead className="font-semibold">Nama Jabatan</TableHead>
                                                 <TableHead className="font-semibold">Singkatan</TableHead>
-                                                <TableHead className="w-[120px] font-semibold">Level</TableHead>
                                                 <TableHead className="w-[110px] font-semibold">Status</TableHead>
                                                 <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
                                                 <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
@@ -497,9 +476,6 @@ export default function JabatanIndex({
                                                     </TableCell>
                                                     <TableCell className="text-sm text-muted-foreground">
                                                         {jabatan.singkatan || '-'}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <span className="text-sm">{jabatan.level}</span>
                                                     </TableCell>
                                                     <TableCell>
                                                         <StatusBadge variant={statusVariant(jabatan.status)} className="w-fit">

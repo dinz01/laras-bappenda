@@ -87,6 +87,13 @@ class JabatanController extends Controller
      */
     public function destroy(Jabatan $jabatan): RedirectResponse
     {
+        $usageCount = $jabatan->users()->count();
+
+        if ($usageCount > 0) {
+            return back()->withErrors([
+                'jabatan' => "Jabatan tidak dapat dihapus karena masih digunakan oleh {$usageCount} pegawai.",
+            ]);
+        }
 
         $jabatan->delete();
 

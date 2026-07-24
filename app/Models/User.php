@@ -38,7 +38,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read UnitOrganisasi|null $unitOrganisasi
  * @property-read Jabatan|null $jabatan
  */
-#[Fillable(['nip', 'nama_lengkap', 'name', 'email', 'password', 'status', 'avatar_path', 'last_login_at'])]
+#[Fillable(['nip', 'nama_lengkap', 'name', 'email', 'password', 'status', 'avatar_path', 'last_login_at', 'unit_organisasi_id', 'jabatan_id'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
