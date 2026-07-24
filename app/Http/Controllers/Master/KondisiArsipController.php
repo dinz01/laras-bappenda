@@ -135,6 +135,6 @@ class KondisiArsipController extends Controller
 
     private function usageCount(KondisiArsip $kondisiArsip): int
     {
-        return 0;
+        return $kondisiArsip->arsips()->count();
     }
 }
