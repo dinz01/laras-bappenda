@@ -150,6 +150,6 @@ class LokasiArsipController extends Controller
 
     private function usageCount(LokasiArsip $lokasiArsip): int
     {
-        return 0;
+        return $lokasiArsip->arsips()->count();
     }
 }

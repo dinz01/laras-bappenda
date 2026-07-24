@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Database\Factories\LokasiArsipFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -23,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property string $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read Collection<int, Arsip> $arsips
  *
  * @method static Builder<static> active()
  *
@@ -66,6 +69,16 @@ class LokasiArsip extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
+    }
+
+    /**
+     * Relasi ke Arsip.
+     *
+     * @return HasMany<Arsip, $this>
+     */
+    public function arsips(): HasMany
+    {
+        return $this->hasMany(Arsip::class, 'lokasi_arsip_id');
     }
 
     /**
