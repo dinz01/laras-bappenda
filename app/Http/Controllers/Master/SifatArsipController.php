@@ -135,6 +135,6 @@ class SifatArsipController extends Controller
 
     private function usageCount(SifatArsip $sifatArsip): int
     {
-        return 0;
+        return $sifatArsip->arsips()->count();
     }
 }
