@@ -135,6 +135,6 @@ class StatusArsipController extends Controller
 
     private function usageCount(StatusArsip $statusArsip): int
     {
-        return 0;
+        return $statusArsip->arsips()->count();
     }
 }
