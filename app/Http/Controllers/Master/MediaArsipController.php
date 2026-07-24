@@ -135,6 +135,6 @@ class MediaArsipController extends Controller
 
     private function usageCount(MediaArsip $mediaArsip): int
     {
-        return 0;
+        return $mediaArsip->arsips()->count();
     }
 }
