@@ -54,12 +54,21 @@ import {
 import { dashboard } from '@/routes';
 import { destroy, index, store, update } from '@/routes/master/retensi-arsip';
 
+type MetodePenyusutanArsipOption = {
+    id: number;
+    kode: string;
+    nama: string;
+};
+
 type RetensiArsip = {
     id: number;
     kode: string;
     nama: string;
     retensi_aktif: number;
     retensi_inaktif: number;
+    nasib_akhir: string | null;
+    metode_penyusutan_arsip_id: number | null;
+    metode_penyusutan_arsip: MetodePenyusutanArsipOption | null;
     keterangan: string | null;
     status: 'active' | 'inactive';
     created_at: string | null;
@@ -93,6 +102,7 @@ type Stats = {
 
 type IndexProps = {
     retensiArsips: PaginatedRetensiArsips;
+    metodePenyusutanArsips: MetodePenyusutanArsipOption[];
     stats: Stats;
     filters: {
         search?: string;
@@ -104,6 +114,8 @@ type RetensiArsipFormData = {
     nama: string;
     retensi_aktif: string;
     retensi_inaktif: string;
+    nasib_akhir: string;
+    metode_penyusutan_arsip_id: string;
     keterangan: string;
     status: 'active' | 'inactive';
 };
@@ -113,6 +125,8 @@ const emptyForm: RetensiArsipFormData = {
     nama: '',
     retensi_aktif: '0',
     retensi_inaktif: '0',
+    nasib_akhir: '',
+    metode_penyusutan_arsip_id: '',
     keterangan: '',
     status: 'active',
 };
@@ -129,11 +143,13 @@ function RetensiArsipFormDialog({
     open,
     mode,
     retensiArsip,
+    metodePenyusutanArsips,
     onOpenChange,
 }: {
     open: boolean;
     mode: 'create' | 'edit';
     retensiArsip: RetensiArsip | null;
+    metodePenyusutanArsips: MetodePenyusutanArsipOption[];
     onOpenChange: (open: boolean) => void;
 }) {
     const form = useForm<RetensiArsipFormData>(emptyForm);
@@ -148,6 +164,8 @@ function RetensiArsipFormDialog({
             nama: retensiArsip.nama,
             retensi_aktif: String(retensiArsip.retensi_aktif),
             retensi_inaktif: String(retensiArsip.retensi_inaktif),
+            nasib_akhir: retensiArsip.nasib_akhir ?? '',
+            metode_penyusutan_arsip_id: retensiArsip.metode_penyusutan_arsip_id ? String(retensiArsip.metode_penyusutan_arsip_id) : '',
             keterangan: retensiArsip.keterangan ?? '',
             status: retensiArsip.status,
         } : emptyForm);
@@ -260,6 +278,40 @@ function RetensiArsipFormDialog({
                         </div>
                     </div>
 
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="nasib_akhir">Nasib Akhir</Label>
+                            <Input
+                                id="nasib_akhir"
+                                value={form.data.nasib_akhir}
+                                onChange={(event) => form.setData('nasib_akhir', event.target.value)}
+                                placeholder="Contoh: Musnah / Permanen"
+                                maxLength={100}
+                            />
+                            <InputError message={form.errors.nasib_akhir} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="metode_penyusutan_arsip_id">Metode Penyusutan</Label>
+                            <Select
+                                value={form.data.metode_penyusutan_arsip_id}
+                                onValueChange={(value: string) => form.setData('metode_penyusutan_arsip_id', value)}
+                            >
+                                <SelectTrigger id="metode_penyusutan_arsip_id" className="w-full">
+                                    <SelectValue placeholder="Pilih metode penyusutan..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {metodePenyusutanArsips.map((metode) => (
+                                        <SelectItem key={metode.id} value={String(metode.id)}>
+                                            {metode.nama} ({metode.kode})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <InputError message={form.errors.metode_penyusutan_arsip_id} />
+                        </div>
+                    </div>
+
                     <div className="space-y-2">
                         <Label htmlFor="keterangan">Keterangan</Label>
                         <Input
@@ -313,6 +365,15 @@ function DetailDialog({
                         <DetailRow label="Nama" value={retensiArsip.nama} />
                         <DetailRow label="Retensi Aktif" value={`${retensiArsip.retensi_aktif} Tahun`} />
                         <DetailRow label="Retensi Inaktif" value={`${retensiArsip.retensi_inaktif} Tahun`} />
+                        <DetailRow label="Nasib Akhir" value={retensiArsip.nasib_akhir || '-'} />
+                        <DetailRow
+                            label="Metode Penyusutan"
+                            value={
+                                retensiArsip.metode_penyusutan_arsip
+                                    ? `${retensiArsip.metode_penyusutan_arsip.nama} (${retensiArsip.metode_penyusutan_arsip.kode})`
+                                    : '-'
+                            }
+                        />
                         <DetailRow label="Keterangan" value={retensiArsip.keterangan || '-'} />
                         <DetailRow label="Dibuat Pada" value={retensiArsip.created_at || '-'} />
                         <DetailRow label="Diperbarui Pada" value={retensiArsip.updated_at || '-'} />
@@ -342,6 +403,7 @@ function DetailRow({ label, value, mono = false }: { label: string; value: strin
 
 export default function RetensiArsipIndex({
     retensiArsips,
+    metodePenyusutanArsips = [],
     stats,
     filters = {},
 }: IndexProps) {
@@ -466,7 +528,7 @@ export default function RetensiArsipIndex({
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
-                            searchPlaceholder="Cari kode, nama, atau keterangan..."
+                            searchPlaceholder="Cari kode, nama, nasib akhir, atau keterangan..."
                             filters={hasFilters && (
                                 <Button
                                     variant="ghost"
@@ -494,8 +556,9 @@ export default function RetensiArsipIndex({
                                             <TableRow className="bg-muted/40">
                                                 <TableHead className="w-[130px] font-semibold">Kode</TableHead>
                                                 <TableHead className="font-semibold">Nama</TableHead>
-                                                <TableHead className="w-[120px] font-semibold text-center">Retensi Aktif</TableHead>
-                                                <TableHead className="w-[120px] font-semibold text-center">Retensi Inaktif</TableHead>
+                                                <TableHead className="w-[110px] font-semibold text-center">Retensi Aktif</TableHead>
+                                                <TableHead className="w-[110px] font-semibold text-center">Retensi Inaktif</TableHead>
+                                                <TableHead className="w-[130px] font-semibold">Nasib Akhir</TableHead>
                                                 <TableHead className="w-[110px] font-semibold">Status</TableHead>
                                                 <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
                                                 <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
@@ -515,6 +578,9 @@ export default function RetensiArsipIndex({
                                                     </TableCell>
                                                     <TableCell className="text-center text-sm">
                                                         {retensiArsip.retensi_inaktif} Thn
+                                                    </TableCell>
+                                                    <TableCell className="text-sm font-medium">
+                                                        {retensiArsip.nasib_akhir || '-'}
                                                     </TableCell>
                                                     <TableCell>
                                                         <StatusBadge variant={statusVariant(retensiArsip.status)} className="w-fit">
@@ -612,6 +678,7 @@ export default function RetensiArsipIndex({
                 open={formOpen}
                 mode={formMode}
                 retensiArsip={selectedRetensiArsip}
+                metodePenyusutanArsips={metodePenyusutanArsips}
                 onOpenChange={setFormOpen}
             />
             <DetailDialog retensiArsip={detailRetensiArsip} onOpenChange={(open) => !open && setDetailRetensiArsip(null)} />

@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\KlasifikasiArsip;
+use App\Models\MetodePenyusutanArsip;
 use App\Models\RetensiArsip;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,18 +25,23 @@ it('renders retensi arsip index with correct props', function () {
         ->assertInertia(fn ($page) => $page
             ->component('master/retensi-arsip/index')
             ->has('retensiArsips')
+            ->has('metodePenyusutanArsips')
             ->has('stats')
             ->has('filters')
         );
 });
 
 it('stores a new retensi arsip', function () {
+    $metode = MetodePenyusutanArsip::factory()->create();
+
     $this->actingAs($this->user)
         ->post(route('master.retensi-arsip.store'), [
             'kode' => 'JRA-001',
             'nama' => 'Retensi Test',
             'retensi_aktif' => 5,
             'retensi_inaktif' => 10,
+            'nasib_akhir' => 'Musnah',
+            'metode_penyusutan_arsip_id' => $metode->id,
             'keterangan' => 'Keterangan test',
             'status' => 'active',
         ])
@@ -43,6 +50,8 @@ it('stores a new retensi arsip', function () {
     $this->assertDatabaseHas('retensi_arsip', [
         'kode' => 'JRA-001',
         'nama' => 'Retensi Test',
+        'nasib_akhir' => 'Musnah',
+        'metode_penyusutan_arsip_id' => $metode->id,
     ]);
 });
 
@@ -54,6 +63,7 @@ it('validates required fields on store', function () {
 
 it('updates a retensi arsip', function () {
     $retensiArsip = RetensiArsip::factory()->create();
+    $metode = MetodePenyusutanArsip::factory()->create();
 
     $this->actingAs($this->user)
         ->put(route('master.retensi-arsip.update', $retensiArsip), [
@@ -61,6 +71,8 @@ it('updates a retensi arsip', function () {
             'nama' => 'Nama Diperbarui',
             'retensi_aktif' => 3,
             'retensi_inaktif' => 7,
+            'nasib_akhir' => 'Permanen',
+            'metode_penyusutan_arsip_id' => $metode->id,
             'keterangan' => null,
             'status' => 'inactive',
         ])
@@ -69,6 +81,8 @@ it('updates a retensi arsip', function () {
     $this->assertDatabaseHas('retensi_arsip', [
         'id' => $retensiArsip->id,
         'nama' => 'Nama Diperbarui',
+        'nasib_akhir' => 'Permanen',
+        'metode_penyusutan_arsip_id' => $metode->id,
         'status' => 'inactive',
     ]);
 });
@@ -81,6 +95,17 @@ it('deletes a retensi arsip not in use', function () {
         ->assertRedirect();
 
     $this->assertDatabaseMissing('retensi_arsip', ['id' => $retensiArsip->id]);
+});
+
+it('prevents deleting retensi arsip in use by klasifikasi arsip', function () {
+    $retensiArsip = RetensiArsip::factory()->create();
+    KlasifikasiArsip::factory()->create(['retensi_arsip_id' => $retensiArsip->id]);
+
+    $this->actingAs($this->user)
+        ->delete(route('master.retensi-arsip.destroy', $retensiArsip))
+        ->assertSessionHasErrors('retensi_arsip');
+
+    $this->assertDatabaseHas('retensi_arsip', ['id' => $retensiArsip->id]);
 });
 
 it('searches retensi arsip by kode', function () {

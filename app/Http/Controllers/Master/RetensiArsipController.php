@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRetensiArsipRequest;
+use App\Models\MetodePenyusutanArsip;
 use App\Models\RetensiArsip;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,7 @@ class RetensiArsipController extends Controller
 
         return Inertia::render('master/retensi-arsip/index', [
             'retensiArsips' => $this->paginatedRetensiArsips($search),
+            'metodePenyusutanArsips' => MetodePenyusutanArsip::active()->get(['id', 'kode', 'nama']),
             'stats' => $this->statistics(),
             'filters' => [
                 'search' => $search,
@@ -62,7 +64,7 @@ class RetensiArsipController extends Controller
 
         if ($usageCount > 0) {
             return back()->withErrors([
-                'retensi_arsip' => "Retensi arsip tidak dapat dihapus karena masih digunakan oleh {$usageCount} data.",
+                'retensi_arsip' => "Retensi arsip tidak dapat dihapus karena masih digunakan oleh {$usageCount} data klasifikasi arsip.",
             ]);
         }
 
@@ -77,11 +79,13 @@ class RetensiArsipController extends Controller
     private function paginatedRetensiArsips(string $search): LengthAwarePaginator
     {
         $retensiArsips = RetensiArsip::query()
+            ->with('metodePenyusutanArsip')
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
                     $query
                         ->where('kode', 'like', "%{$search}%")
                         ->orWhere('nama', 'like', "%{$search}%")
+                        ->orWhere('nasib_akhir', 'like', "%{$search}%")
                         ->orWhere('keterangan', 'like', "%{$search}%");
                 });
             })
@@ -96,6 +100,11 @@ class RetensiArsipController extends Controller
                 'retensi_inaktif' => $retensiArsip->retensi_inaktif,
                 'nasib_akhir' => $retensiArsip->nasib_akhir,
                 'metode_penyusutan_arsip_id' => $retensiArsip->metode_penyusutan_arsip_id,
+                'metode_penyusutan_arsip' => $retensiArsip->metodePenyusutanArsip ? [
+                    'id' => $retensiArsip->metodePenyusutanArsip->id,
+                    'kode' => $retensiArsip->metodePenyusutanArsip->kode,
+                    'nama' => $retensiArsip->metodePenyusutanArsip->nama,
+                ] : null,
                 'keterangan' => $retensiArsip->keterangan,
                 'status' => $retensiArsip->status,
                 'created_at' => AppDateTime::dateTime($retensiArsip->created_at),
@@ -143,6 +152,6 @@ class RetensiArsipController extends Controller
 
     private function usageCount(RetensiArsip $retensiArsip): int
     {
-        return 0;
+        return $retensiArsip->klasifikasiArsip()->count();
     }
 }
