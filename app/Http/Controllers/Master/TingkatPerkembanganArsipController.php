@@ -135,6 +135,6 @@ class TingkatPerkembanganArsipController extends Controller
 
     private function usageCount(TingkatPerkembanganArsip $tingkatPerkembanganArsip): int
     {
-        return 0;
+        return $tingkatPerkembanganArsip->arsips()->count();
     }
 }
