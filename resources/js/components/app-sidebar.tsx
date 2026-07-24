@@ -47,6 +47,7 @@ import { index as klasifikasiArsipIndex } from '@/routes/master/klasifikasi-arsi
 import { index as kondisiArsipIndex } from '@/routes/master/kondisi-arsip';
 import { index as lokasiArsipIndex } from '@/routes/master/lokasi-arsip';
 import { index as mediaArsipIndex } from '@/routes/master/media-arsip';
+import { index as metodePenyusutanArsipIndex } from '@/routes/master/metode-penyusutan-arsip';
 import { index as retensiArsipIndex } from '@/routes/master/retensi-arsip';
 import { index as sifatArsipIndex } from '@/routes/master/sifat-arsip';
 import { index as statusArsipIndex } from '@/routes/master/status-arsip';
@@ -149,6 +150,11 @@ const masterNavItems: NavItem[] = [
         title: 'Kondisi Arsip',
         href: kondisiArsipIndex.url(),
         icon: Activity,
+    },
+    {
+        title: 'Metode Penyusutan Arsip',
+        href: metodePenyusutanArsipIndex.url(),
+        icon: FileText,
     },
 ];
 

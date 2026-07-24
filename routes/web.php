@@ -13,6 +13,7 @@ use App\Http\Controllers\Master\KlasifikasiArsipController;
 use App\Http\Controllers\Master\KondisiArsipController;
 use App\Http\Controllers\Master\LokasiArsipController;
 use App\Http\Controllers\Master\MediaArsipController;
+use App\Http\Controllers\Master\MetodePenyusutanArsipController;
 use App\Http\Controllers\Master\RetensiArsipController;
 use App\Http\Controllers\Master\SifatArsipController;
 use App\Http\Controllers\Master\StatusArsipController;
@@ -89,6 +90,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('kondisi-arsip', KondisiArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['kondisi-arsip' => 'kondisiArsip']);
+        Route::resource('metode-penyusutan-arsip', MetodePenyusutanArsipController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['metode-penyusutan-arsip' => 'metodePenyusutanArsip']);
     });
 
     // ── Administrasi ──────────────────────────────────────────────────────

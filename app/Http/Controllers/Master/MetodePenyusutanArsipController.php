@@ -135,6 +135,6 @@ class MetodePenyusutanArsipController extends Controller
 
     private function usageCount(MetodePenyusutanArsip $metodePenyusutanArsip): int
     {
-        return 0;
+        return $metodePenyusutanArsip->retensiArsips()->count();
     }
 }
