@@ -109,6 +109,7 @@ type WorkflowHistoryItem = {
     id: number;
     status_lama: string;
     status_baru: string;
+    action?: string | null;
     keterangan: string | null;
     created_at: string;
     user?: UserItem | null;
@@ -932,11 +933,23 @@ export default function Show({
 
                                                     <div className="flex flex-col gap-1">
                                                         <div className="flex items-center justify-between gap-2">
-                                                            <span className="font-semibold text-foreground">
-                                                                {workflowStatusLabel(
-                                                                    history.status_baru,
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="font-semibold text-foreground">
+                                                                    {workflowStatusLabel(
+                                                                        history.status_baru,
+                                                                    )}
+                                                                </span>
+                                                                {history.action && (
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className="px-1 py-0 font-mono text-[9px] uppercase"
+                                                                    >
+                                                                        {
+                                                                            history.action
+                                                                        }
+                                                                    </Badge>
                                                                 )}
-                                                            </span>
+                                                            </div>
                                                             <span className="text-[10px] whitespace-nowrap text-muted-foreground">
                                                                 {
                                                                     history.created_at

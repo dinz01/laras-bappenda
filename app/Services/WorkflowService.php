@@ -36,6 +36,22 @@ class WorkflowService
     }
 
     /**
+     * Tentukan nama aksi bisnis berdasarkan transisi status.
+     */
+    public function determineAction(WorkflowStatus $from, WorkflowStatus $to): string
+    {
+        return match ([$from->value, $to->value]) {
+            [WorkflowStatus::Draft->value, WorkflowStatus::Review->value] => 'submit',
+            [WorkflowStatus::Review->value, WorkflowStatus::Approved->value] => 'approve',
+            [WorkflowStatus::Approved->value, WorkflowStatus::Active->value] => 'activate',
+            [WorkflowStatus::Active->value, WorkflowStatus::Retention->value] => 'retention',
+            [WorkflowStatus::Retention->value, WorkflowStatus::RecordCenter->value] => 'record_center',
+            [WorkflowStatus::RecordCenter->value, WorkflowStatus::Destruction->value] => 'destruction',
+            default => 'transition',
+        };
+    }
+
+    /**
      * Eksekusi transisi workflow, simpan riwayat, catat audit log, dan dispatch event.
      *
      * @throws \InvalidArgumentException Jika transisi tidak diizinkan.
@@ -46,6 +62,7 @@ class WorkflowService
         ?string $keterangan,
         User $actor,
         Request $request,
+        ?string $action = null,
     ): ArsipWorkflowHistory {
         if (! $this->canTransition($arsip, $target)) {
             throw new \InvalidArgumentException(
@@ -58,11 +75,14 @@ class WorkflowService
         // 1. Update status arsip
         $arsip->update(['workflow_status' => $target]);
 
+        $actionName = $action ?? $this->determineAction($statusLama, $target);
+
         // 2. Simpan riwayat
         $history = ArsipWorkflowHistory::create([
             'arsip_id' => $arsip->id,
             'status_lama' => $statusLama->value,
             'status_baru' => $target->value,
+            'action' => $actionName,
             'user_id' => $actor->id,
             'keterangan' => $keterangan,
         ]);
