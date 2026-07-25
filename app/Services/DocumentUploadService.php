@@ -28,7 +28,7 @@ class DocumentUploadService
     /**
      * Upload a new document for an archive.
      */
-    public function upload(Arsip $arsip, UploadedFile $uploadedFile, int $uploadedById): DokumenArsip
+    public function upload(Arsip $arsip, UploadedFile $uploadedFile, int $uploadedById, ?string $catatanPerubahan = null): DokumenArsip
     {
         $originalName = $uploadedFile->getClientOriginalName();
         $extension = $uploadedFile->getClientOriginalExtension();
@@ -64,7 +64,8 @@ class DocumentUploadService
             $path,
             $uploadedFile->getSize(),
             $uploadedFile->getMimeType() ?? 'application/octet-stream',
-            $uploadedById
+            $uploadedById,
+            $catatanPerubahan
         );
 
         ProcessOcrJob::dispatch($dokumen);
@@ -75,7 +76,7 @@ class DocumentUploadService
     /**
      * Replace the existing document for an archive.
      */
-    public function replace(Arsip $arsip, UploadedFile $uploadedFile, int $uploadedById): DokumenArsip
+    public function replace(Arsip $arsip, UploadedFile $uploadedFile, int $uploadedById, ?string $catatanPerubahan = null): DokumenArsip
     {
         $originalName = $uploadedFile->getClientOriginalName();
         $extension = $uploadedFile->getClientOriginalExtension();
@@ -135,7 +136,8 @@ class DocumentUploadService
             $path,
             $uploadedFile->getSize(),
             $uploadedFile->getMimeType() ?? 'application/octet-stream',
-            $uploadedById
+            $uploadedById,
+            $catatanPerubahan
         );
 
         ProcessOcrJob::dispatch($dokumen);

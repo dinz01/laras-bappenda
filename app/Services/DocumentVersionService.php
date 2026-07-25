@@ -34,7 +34,8 @@ class DocumentVersionService
         string $pathFile,
         int $ukuranFile,
         string $mimeType,
-        ?int $uploadedBy = null
+        ?int $uploadedBy = null,
+        ?string $catatanPerubahan = null
     ): DokumenArsipVersion {
         $absolutePath = Storage::disk('local')->path($pathFile);
 
@@ -54,6 +55,7 @@ class DocumentVersionService
             'ukuran_file' => $ukuranFile,
             'mime_type' => $mimeType,
             'hash_file' => $hashFile,
+            'catatan_perubahan' => $catatanPerubahan,
             'uploaded_by' => $uploadedBy,
         ]);
 

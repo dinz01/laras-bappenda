@@ -30,13 +30,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { index, create, show } from '@/routes/arsip';
-
-type MasterItem = {
-    id: number;
-    kode: string;
-    nama: string;
-};
+import { index, show } from '@/routes/arsip';
+import { ArsipCreateDialog, MasterItem } from './create-dialog';
 
 type Arsip = {
     id: number;
@@ -81,10 +76,14 @@ type PaginatedArsips = {
 
 type IndexProps = {
     arsips: PaginatedArsips;
-    klasifikasis: MasterItem[];
-    unitOrganisasis: MasterItem[];
-    statusArsips: MasterItem[];
-    filters: {
+    klasifikasis?: MasterItem[];
+    unitOrganisasis?: MasterItem[];
+    statusArsips?: MasterItem[];
+    jenisArsips?: MasterItem[];
+    sifatArsips?: MasterItem[];
+    tingkatPerkembanganArsips?: MasterItem[];
+    lokasiArsips?: MasterItem[];
+    filters?: {
         search?: string;
         status_arsip_id?: string;
         unit_organisasi_id?: string;
@@ -95,34 +94,39 @@ type IndexProps = {
 
 function statusVariant(statusName?: string | null) {
     if (!statusName) {
-return 'secondary' as const;
-}
+        return 'secondary' as const;
+    }
 
     const name = statusName.toLowerCase();
 
     if (name.includes('aktif') && !name.includes('inaktif')) {
-return 'success' as const;
-}
+        return 'success' as const;
+    }
 
     if (name.includes('inaktif')) {
-return 'secondary' as const;
-}
+        return 'secondary' as const;
+    }
 
     if (name.includes('musnah') || name.includes('hapus')) {
-return 'danger' as const;
-}
+        return 'danger' as const;
+    }
 
     return 'warning' as const;
 }
 
 export default function Index({
     arsips,
-    klasifikasis,
-    unitOrganisasis,
-    statusArsips,
+    klasifikasis = [],
+    unitOrganisasis = [],
+    statusArsips = [],
+    jenisArsips = [],
+    sifatArsips = [],
+    tingkatPerkembanganArsips = [],
+    lokasiArsips = [],
     filters = {},
 }: IndexProps) {
     const [search, setSearch] = useState(filters.search || '');
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     // Handle filter/search trigger
     const updateFilters = (newParams: Record<string, string | null | undefined>) => {
@@ -189,11 +193,9 @@ export default function Index({
                         { title: 'Repository Arsip', href: index() },
                     ]}
                     actions={
-                        <Button asChild size="sm">
-                            <Link href={create()}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Tambah Arsip
-                            </Link>
+                        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Tambah Arsip
                         </Button>
                     }
                 />
@@ -425,6 +427,18 @@ export default function Index({
                         )}
                     </div>
                 </ContentCard>
+
+                <ArsipCreateDialog
+                    open={isCreateOpen}
+                    onClose={() => setIsCreateOpen(false)}
+                    klasifikasis={klasifikasis}
+                    unitOrganisasis={unitOrganisasis}
+                    statusArsips={statusArsips}
+                    jenisArsips={jenisArsips}
+                    sifatArsips={sifatArsips}
+                    tingkatPerkembanganArsips={tingkatPerkembanganArsips}
+                    lokasiArsips={lokasiArsips}
+                />
             </PageContainer>
         </>
     );

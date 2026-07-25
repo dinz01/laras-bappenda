@@ -55,16 +55,24 @@ class ArsipController extends Controller
 
         $arsips = $query->paginate(10)->withQueryString();
 
-        // Master lists for filters
+        // Master lists for filters & create dialog
         $klasifikasis = KlasifikasiArsip::active()->get(['id', 'kode', 'nama']);
         $unitOrganisasis = UnitOrganisasi::active()->get(['id', 'kode', 'nama']);
         $statusArsips = StatusArsip::active()->get(['id', 'kode', 'nama']);
+        $jenisArsips = JenisArsip::active()->get(['id', 'kode', 'nama']);
+        $sifatArsips = SifatArsip::active()->get(['id', 'kode', 'nama']);
+        $tingkatPerkembanganArsips = TingkatPerkembanganArsip::active()->get(['id', 'kode', 'nama']);
+        $lokasiArsips = LokasiArsip::active()->get(['id', 'kode', 'nama']);
 
         return Inertia::render('arsip/index', [
             'arsips' => $arsips,
             'klasifikasis' => $klasifikasis,
             'unitOrganisasis' => $unitOrganisasis,
             'statusArsips' => $statusArsips,
+            'jenisArsips' => $jenisArsips,
+            'sifatArsips' => $sifatArsips,
+            'tingkatPerkembanganArsips' => $tingkatPerkembanganArsips,
+            'lokasiArsips' => $lokasiArsips,
             'filters' => $request->only(['search', 'status_arsip_id', 'unit_organisasi_id', 'klasifikasi_arsip_id', 'tahun']),
         ]);
     }
@@ -346,8 +354,9 @@ class ArsipController extends Controller
     {
         Gate::authorize('update', $arsip);
 
-        $request->validate([
+        $validated = $request->validate([
             'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+            'catatan_perubahan' => 'nullable|string|max:500',
         ]);
 
         if ($arsip->dokumen) {
@@ -357,7 +366,8 @@ class ArsipController extends Controller
         $this->documentUploadService->upload(
             $arsip,
             $request->file('file'),
-            (int) auth()->id()
+            (int) auth()->id(),
+            isset($validated['catatan_perubahan']) ? (string) $validated['catatan_perubahan'] : null
         );
 
         /** @var User $user */
@@ -381,14 +391,16 @@ class ArsipController extends Controller
     {
         Gate::authorize('update', $arsip);
 
-        $request->validate([
+        $validated = $request->validate([
             'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+            'catatan_perubahan' => 'nullable|string|max:500',
         ]);
 
         $this->documentUploadService->replace(
             $arsip,
             $request->file('file'),
-            (int) auth()->id()
+            (int) auth()->id(),
+            isset($validated['catatan_perubahan']) ? (string) $validated['catatan_perubahan'] : null
         );
 
         /** @var User $user */

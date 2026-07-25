@@ -39,6 +39,7 @@ type DokumenArsipVersion = {
     ukuran_file: number;
     mime_type: string;
     hash_file: string;
+    catatan_perubahan?: string | null;
     uploaded_by: number | null;
     created_at: string;
     uploader?: UserItem | null;
@@ -435,6 +436,15 @@ return;
                                                 required
                                                 className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-secondary-foreground hover:file:bg-secondary/80"
                                             />
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-medium text-muted-foreground">Catatan Perubahan (Opsional)</label>
+                                                <textarea
+                                                    name="catatan_perubahan"
+                                                    rows={2}
+                                                    placeholder="Alasan / deskripsi perubahan versi..."
+                                                    className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                                />
+                                            </div>
                                             <div className="flex items-center gap-2">
                                                 <Button type="submit" size="sm">
                                                     <RefreshCw className="mr-2 h-4 w-4" />
@@ -488,6 +498,9 @@ return;
                                                 </Badge>
                                                 <div className="min-w-0 space-y-1">
                                                     <p className="truncate text-sm font-medium">{ver.nama_file}</p>
+                                                    {ver.catatan_perubahan && (
+                                                        <p className="text-xs text-muted-foreground italic">"{ver.catatan_perubahan}"</p>
+                                                    )}
                                                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
                                                         <span className="inline-flex items-center gap-1">
                                                             <Clock className="h-3 w-3" />
