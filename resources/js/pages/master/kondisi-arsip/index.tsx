@@ -137,12 +137,16 @@ function KondisiArsipFormDialog({
             return;
         }
 
-        form.setData(kondisiArsip ? {
-            kode: kondisiArsip.kode,
-            nama: kondisiArsip.nama,
-            deskripsi: kondisiArsip.deskripsi ?? '',
-            status: kondisiArsip.status,
-        } : emptyForm);
+        form.setData(
+            kondisiArsip
+                ? {
+                      kode: kondisiArsip.kode,
+                      nama: kondisiArsip.nama,
+                      deskripsi: kondisiArsip.deskripsi ?? '',
+                      status: kondisiArsip.status,
+                  }
+                : emptyForm,
+        );
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, kondisiArsip]);
@@ -173,7 +177,9 @@ function KondisiArsipFormDialog({
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
-                        {mode === 'create' ? 'Tambah Kondisi Arsip' : 'Edit Kondisi Arsip'}
+                        {mode === 'create'
+                            ? 'Tambah Kondisi Arsip'
+                            : 'Edit Kondisi Arsip'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
                         Lengkapi data kondisi fisik arsip.
@@ -187,7 +193,9 @@ function KondisiArsipFormDialog({
                             <Input
                                 id="kode"
                                 value={form.data.kode}
-                                onChange={(event) => form.setData('kode', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('kode', event.target.value)
+                                }
                                 placeholder="Contoh: KA-00001"
                                 maxLength={50}
                             />
@@ -198,14 +206,20 @@ function KondisiArsipFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: KondisiArsipFormData['status']) => form.setData('status', value)}
+                                onValueChange={(
+                                    value: KondisiArsipFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -217,7 +231,9 @@ function KondisiArsipFormDialog({
                         <Input
                             id="nama"
                             value={form.data.nama}
-                            onChange={(event) => form.setData('nama', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('nama', event.target.value)
+                            }
                             placeholder="Nama kondisi arsip"
                             maxLength={255}
                         />
@@ -229,7 +245,9 @@ function KondisiArsipFormDialog({
                         <Input
                             id="deskripsi"
                             value={form.data.deskripsi}
-                            onChange={(event) => form.setData('deskripsi', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('deskripsi', event.target.value)
+                            }
                             placeholder="Deskripsi kondisi arsip"
                         />
                         <InputError message={form.errors.deskripsi} />
@@ -265,7 +283,9 @@ function DetailDialog({
         <Dialog open={kondisiArsip !== null} onOpenChange={onOpenChange}>
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">Detail Kondisi Arsip</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">
+                        Detail Kondisi Arsip
+                    </DialogTitle>
                     <DialogDescription className="text-xs">
                         Informasi lengkap kondisi arsip.
                     </DialogDescription>
@@ -273,14 +293,31 @@ function DetailDialog({
 
                 {kondisiArsip && (
                     <div className="grid gap-3 text-sm">
-                        <DetailRow label="Kode" value={kondisiArsip.kode} mono />
+                        <DetailRow
+                            label="Kode"
+                            value={kondisiArsip.kode}
+                            mono
+                        />
                         <DetailRow label="Nama" value={kondisiArsip.nama} />
-                        <DetailRow label="Deskripsi" value={kondisiArsip.deskripsi || '-'} />
-                        <DetailRow label="Dibuat Pada" value={kondisiArsip.created_at || '-'} />
-                        <DetailRow label="Diperbarui Pada" value={kondisiArsip.updated_at || '-'} />
+                        <DetailRow
+                            label="Deskripsi"
+                            value={kondisiArsip.deskripsi || '-'}
+                        />
+                        <DetailRow
+                            label="Dibuat Pada"
+                            value={kondisiArsip.created_at || '-'}
+                        />
+                        <DetailRow
+                            label="Diperbarui Pada"
+                            value={kondisiArsip.updated_at || '-'}
+                        />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
-                            <StatusBadge variant={statusVariant(kondisiArsip.status)}>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
+                            <StatusBadge
+                                variant={statusVariant(kondisiArsip.status)}
+                            >
                                 {statusLabel(kondisiArsip.status)}
                             </StatusBadge>
                         </div>
@@ -291,11 +328,25 @@ function DetailDialog({
     );
 }
 
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
             <span className="text-muted-foreground">{label}</span>
-            <span className={mono ? 'font-mono text-xs text-right' : 'font-medium text-right'}>
+            <span
+                className={
+                    mono
+                        ? 'text-right font-mono text-xs'
+                        : 'text-right font-medium'
+                }
+            >
                 {value}
             </span>
         </div>
@@ -310,13 +361,18 @@ export default function KondisiArsipIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-    const [selectedKondisiArsip, setSelectedKondisiArsip] = useState<KondisiArsip | null>(null);
-    const [detailKondisiArsip, setDetailKondisiArsip] = useState<KondisiArsip | null>(null);
-    const [deleteKondisiArsip, setDeleteKondisiArsip] = useState<KondisiArsip | null>(null);
+    const [selectedKondisiArsip, setSelectedKondisiArsip] =
+        useState<KondisiArsip | null>(null);
+    const [detailKondisiArsip, setDetailKondisiArsip] =
+        useState<KondisiArsip | null>(null);
+    const [deleteKondisiArsip, setDeleteKondisiArsip] =
+        useState<KondisiArsip | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -361,10 +417,14 @@ export default function KondisiArsipIndex({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index().url, {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index().url,
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const confirmDelete = () => {
@@ -379,7 +439,9 @@ export default function KondisiArsipIndex({
             preserveScroll: true,
             onSuccess: () => setDeleteKondisiArsip(null),
             onError: (errors) => {
-                setDeleteError(errors.kondisi_arsip || 'Kondisi arsip gagal dihapus.');
+                setDeleteError(
+                    errors.kondisi_arsip || 'Kondisi arsip gagal dihapus.',
+                );
             },
             onFinish: () => setDeleting(false),
         });
@@ -423,23 +485,28 @@ export default function KondisiArsipIndex({
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Daftar Kondisi Arsip" description="Data kondisi fisik arsip yang tersedia">
+                <ContentCard
+                    title="Daftar Kondisi Arsip"
+                    description="Data kondisi fisik arsip yang tersedia"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari kode, nama, atau deskripsi..."
-                            filters={hasFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Reset Filter
-                                </Button>
-                            )}
+                            filters={
+                                hasFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="mr-1 h-4 w-4" />
+                                        Reset Filter
+                                    </Button>
+                                )
+                            }
                         />
 
                         {kondisiArsips.data.length === 0 ? (
@@ -454,90 +521,151 @@ export default function KondisiArsipIndex({
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[130px] font-semibold">Kode</TableHead>
-                                                <TableHead className="font-semibold">Nama</TableHead>
-                                                <TableHead className="font-semibold">Deskripsi</TableHead>
-                                                <TableHead className="w-[110px] font-semibold">Status</TableHead>
-                                                <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="w-[130px] font-semibold">
+                                                    Kode
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Nama
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Deskripsi
+                                                </TableHead>
+                                                <TableHead className="w-[110px] font-semibold">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead className="w-[170px] font-semibold">
+                                                    Dibuat Pada
+                                                </TableHead>
+                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {kondisiArsips.data.map((kondisiArsip) => (
-                                                <TableRow key={kondisiArsip.id} className="transition-colors hover:bg-muted/30">
-                                                    <TableCell className="font-mono text-xs text-muted-foreground">
-                                                        {kondisiArsip.kode}
-                                                    </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {kondisiArsip.nama}
-                                                    </TableCell>
-                                                    <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
-                                                        {kondisiArsip.deskripsi || '-'}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusBadge variant={statusVariant(kondisiArsip.status)} className="w-fit">
-                                                            {statusLabel(kondisiArsip.status)}
-                                                        </StatusBadge>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
-                                                        {kondisiArsip.created_at || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <span className="sr-only">Menu aksi</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => setDetailKondisiArsip(kondisiArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                            {kondisiArsips.data.map(
+                                                (kondisiArsip) => (
+                                                    <TableRow
+                                                        key={kondisiArsip.id}
+                                                        className="transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                                            {kondisiArsip.kode}
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">
+                                                            {kondisiArsip.nama}
+                                                        </TableCell>
+                                                        <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
+                                                            {kondisiArsip.deskripsi ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <StatusBadge
+                                                                variant={statusVariant(
+                                                                    kondisiArsip.status,
+                                                                )}
+                                                                className="w-fit"
+                                                            >
+                                                                {statusLabel(
+                                                                    kondisiArsip.status,
+                                                                )}
+                                                            </StatusBadge>
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-muted-foreground">
+                                                            {kondisiArsip.created_at ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    asChild
                                                                 >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    Detail
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => openEditDialog(kondisiArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8"
+                                                                    >
+                                                                        <span className="sr-only">
+                                                                            Menu
+                                                                            aksi
+                                                                        </span>
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent
+                                                                    align="end"
+                                                                    className="w-40"
                                                                 >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                    Edit
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setDeleteError(null);
-                                                                        setDeleteKondisiArsip(kondisiArsip);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Hapus
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            setDetailKondisiArsip(
+                                                                                kondisiArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        Detail
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            openEditDialog(
+                                                                                kondisiArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setDeleteError(
+                                                                                null,
+                                                                            );
+                                                                            setDeleteKondisiArsip(
+                                                                                kondisiArsip,
+                                                                            );
+                                                                        }}
+                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Hapus
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
 
                                 <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
-                                        Menampilkan {kondisiArsips.from || 0} hingga {kondisiArsips.to || 0} dari {kondisiArsips.total} kondisi
+                                        Menampilkan {kondisiArsips.from || 0}{' '}
+                                        hingga {kondisiArsips.to || 0} dari{' '}
+                                        {kondisiArsips.total} kondisi
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!kondisiArsips.prev_page_url}
-                                            asChild={Boolean(kondisiArsips.prev_page_url)}
+                                            disabled={
+                                                !kondisiArsips.prev_page_url
+                                            }
+                                            asChild={Boolean(
+                                                kondisiArsips.prev_page_url,
+                                            )}
                                         >
                                             {kondisiArsips.prev_page_url ? (
-                                                <Link href={kondisiArsips.prev_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        kondisiArsips.prev_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Sebelumnya
                                                 </Link>
                                             ) : (
@@ -547,11 +675,20 @@ export default function KondisiArsipIndex({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!kondisiArsips.next_page_url}
-                                            asChild={Boolean(kondisiArsips.next_page_url)}
+                                            disabled={
+                                                !kondisiArsips.next_page_url
+                                            }
+                                            asChild={Boolean(
+                                                kondisiArsips.next_page_url,
+                                            )}
                                         >
                                             {kondisiArsips.next_page_url ? (
-                                                <Link href={kondisiArsips.next_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        kondisiArsips.next_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Selanjutnya
                                                 </Link>
                                             ) : (
@@ -572,7 +709,10 @@ export default function KondisiArsipIndex({
                 kondisiArsip={selectedKondisiArsip}
                 onOpenChange={setFormOpen}
             />
-            <DetailDialog kondisiArsip={detailKondisiArsip} onOpenChange={(open) => !open && setDetailKondisiArsip(null)} />
+            <DetailDialog
+                kondisiArsip={detailKondisiArsip}
+                onOpenChange={(open) => !open && setDetailKondisiArsip(null)}
+            />
             <ConfirmDialog
                 isOpen={deleteKondisiArsip !== null}
                 onClose={() => {
@@ -581,7 +721,10 @@ export default function KondisiArsipIndex({
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Kondisi Arsip"
-                description={deleteError || `Hapus kondisi arsip "${deleteKondisiArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+                description={
+                    deleteError ||
+                    `Hapus kondisi arsip "${deleteKondisiArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
+                }
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -591,7 +734,11 @@ export default function KondisiArsipIndex({
 }
 
 function StatValue({ value }: { value: number }) {
-    return <div className="text-2xl font-semibold tracking-normal text-foreground">{value.toLocaleString('id-ID')}</div>;
+    return (
+        <div className="text-2xl font-semibold tracking-normal text-foreground">
+            {value.toLocaleString('id-ID')}
+        </div>
+    );
 }
 
 KondisiArsipIndex.layout = {

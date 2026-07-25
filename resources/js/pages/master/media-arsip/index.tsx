@@ -137,12 +137,16 @@ function MediaArsipFormDialog({
             return;
         }
 
-        form.setData(mediaArsip ? {
-            kode: mediaArsip.kode,
-            nama: mediaArsip.nama,
-            deskripsi: mediaArsip.deskripsi ?? '',
-            status: mediaArsip.status,
-        } : emptyForm);
+        form.setData(
+            mediaArsip
+                ? {
+                      kode: mediaArsip.kode,
+                      nama: mediaArsip.nama,
+                      deskripsi: mediaArsip.deskripsi ?? '',
+                      status: mediaArsip.status,
+                  }
+                : emptyForm,
+        );
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, mediaArsip]);
@@ -173,7 +177,9 @@ function MediaArsipFormDialog({
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
-                        {mode === 'create' ? 'Tambah Media Arsip' : 'Edit Media Arsip'}
+                        {mode === 'create'
+                            ? 'Tambah Media Arsip'
+                            : 'Edit Media Arsip'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
                         Lengkapi data media dan format penyimpanan arsip.
@@ -187,7 +193,9 @@ function MediaArsipFormDialog({
                             <Input
                                 id="kode"
                                 value={form.data.kode}
-                                onChange={(event) => form.setData('kode', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('kode', event.target.value)
+                                }
                                 placeholder="Contoh: MA-001"
                                 maxLength={50}
                             />
@@ -198,14 +206,20 @@ function MediaArsipFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: MediaArsipFormData['status']) => form.setData('status', value)}
+                                onValueChange={(
+                                    value: MediaArsipFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -217,7 +231,9 @@ function MediaArsipFormDialog({
                         <Input
                             id="nama"
                             value={form.data.nama}
-                            onChange={(event) => form.setData('nama', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('nama', event.target.value)
+                            }
                             placeholder="Nama media arsip"
                             maxLength={255}
                         />
@@ -229,7 +245,9 @@ function MediaArsipFormDialog({
                         <Input
                             id="deskripsi"
                             value={form.data.deskripsi}
-                            onChange={(event) => form.setData('deskripsi', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('deskripsi', event.target.value)
+                            }
                             placeholder="Deskripsi media arsip"
                         />
                         <InputError message={form.errors.deskripsi} />
@@ -265,7 +283,9 @@ function DetailDialog({
         <Dialog open={mediaArsip !== null} onOpenChange={onOpenChange}>
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">Detail Media Arsip</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">
+                        Detail Media Arsip
+                    </DialogTitle>
                     <DialogDescription className="text-xs">
                         Informasi lengkap media arsip.
                     </DialogDescription>
@@ -275,12 +295,25 @@ function DetailDialog({
                     <div className="grid gap-3 text-sm">
                         <DetailRow label="Kode" value={mediaArsip.kode} mono />
                         <DetailRow label="Nama" value={mediaArsip.nama} />
-                        <DetailRow label="Deskripsi" value={mediaArsip.deskripsi || '-'} />
-                        <DetailRow label="Dibuat Pada" value={mediaArsip.created_at || '-'} />
-                        <DetailRow label="Diperbarui Pada" value={mediaArsip.updated_at || '-'} />
+                        <DetailRow
+                            label="Deskripsi"
+                            value={mediaArsip.deskripsi || '-'}
+                        />
+                        <DetailRow
+                            label="Dibuat Pada"
+                            value={mediaArsip.created_at || '-'}
+                        />
+                        <DetailRow
+                            label="Diperbarui Pada"
+                            value={mediaArsip.updated_at || '-'}
+                        />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
-                            <StatusBadge variant={statusVariant(mediaArsip.status)}>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
+                            <StatusBadge
+                                variant={statusVariant(mediaArsip.status)}
+                            >
                                 {statusLabel(mediaArsip.status)}
                             </StatusBadge>
                         </div>
@@ -291,11 +324,25 @@ function DetailDialog({
     );
 }
 
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
             <span className="text-muted-foreground">{label}</span>
-            <span className={mono ? 'font-mono text-xs text-right' : 'font-medium text-right'}>
+            <span
+                className={
+                    mono
+                        ? 'text-right font-mono text-xs'
+                        : 'text-right font-medium'
+                }
+            >
                 {value}
             </span>
         </div>
@@ -310,13 +357,20 @@ export default function MediaArsipIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-    const [selectedMediaArsip, setSelectedMediaArsip] = useState<MediaArsip | null>(null);
-    const [detailMediaArsip, setDetailMediaArsip] = useState<MediaArsip | null>(null);
-    const [deleteMediaArsip, setDeleteMediaArsip] = useState<MediaArsip | null>(null);
+    const [selectedMediaArsip, setSelectedMediaArsip] =
+        useState<MediaArsip | null>(null);
+    const [detailMediaArsip, setDetailMediaArsip] = useState<MediaArsip | null>(
+        null,
+    );
+    const [deleteMediaArsip, setDeleteMediaArsip] = useState<MediaArsip | null>(
+        null,
+    );
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -361,10 +415,14 @@ export default function MediaArsipIndex({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index().url, {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index().url,
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const confirmDelete = () => {
@@ -379,7 +437,9 @@ export default function MediaArsipIndex({
             preserveScroll: true,
             onSuccess: () => setDeleteMediaArsip(null),
             onError: (errors) => {
-                setDeleteError(errors.media_arsip || 'Media arsip gagal dihapus.');
+                setDeleteError(
+                    errors.media_arsip || 'Media arsip gagal dihapus.',
+                );
             },
             onFinish: () => setDeleting(false),
         });
@@ -423,23 +483,28 @@ export default function MediaArsipIndex({
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Daftar Media Arsip" description="Data media arsip yang tersedia dalam repositori">
+                <ContentCard
+                    title="Daftar Media Arsip"
+                    description="Data media arsip yang tersedia dalam repositori"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari kode, nama, atau deskripsi..."
-                            filters={hasFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Reset Filter
-                                </Button>
-                            )}
+                            filters={
+                                hasFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="mr-1 h-4 w-4" />
+                                        Reset Filter
+                                    </Button>
+                                )
+                            }
                         />
 
                         {mediaArsips.data.length === 0 ? (
@@ -454,90 +519,151 @@ export default function MediaArsipIndex({
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[130px] font-semibold">Kode</TableHead>
-                                                <TableHead className="font-semibold">Nama</TableHead>
-                                                <TableHead className="font-semibold">Deskripsi</TableHead>
-                                                <TableHead className="w-[110px] font-semibold">Status</TableHead>
-                                                <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="w-[130px] font-semibold">
+                                                    Kode
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Nama
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Deskripsi
+                                                </TableHead>
+                                                <TableHead className="w-[110px] font-semibold">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead className="w-[170px] font-semibold">
+                                                    Dibuat Pada
+                                                </TableHead>
+                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {mediaArsips.data.map((mediaArsip) => (
-                                                <TableRow key={mediaArsip.id} className="transition-colors hover:bg-muted/30">
-                                                    <TableCell className="font-mono text-xs text-muted-foreground">
-                                                        {mediaArsip.kode}
-                                                    </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {mediaArsip.nama}
-                                                    </TableCell>
-                                                    <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
-                                                        {mediaArsip.deskripsi || '-'}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusBadge variant={statusVariant(mediaArsip.status)} className="w-fit">
-                                                            {statusLabel(mediaArsip.status)}
-                                                        </StatusBadge>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
-                                                        {mediaArsip.created_at || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <span className="sr-only">Menu aksi</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => setDetailMediaArsip(mediaArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                            {mediaArsips.data.map(
+                                                (mediaArsip) => (
+                                                    <TableRow
+                                                        key={mediaArsip.id}
+                                                        className="transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                                            {mediaArsip.kode}
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">
+                                                            {mediaArsip.nama}
+                                                        </TableCell>
+                                                        <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
+                                                            {mediaArsip.deskripsi ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <StatusBadge
+                                                                variant={statusVariant(
+                                                                    mediaArsip.status,
+                                                                )}
+                                                                className="w-fit"
+                                                            >
+                                                                {statusLabel(
+                                                                    mediaArsip.status,
+                                                                )}
+                                                            </StatusBadge>
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-muted-foreground">
+                                                            {mediaArsip.created_at ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    asChild
                                                                 >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    Detail
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => openEditDialog(mediaArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8"
+                                                                    >
+                                                                        <span className="sr-only">
+                                                                            Menu
+                                                                            aksi
+                                                                        </span>
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent
+                                                                    align="end"
+                                                                    className="w-40"
                                                                 >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                    Edit
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setDeleteError(null);
-                                                                        setDeleteMediaArsip(mediaArsip);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Hapus
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            setDetailMediaArsip(
+                                                                                mediaArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        Detail
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            openEditDialog(
+                                                                                mediaArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setDeleteError(
+                                                                                null,
+                                                                            );
+                                                                            setDeleteMediaArsip(
+                                                                                mediaArsip,
+                                                                            );
+                                                                        }}
+                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Hapus
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
 
                                 <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
-                                        Menampilkan {mediaArsips.from || 0} hingga {mediaArsips.to || 0} dari {mediaArsips.total} media
+                                        Menampilkan {mediaArsips.from || 0}{' '}
+                                        hingga {mediaArsips.to || 0} dari{' '}
+                                        {mediaArsips.total} media
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!mediaArsips.prev_page_url}
-                                            asChild={Boolean(mediaArsips.prev_page_url)}
+                                            disabled={
+                                                !mediaArsips.prev_page_url
+                                            }
+                                            asChild={Boolean(
+                                                mediaArsips.prev_page_url,
+                                            )}
                                         >
                                             {mediaArsips.prev_page_url ? (
-                                                <Link href={mediaArsips.prev_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        mediaArsips.prev_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Sebelumnya
                                                 </Link>
                                             ) : (
@@ -547,11 +673,20 @@ export default function MediaArsipIndex({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!mediaArsips.next_page_url}
-                                            asChild={Boolean(mediaArsips.next_page_url)}
+                                            disabled={
+                                                !mediaArsips.next_page_url
+                                            }
+                                            asChild={Boolean(
+                                                mediaArsips.next_page_url,
+                                            )}
                                         >
                                             {mediaArsips.next_page_url ? (
-                                                <Link href={mediaArsips.next_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        mediaArsips.next_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Selanjutnya
                                                 </Link>
                                             ) : (
@@ -572,7 +707,10 @@ export default function MediaArsipIndex({
                 mediaArsip={selectedMediaArsip}
                 onOpenChange={setFormOpen}
             />
-            <DetailDialog mediaArsip={detailMediaArsip} onOpenChange={(open) => !open && setDetailMediaArsip(null)} />
+            <DetailDialog
+                mediaArsip={detailMediaArsip}
+                onOpenChange={(open) => !open && setDetailMediaArsip(null)}
+            />
             <ConfirmDialog
                 isOpen={deleteMediaArsip !== null}
                 onClose={() => {
@@ -581,7 +719,10 @@ export default function MediaArsipIndex({
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Media Arsip"
-                description={deleteError || `Hapus media arsip "${deleteMediaArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+                description={
+                    deleteError ||
+                    `Hapus media arsip "${deleteMediaArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
+                }
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -591,7 +732,11 @@ export default function MediaArsipIndex({
 }
 
 function StatValue({ value }: { value: number }) {
-    return <div className="text-2xl font-semibold tracking-normal text-foreground">{value.toLocaleString('id-ID')}</div>;
+    return (
+        <div className="text-2xl font-semibold tracking-normal text-foreground">
+            {value.toLocaleString('id-ID')}
+        </div>
+    );
 }
 
 MediaArsipIndex.layout = {

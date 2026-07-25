@@ -137,12 +137,16 @@ function JabatanFormDialog({
             return;
         }
 
-        form.setData(jabatan ? {
-            kode: jabatan.kode,
-            nama: jabatan.nama,
-            singkatan: jabatan.singkatan ?? '',
-            status: jabatan.status,
-        } : emptyForm);
+        form.setData(
+            jabatan
+                ? {
+                      kode: jabatan.kode,
+                      nama: jabatan.nama,
+                      singkatan: jabatan.singkatan ?? '',
+                      status: jabatan.status,
+                  }
+                : emptyForm,
+        );
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, jabatan]);
@@ -187,7 +191,9 @@ function JabatanFormDialog({
                             <Input
                                 id="kode"
                                 value={form.data.kode}
-                                onChange={(event) => form.setData('kode', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('kode', event.target.value)
+                                }
                                 placeholder="Contoh: JB-001"
                                 maxLength={50}
                             />
@@ -198,14 +204,20 @@ function JabatanFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: JabatanFormData['status']) => form.setData('status', value)}
+                                onValueChange={(
+                                    value: JabatanFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -217,7 +229,9 @@ function JabatanFormDialog({
                         <Input
                             id="nama"
                             value={form.data.nama}
-                            onChange={(event) => form.setData('nama', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('nama', event.target.value)
+                            }
                             placeholder="Nama jabatan"
                             maxLength={255}
                         />
@@ -229,7 +243,9 @@ function JabatanFormDialog({
                         <Input
                             id="singkatan"
                             value={form.data.singkatan}
-                            onChange={(e) => form.setData('singkatan', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('singkatan', e.target.value)
+                            }
                             placeholder="Contoh: KABID"
                             maxLength={50}
                         />
@@ -266,7 +282,9 @@ function DetailDialog({
         <Dialog open={jabatan !== null} onOpenChange={onOpenChange}>
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">Detail Jabatan</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">
+                        Detail Jabatan
+                    </DialogTitle>
                     <DialogDescription className="text-xs">
                         Informasi lengkap jabatan.
                     </DialogDescription>
@@ -276,12 +294,25 @@ function DetailDialog({
                     <div className="grid gap-3 text-sm">
                         <DetailRow label="Kode" value={jabatan.kode} mono />
                         <DetailRow label="Nama Jabatan" value={jabatan.nama} />
-                        <DetailRow label="Singkatan" value={jabatan.singkatan || '-'} />
-                        <DetailRow label="Dibuat Pada" value={jabatan.created_at || '-'} />
-                        <DetailRow label="Diperbarui Pada" value={jabatan.updated_at || '-'} />
+                        <DetailRow
+                            label="Singkatan"
+                            value={jabatan.singkatan || '-'}
+                        />
+                        <DetailRow
+                            label="Dibuat Pada"
+                            value={jabatan.created_at || '-'}
+                        />
+                        <DetailRow
+                            label="Diperbarui Pada"
+                            value={jabatan.updated_at || '-'}
+                        />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
-                            <StatusBadge variant={statusVariant(jabatan.status)}>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
+                            <StatusBadge
+                                variant={statusVariant(jabatan.status)}
+                            >
                                 {statusLabel(jabatan.status)}
                             </StatusBadge>
                         </div>
@@ -292,11 +323,25 @@ function DetailDialog({
     );
 }
 
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
             <span className="text-muted-foreground">{label}</span>
-            <span className={mono ? 'font-mono text-xs text-right' : 'font-medium text-right'}>
+            <span
+                className={
+                    mono
+                        ? 'text-right font-mono text-xs'
+                        : 'text-right font-medium'
+                }
+            >
                 {value}
             </span>
         </div>
@@ -311,13 +356,17 @@ export default function JabatanIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-    const [selectedJabatan, setSelectedJabatan] = useState<Jabatan | null>(null);
+    const [selectedJabatan, setSelectedJabatan] = useState<Jabatan | null>(
+        null,
+    );
     const [detailJabatan, setDetailJabatan] = useState<Jabatan | null>(null);
     const [deleteJabatan, setDeleteJabatan] = useState<Jabatan | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -362,10 +411,14 @@ export default function JabatanIndex({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index().url, {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index().url,
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const confirmDelete = () => {
@@ -426,23 +479,28 @@ export default function JabatanIndex({
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Daftar Jabatan" description="Data jabatan yang tersedia dalam struktur organisasi">
+                <ContentCard
+                    title="Daftar Jabatan"
+                    description="Data jabatan yang tersedia dalam struktur organisasi"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari kode, nama jabatan, atau singkatan..."
-                            filters={hasFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Reset Filter
-                                </Button>
-                            )}
+                            filters={
+                                hasFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="mr-1 h-4 w-4" />
+                                        Reset Filter
+                                    </Button>
+                                )
+                            }
                         />
 
                         {jabatans.data.length === 0 ? (
@@ -457,17 +515,32 @@ export default function JabatanIndex({
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[130px] font-semibold">Kode</TableHead>
-                                                <TableHead className="font-semibold">Nama Jabatan</TableHead>
-                                                <TableHead className="font-semibold">Singkatan</TableHead>
-                                                <TableHead className="w-[110px] font-semibold">Status</TableHead>
-                                                <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="w-[130px] font-semibold">
+                                                    Kode
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Nama Jabatan
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Singkatan
+                                                </TableHead>
+                                                <TableHead className="w-[110px] font-semibold">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead className="w-[170px] font-semibold">
+                                                    Dibuat Pada
+                                                </TableHead>
+                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {jabatans.data.map((jabatan) => (
-                                                <TableRow key={jabatan.id} className="transition-colors hover:bg-muted/30">
+                                                <TableRow
+                                                    key={jabatan.id}
+                                                    className="transition-colors hover:bg-muted/30"
+                                                >
                                                     <TableCell className="font-mono text-xs text-muted-foreground">
                                                         {jabatan.kode}
                                                     </TableCell>
@@ -475,34 +548,63 @@ export default function JabatanIndex({
                                                         {jabatan.nama}
                                                     </TableCell>
                                                     <TableCell className="text-sm text-muted-foreground">
-                                                        {jabatan.singkatan || '-'}
+                                                        {jabatan.singkatan ||
+                                                            '-'}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <StatusBadge variant={statusVariant(jabatan.status)} className="w-fit">
-                                                            {statusLabel(jabatan.status)}
+                                                        <StatusBadge
+                                                            variant={statusVariant(
+                                                                jabatan.status,
+                                                            )}
+                                                            className="w-fit"
+                                                        >
+                                                            {statusLabel(
+                                                                jabatan.status,
+                                                            )}
                                                         </StatusBadge>
                                                     </TableCell>
                                                     <TableCell className="text-sm text-muted-foreground">
-                                                        {jabatan.created_at || '-'}
+                                                        {jabatan.created_at ||
+                                                            '-'}
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <span className="sr-only">Menu aksi</span>
+                                                            <DropdownMenuTrigger
+                                                                asChild
+                                                            >
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8"
+                                                                >
+                                                                    <span className="sr-only">
+                                                                        Menu
+                                                                        aksi
+                                                                    </span>
                                                                     <MoreHorizontal className="h-4 w-4" />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
+                                                            <DropdownMenuContent
+                                                                align="end"
+                                                                className="w-40"
+                                                            >
                                                                 <DropdownMenuItem
-                                                                    onClick={() => setDetailJabatan(jabatan)}
+                                                                    onClick={() =>
+                                                                        setDetailJabatan(
+                                                                            jabatan,
+                                                                        )
+                                                                    }
                                                                     className="flex cursor-pointer items-center gap-2"
                                                                 >
                                                                     <Eye className="h-4 w-4" />
                                                                     Detail
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem
-                                                                    onClick={() => openEditDialog(jabatan)}
+                                                                    onClick={() =>
+                                                                        openEditDialog(
+                                                                            jabatan,
+                                                                        )
+                                                                    }
                                                                     className="flex cursor-pointer items-center gap-2"
                                                                 >
                                                                     <Pencil className="h-4 w-4" />
@@ -511,8 +613,12 @@ export default function JabatanIndex({
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem
                                                                     onClick={() => {
-                                                                        setDeleteError(null);
-                                                                        setDeleteJabatan(jabatan);
+                                                                        setDeleteError(
+                                                                            null,
+                                                                        );
+                                                                        setDeleteJabatan(
+                                                                            jabatan,
+                                                                        );
                                                                     }}
                                                                     className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
                                                                 >
@@ -530,17 +636,26 @@ export default function JabatanIndex({
 
                                 <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
-                                        Menampilkan {jabatans.from || 0} hingga {jabatans.to || 0} dari {jabatans.total} jabatan
+                                        Menampilkan {jabatans.from || 0} hingga{' '}
+                                        {jabatans.to || 0} dari {jabatans.total}{' '}
+                                        jabatan
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             disabled={!jabatans.prev_page_url}
-                                            asChild={Boolean(jabatans.prev_page_url)}
+                                            asChild={Boolean(
+                                                jabatans.prev_page_url,
+                                            )}
                                         >
                                             {jabatans.prev_page_url ? (
-                                                <Link href={jabatans.prev_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        jabatans.prev_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Sebelumnya
                                                 </Link>
                                             ) : (
@@ -551,10 +666,17 @@ export default function JabatanIndex({
                                             variant="outline"
                                             size="sm"
                                             disabled={!jabatans.next_page_url}
-                                            asChild={Boolean(jabatans.next_page_url)}
+                                            asChild={Boolean(
+                                                jabatans.next_page_url,
+                                            )}
                                         >
                                             {jabatans.next_page_url ? (
-                                                <Link href={jabatans.next_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        jabatans.next_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Selanjutnya
                                                 </Link>
                                             ) : (
@@ -575,7 +697,10 @@ export default function JabatanIndex({
                 jabatan={selectedJabatan}
                 onOpenChange={setFormOpen}
             />
-            <DetailDialog jabatan={detailJabatan} onOpenChange={(open) => !open && setDetailJabatan(null)} />
+            <DetailDialog
+                jabatan={detailJabatan}
+                onOpenChange={(open) => !open && setDetailJabatan(null)}
+            />
             <ConfirmDialog
                 isOpen={deleteJabatan !== null}
                 onClose={() => {
@@ -584,7 +709,10 @@ export default function JabatanIndex({
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Jabatan"
-                description={deleteError || `Hapus jabatan "${deleteJabatan?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+                description={
+                    deleteError ||
+                    `Hapus jabatan "${deleteJabatan?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
+                }
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -594,7 +722,11 @@ export default function JabatanIndex({
 }
 
 function StatValue({ value }: { value: number }) {
-    return <div className="text-2xl font-semibold tracking-normal text-foreground">{value.toLocaleString('id-ID')}</div>;
+    return (
+        <div className="text-2xl font-semibold tracking-normal text-foreground">
+            {value.toLocaleString('id-ID')}
+        </div>
+    );
 }
 
 JabatanIndex.layout = {

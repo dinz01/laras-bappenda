@@ -31,7 +31,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { index, show } from '@/routes/arsip';
-import { ArsipCreateDialog, MasterItem } from './create-dialog';
+import type { MasterItem } from './create-dialog';
+import { ArsipCreateDialog } from './create-dialog';
 
 type Arsip = {
     id: number;
@@ -129,7 +130,9 @@ export default function Index({
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     // Handle filter/search trigger
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -171,14 +174,23 @@ export default function Index({
         }
     };
 
-    const hasFilters = filters.status_arsip_id || filters.unit_organisasi_id || filters.klasifikasi_arsip_id || filters.tahun || filters.search;
+    const hasFilters =
+        filters.status_arsip_id ||
+        filters.unit_organisasi_id ||
+        filters.klasifikasi_arsip_id ||
+        filters.tahun ||
+        filters.search;
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index(), {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index(),
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     return (
@@ -200,7 +212,10 @@ export default function Index({
                     }
                 />
 
-                <ContentCard title="Daftar Arsip" description="Data seluruh arsip yang telah diregistrasi">
+                <ContentCard
+                    title="Daftar Arsip"
+                    description="Data seluruh arsip yang telah diregistrasi"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
@@ -210,16 +225,29 @@ export default function Index({
                                 <div className="flex flex-wrap items-center gap-2">
                                     {/* Klasifikasi Filter */}
                                     <Select
-                                        value={filters.klasifikasi_arsip_id || 'all'}
-                                        onValueChange={(val) => updateFilters({ klasifikasi_arsip_id: val === 'all' ? null : val })}
+                                        value={
+                                            filters.klasifikasi_arsip_id ||
+                                            'all'
+                                        }
+                                        onValueChange={(val) =>
+                                            updateFilters({
+                                                klasifikasi_arsip_id:
+                                                    val === 'all' ? null : val,
+                                            })
+                                        }
                                     >
                                         <SelectTrigger className="h-9 w-[150px] border-border/60">
                                             <SelectValue placeholder="Klasifikasi" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">Semua Klasifikasi</SelectItem>
+                                            <SelectItem value="all">
+                                                Semua Klasifikasi
+                                            </SelectItem>
                                             {klasifikasis.map((opt) => (
-                                                <SelectItem key={opt.id} value={opt.id.toString()}>
+                                                <SelectItem
+                                                    key={opt.id}
+                                                    value={opt.id.toString()}
+                                                >
                                                     {opt.kode} — {opt.nama}
                                                 </SelectItem>
                                             ))}
@@ -228,16 +256,28 @@ export default function Index({
 
                                     {/* Unit Organisasi Filter */}
                                     <Select
-                                        value={filters.unit_organisasi_id || 'all'}
-                                        onValueChange={(val) => updateFilters({ unit_organisasi_id: val === 'all' ? null : val })}
+                                        value={
+                                            filters.unit_organisasi_id || 'all'
+                                        }
+                                        onValueChange={(val) =>
+                                            updateFilters({
+                                                unit_organisasi_id:
+                                                    val === 'all' ? null : val,
+                                            })
+                                        }
                                     >
                                         <SelectTrigger className="h-9 w-[150px] border-border/60">
                                             <SelectValue placeholder="Unit Organisasi" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">Semua Unit</SelectItem>
+                                            <SelectItem value="all">
+                                                Semua Unit
+                                            </SelectItem>
                                             {unitOrganisasis.map((opt) => (
-                                                <SelectItem key={opt.id} value={opt.id.toString()}>
+                                                <SelectItem
+                                                    key={opt.id}
+                                                    value={opt.id.toString()}
+                                                >
                                                     {opt.nama}
                                                 </SelectItem>
                                             ))}
@@ -247,15 +287,25 @@ export default function Index({
                                     {/* Status Filter */}
                                     <Select
                                         value={filters.status_arsip_id || 'all'}
-                                        onValueChange={(val) => updateFilters({ status_arsip_id: val === 'all' ? null : val })}
+                                        onValueChange={(val) =>
+                                            updateFilters({
+                                                status_arsip_id:
+                                                    val === 'all' ? null : val,
+                                            })
+                                        }
                                     >
                                         <SelectTrigger className="h-9 w-[120px] border-border/60">
                                             <SelectValue placeholder="Status" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">Semua Status</SelectItem>
+                                            <SelectItem value="all">
+                                                Semua Status
+                                            </SelectItem>
                                             {statusArsips.map((opt) => (
-                                                <SelectItem key={opt.id} value={opt.id.toString()}>
+                                                <SelectItem
+                                                    key={opt.id}
+                                                    value={opt.id.toString()}
+                                                >
                                                     {opt.nama}
                                                 </SelectItem>
                                             ))}
@@ -265,15 +315,30 @@ export default function Index({
                                     {/* Tahun Filter */}
                                     <Select
                                         value={filters.tahun || 'all'}
-                                        onValueChange={(val) => updateFilters({ tahun: val === 'all' ? null : val })}
+                                        onValueChange={(val) =>
+                                            updateFilters({
+                                                tahun:
+                                                    val === 'all' ? null : val,
+                                            })
+                                        }
                                     >
                                         <SelectTrigger className="h-9 w-[110px] border-border/60">
                                             <SelectValue placeholder="Tahun" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">Semua Tahun</SelectItem>
-                                            {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((yr) => (
-                                                <SelectItem key={yr} value={yr.toString()}>
+                                            <SelectItem value="all">
+                                                Semua Tahun
+                                            </SelectItem>
+                                            {Array.from(
+                                                { length: 10 },
+                                                (_, i) =>
+                                                    new Date().getFullYear() -
+                                                    i,
+                                            ).map((yr) => (
+                                                <SelectItem
+                                                    key={yr}
+                                                    value={yr.toString()}
+                                                >
                                                     {yr}
                                                 </SelectItem>
                                             ))}
@@ -303,77 +368,161 @@ export default function Index({
                             />
                         ) : (
                             <>
-                                <div className="rounded-md border border-border/60 overflow-hidden">
+                                <div className="overflow-hidden rounded-md border border-border/60">
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[180px] font-semibold">Nomor Arsip</TableHead>
-                                                <TableHead className="font-semibold">Judul</TableHead>
-                                                <TableHead className="font-semibold">Klasifikasi</TableHead>
-                                                <TableHead className="font-semibold">Unit Organisasi</TableHead>
-                                                <TableHead className="font-semibold">Lokasi</TableHead>
-                                                <TableHead className="font-semibold">Status</TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="w-[180px] font-semibold">
+                                                    Nomor Arsip
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Judul
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Klasifikasi
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Unit Organisasi
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Lokasi
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {arsips.data.map((arsip) => (
-                                                <TableRow key={arsip.id} className="hover:bg-muted/30 transition-colors">
+                                                <TableRow
+                                                    key={arsip.id}
+                                                    className="transition-colors hover:bg-muted/30"
+                                                >
                                                     <TableCell className="font-mono text-xs text-muted-foreground">
                                                         {arsip.nomor_arsip}
                                                     </TableCell>
-                                                    <TableCell className="font-medium max-w-[200px] truncate">
+                                                    <TableCell className="max-w-[200px] truncate font-medium">
                                                         {arsip.judul}
                                                     </TableCell>
                                                     <TableCell>
                                                         {arsip.klasifikasi_arsip ? (
-                                                            <span className="inline-flex items-center rounded bg-muted px-2 py-0.5 text-xs font-mono" title={arsip.klasifikasi_arsip.nama}>
-                                                                {arsip.klasifikasi_arsip.kode}
+                                                            <span
+                                                                className="inline-flex items-center rounded bg-muted px-2 py-0.5 font-mono text-xs"
+                                                                title={
+                                                                    arsip
+                                                                        .klasifikasi_arsip
+                                                                        .nama
+                                                                }
+                                                            >
+                                                                {
+                                                                    arsip
+                                                                        .klasifikasi_arsip
+                                                                        .kode
+                                                                }
                                                             </span>
                                                         ) : (
                                                             '-'
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-sm text-muted-foreground">
-                                                        {arsip.unit_organisasi?.nama || '-'}
+                                                        {arsip.unit_organisasi
+                                                            ?.nama || '-'}
                                                     </TableCell>
                                                     <TableCell className="text-sm text-muted-foreground">
-                                                        {arsip.lokasi_arsip?.nama || '-'}
+                                                        {arsip.lokasi_arsip
+                                                            ?.nama || '-'}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <StatusBadge variant={statusVariant(arsip.status_arsip?.nama)}>
-                                                            {arsip.status_arsip?.nama || 'Draft'}
+                                                        <StatusBadge
+                                                            variant={statusVariant(
+                                                                arsip
+                                                                    .status_arsip
+                                                                    ?.nama,
+                                                            )}
+                                                        >
+                                                            {arsip.status_arsip
+                                                                ?.nama ||
+                                                                'Draft'}
                                                         </StatusBadge>
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <span className="sr-only">Menu aksi</span>
-                                                                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                                                        <circle cx="4" cy="10" r="1.5" />
-                                                                        <circle cx="10" cy="10" r="1.5" />
-                                                                        <circle cx="16" cy="10" r="1.5" />
+                                                            <DropdownMenuTrigger
+                                                                asChild
+                                                            >
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8"
+                                                                >
+                                                                    <span className="sr-only">
+                                                                        Menu
+                                                                        aksi
+                                                                    </span>
+                                                                    <svg
+                                                                        className="h-4 w-4"
+                                                                        fill="currentColor"
+                                                                        viewBox="0 0 20 20"
+                                                                    >
+                                                                        <circle
+                                                                            cx="4"
+                                                                            cy="10"
+                                                                            r="1.5"
+                                                                        />
+                                                                        <circle
+                                                                            cx="10"
+                                                                            cy="10"
+                                                                            r="1.5"
+                                                                        />
+                                                                        <circle
+                                                                            cx="16"
+                                                                            cy="10"
+                                                                            r="1.5"
+                                                                        />
                                                                     </svg>
                                                                 </Button>
                                                             </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
-                                                                <DropdownMenuItem asChild>
-                                                                    <Link href={show({ arsip: arsip.id })} className="flex items-center gap-2 cursor-pointer">
+                                                            <DropdownMenuContent
+                                                                align="end"
+                                                                className="w-40"
+                                                            >
+                                                                <DropdownMenuItem
+                                                                    asChild
+                                                                >
+                                                                    <Link
+                                                                        href={show(
+                                                                            {
+                                                                                arsip: arsip.id,
+                                                                            },
+                                                                        )}
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
                                                                         <Eye className="h-4 w-4" />
                                                                         Detail
                                                                     </Link>
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem asChild>
-                                                                    <Link href={`/arsip/${arsip.id}/edit`} className="flex items-center gap-2 cursor-pointer">
+                                                                <DropdownMenuItem
+                                                                    asChild
+                                                                >
+                                                                    <Link
+                                                                        href={`/arsip/${arsip.id}/edit`}
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
                                                                         <Pencil className="h-4 w-4" />
                                                                         Edit
                                                                     </Link>
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem
-                                                                    onClick={() => handleDelete(arsip.id)}
-                                                                    className="text-destructive focus:text-destructive flex items-center gap-2 cursor-pointer"
+                                                                    onClick={() =>
+                                                                        handleDelete(
+                                                                            arsip.id,
+                                                                        )
+                                                                    }
+                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
                                                                     Hapus
@@ -390,7 +539,9 @@ export default function Index({
                                 {/* Pagination */}
                                 <div className="flex items-center justify-between pt-4 text-sm text-muted-foreground">
                                     <span>
-                                        Menampilkan {arsips.from || 0} hingga {arsips.to || 0} dari {arsips.total} arsip
+                                        Menampilkan {arsips.from || 0} hingga{' '}
+                                        {arsips.to || 0} dari {arsips.total}{' '}
+                                        arsip
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <Button
@@ -400,7 +551,10 @@ export default function Index({
                                             asChild={!!arsips.prev_page_url}
                                         >
                                             {arsips.prev_page_url ? (
-                                                <Link href={arsips.prev_page_url} preserveState>
+                                                <Link
+                                                    href={arsips.prev_page_url}
+                                                    preserveState
+                                                >
                                                     Sebelumnya
                                                 </Link>
                                             ) : (
@@ -414,7 +568,10 @@ export default function Index({
                                             asChild={!!arsips.next_page_url}
                                         >
                                             {arsips.next_page_url ? (
-                                                <Link href={arsips.next_page_url} preserveState>
+                                                <Link
+                                                    href={arsips.next_page_url}
+                                                    preserveState
+                                                >
                                                     Selanjutnya
                                                 </Link>
                                             ) : (

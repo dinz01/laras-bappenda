@@ -108,11 +108,12 @@ export function ArsipCreateDialog({
 
     return (
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-            <DialogContent className="border-border/60 max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+            <DialogContent className="max-h-[90vh] overflow-y-auto border-border/60 sm:max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Tambah Arsip Baru</DialogTitle>
                     <DialogDescription>
-                        Registrasi berkas dan metadata arsip baru ke dalam repositori.
+                        Registrasi berkas dan metadata arsip baru ke dalam
+                        repositori.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -120,12 +121,15 @@ export function ArsipCreateDialog({
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-1.5">
                             <Label htmlFor="nomor_arsip">
-                                Nomor Arsip <span className="text-destructive">*</span>
+                                Nomor Arsip{' '}
+                                <span className="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="nomor_arsip"
                                 value={data.nomor_arsip}
-                                onChange={(e) => setData('nomor_arsip', e.target.value)}
+                                onChange={(e) =>
+                                    setData('nomor_arsip', e.target.value)
+                                }
                                 placeholder="Contoh: ARS/2026/00001"
                                 className="border-border/60"
                             />
@@ -134,59 +138,78 @@ export function ArsipCreateDialog({
 
                         <div className="space-y-1.5">
                             <Label htmlFor="tanggal_arsip">
-                                Tanggal Arsip <span className="text-destructive">*</span>
+                                Tanggal Arsip{' '}
+                                <span className="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="tanggal_arsip"
                                 type="date"
                                 value={data.tanggal_arsip}
-                                onChange={(e) => setData('tanggal_arsip', e.target.value)}
+                                onChange={(e) =>
+                                    setData('tanggal_arsip', e.target.value)
+                                }
                                 className="border-border/60"
                             />
                             <InputError message={errors.tanggal_arsip} />
                         </div>
 
-                        <div className="sm:col-span-2 space-y-1.5">
+                        <div className="space-y-1.5 sm:col-span-2">
                             <Label htmlFor="judul">
-                                Judul Arsip <span className="text-destructive">*</span>
+                                Judul Arsip{' '}
+                                <span className="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="judul"
                                 value={data.judul}
-                                onChange={(e) => setData('judul', e.target.value)}
+                                onChange={(e) =>
+                                    setData('judul', e.target.value)
+                                }
                                 placeholder="Masukkan judul arsip"
                                 className="border-border/60"
                             />
                             <InputError message={errors.judul} />
                         </div>
 
-                        <div className="sm:col-span-2 space-y-1.5">
-                            <Label htmlFor="deskripsi">Keterangan / Deskripsi</Label>
+                        <div className="space-y-1.5 sm:col-span-2">
+                            <Label htmlFor="deskripsi">
+                                Keterangan / Deskripsi
+                            </Label>
                             <textarea
                                 id="deskripsi"
                                 value={data.deskripsi}
-                                onChange={(e) => setData('deskripsi', e.target.value)}
+                                onChange={(e) =>
+                                    setData('deskripsi', e.target.value)
+                                }
                                 rows={2}
                                 placeholder="Deskripsi singkat isi arsip (opsional)"
-                                className="flex w-full rounded-md border border-border/60 bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+                                className="flex w-full resize-none rounded-md border border-border/60 bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                             />
                             <InputError message={errors.deskripsi} />
                         </div>
 
                         <div className="space-y-1.5">
                             <Label htmlFor="klasifikasi_arsip_id">
-                                Klasifikasi Arsip <span className="text-destructive">*</span>
+                                Klasifikasi Arsip{' '}
+                                <span className="text-destructive">*</span>
                             </Label>
                             <Select
                                 value={data.klasifikasi_arsip_id}
-                                onValueChange={(val) => setData('klasifikasi_arsip_id', val)}
+                                onValueChange={(val) =>
+                                    setData('klasifikasi_arsip_id', val)
+                                }
                             >
-                                <SelectTrigger id="klasifikasi_arsip_id" className="border-border/60">
+                                <SelectTrigger
+                                    id="klasifikasi_arsip_id"
+                                    className="border-border/60"
+                                >
                                     <SelectValue placeholder="Pilih klasifikasi..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {klasifikasis.map((opt) => (
-                                        <SelectItem key={opt.id} value={opt.id.toString()}>
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id.toString()}
+                                        >
                                             {opt.kode} — {opt.nama}
                                         </SelectItem>
                                     ))}
@@ -199,14 +222,22 @@ export function ArsipCreateDialog({
                             <Label htmlFor="jenis_arsip_id">Jenis Arsip</Label>
                             <Select
                                 value={data.jenis_arsip_id}
-                                onValueChange={(val) => setData('jenis_arsip_id', val)}
+                                onValueChange={(val) =>
+                                    setData('jenis_arsip_id', val)
+                                }
                             >
-                                <SelectTrigger id="jenis_arsip_id" className="border-border/60">
+                                <SelectTrigger
+                                    id="jenis_arsip_id"
+                                    className="border-border/60"
+                                >
                                     <SelectValue placeholder="Pilih jenis arsip..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {jenisList.map((opt) => (
-                                        <SelectItem key={opt.id} value={opt.id.toString()}>
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id.toString()}
+                                        >
                                             {opt.nama}
                                         </SelectItem>
                                     ))}
@@ -216,17 +247,27 @@ export function ArsipCreateDialog({
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="unit_organisasi_id">Unit Organisasi</Label>
+                            <Label htmlFor="unit_organisasi_id">
+                                Unit Organisasi
+                            </Label>
                             <Select
                                 value={data.unit_organisasi_id}
-                                onValueChange={(val) => setData('unit_organisasi_id', val)}
+                                onValueChange={(val) =>
+                                    setData('unit_organisasi_id', val)
+                                }
                             >
-                                <SelectTrigger id="unit_organisasi_id" className="border-border/60">
+                                <SelectTrigger
+                                    id="unit_organisasi_id"
+                                    className="border-border/60"
+                                >
                                     <SelectValue placeholder="Pilih unit organisasi..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {unitOrganisasis.map((opt) => (
-                                        <SelectItem key={opt.id} value={opt.id.toString()}>
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id.toString()}
+                                        >
                                             {opt.nama}
                                         </SelectItem>
                                     ))}
@@ -236,17 +277,27 @@ export function ArsipCreateDialog({
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="lokasi_arsip_id">Lokasi Arsip</Label>
+                            <Label htmlFor="lokasi_arsip_id">
+                                Lokasi Arsip
+                            </Label>
                             <Select
                                 value={data.lokasi_arsip_id}
-                                onValueChange={(val) => setData('lokasi_arsip_id', val)}
+                                onValueChange={(val) =>
+                                    setData('lokasi_arsip_id', val)
+                                }
                             >
-                                <SelectTrigger id="lokasi_arsip_id" className="border-border/60">
+                                <SelectTrigger
+                                    id="lokasi_arsip_id"
+                                    className="border-border/60"
+                                >
                                     <SelectValue placeholder="Pilih lokasi..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {lokasiArsips.map((opt) => (
-                                        <SelectItem key={opt.id} value={opt.id.toString()}>
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id.toString()}
+                                        >
                                             {opt.nama}
                                         </SelectItem>
                                     ))}
@@ -259,14 +310,22 @@ export function ArsipCreateDialog({
                             <Label htmlFor="sifat_arsip_id">Sifat Arsip</Label>
                             <Select
                                 value={data.sifat_arsip_id}
-                                onValueChange={(val) => setData('sifat_arsip_id', val)}
+                                onValueChange={(val) =>
+                                    setData('sifat_arsip_id', val)
+                                }
                             >
-                                <SelectTrigger id="sifat_arsip_id" className="border-border/60">
+                                <SelectTrigger
+                                    id="sifat_arsip_id"
+                                    className="border-border/60"
+                                >
                                     <SelectValue placeholder="Pilih sifat..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {sifatArsips.map((opt) => (
-                                        <SelectItem key={opt.id} value={opt.id.toString()}>
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id.toString()}
+                                        >
                                             {opt.nama}
                                         </SelectItem>
                                     ))}
@@ -276,17 +335,60 @@ export function ArsipCreateDialog({
                         </div>
 
                         <div className="space-y-1.5">
+                            <Label htmlFor="tingkat_perkembangan_arsip_id">
+                                Tingkat Perkembangan
+                            </Label>
+                            <Select
+                                value={data.tingkat_perkembangan_arsip_id}
+                                onValueChange={(val) =>
+                                    setData(
+                                        'tingkat_perkembangan_arsip_id',
+                                        val,
+                                    )
+                                }
+                            >
+                                <SelectTrigger
+                                    id="tingkat_perkembangan_arsip_id"
+                                    className="border-border/60"
+                                >
+                                    <SelectValue placeholder="Pilih tingkat..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {tingkatPerkembanganArsips.map((opt) => (
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id.toString()}
+                                        >
+                                            {opt.nama}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <InputError
+                                message={errors.tingkat_perkembangan_arsip_id}
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
                             <Label htmlFor="status_arsip_id">Status</Label>
                             <Select
                                 value={data.status_arsip_id}
-                                onValueChange={(val) => setData('status_arsip_id', val)}
+                                onValueChange={(val) =>
+                                    setData('status_arsip_id', val)
+                                }
                             >
-                                <SelectTrigger id="status_arsip_id" className="border-border/60">
+                                <SelectTrigger
+                                    id="status_arsip_id"
+                                    className="border-border/60"
+                                >
                                     <SelectValue placeholder="Pilih status..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {statusArsips.map((opt) => (
-                                        <SelectItem key={opt.id} value={opt.id.toString()}>
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id.toString()}
+                                        >
                                             {opt.nama}
                                         </SelectItem>
                                     ))}
@@ -295,16 +397,23 @@ export function ArsipCreateDialog({
                             <InputError message={errors.status_arsip_id} />
                         </div>
 
-                        <div className="sm:col-span-2 space-y-1.5">
+                        <div className="space-y-1.5 sm:col-span-2">
                             <Label>Berkas Digital (Opsional)</Label>
                             {data.file ? (
                                 <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/40 p-3">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <FileText className="h-7 w-7 text-muted-foreground shrink-0" />
+                                    <div className="flex min-w-0 items-center gap-3">
+                                        <FileText className="h-7 w-7 shrink-0 text-muted-foreground" />
                                         <div className="min-w-0 flex-1">
-                                            <p className="truncate text-xs font-medium">{data.file.name}</p>
+                                            <p className="truncate text-xs font-medium">
+                                                {data.file.name}
+                                            </p>
                                             <p className="text-[10px] text-muted-foreground">
-                                                {(data.file.size / 1024 / 1024).toFixed(2)} MB
+                                                {(
+                                                    data.file.size /
+                                                    1024 /
+                                                    1024
+                                                ).toFixed(2)}{' '}
+                                                MB
                                             </p>
                                         </div>
                                     </div>
@@ -325,22 +434,34 @@ export function ArsipCreateDialog({
                                     onDragLeave={handleDrag}
                                     onDrop={handleDrop}
                                     className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
-                                        dragActive ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20'
+                                        dragActive
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-border/60 bg-muted/20'
                                     }`}
                                 >
-                                    <UploadCloud className="mx-auto h-7 w-7 text-muted-foreground mb-1" />
-                                    <p className="text-xs font-medium">Seret dan lepas berkas di sini, atau</p>
-                                    <label className="mt-1.5 inline-flex h-7 items-center justify-center rounded-md bg-secondary px-3 text-xs font-medium text-secondary-foreground shadow-sm hover:bg-secondary/80 cursor-pointer">
+                                    <UploadCloud className="mx-auto mb-1 h-7 w-7 text-muted-foreground" />
+                                    <p className="text-xs font-medium">
+                                        Seret dan lepas berkas di sini, atau
+                                    </p>
+                                    <label className="mt-1.5 inline-flex h-7 cursor-pointer items-center justify-center rounded-md bg-secondary px-3 text-xs font-medium text-secondary-foreground shadow-sm hover:bg-secondary/80">
                                         Pilih Berkas
                                         <input
                                             type="file"
                                             className="sr-only"
                                             accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-                                            onChange={(e) => setData('file', e.target.files ? e.target.files[0] : null)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'file',
+                                                    e.target.files
+                                                        ? e.target.files[0]
+                                                        : null,
+                                                )
+                                            }
                                         />
                                     </label>
-                                    <p className="text-[10px] text-muted-foreground mt-1.5">
-                                        PDF, DOC, DOCX, XLS, XLSX, JPG, PNG hingga 10MB
+                                    <p className="mt-1.5 text-[10px] text-muted-foreground">
+                                        PDF, DOC, DOCX, XLS, XLSX, JPG, PNG
+                                        hingga 10MB
                                     </p>
                                 </div>
                             )}
@@ -348,8 +469,13 @@ export function ArsipCreateDialog({
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/40">
-                        <Button type="button" variant="outline" size="sm" onClick={handleClose}>
+                    <div className="flex items-center justify-end gap-2 border-t border-border/40 pt-3">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleClose}
+                        >
                             Batal
                         </Button>
                         <Button type="submit" size="sm" disabled={processing}>

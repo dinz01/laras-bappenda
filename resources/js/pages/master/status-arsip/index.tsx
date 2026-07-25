@@ -137,12 +137,16 @@ function StatusArsipFormDialog({
             return;
         }
 
-        form.setData(statusArsip ? {
-            kode: statusArsip.kode,
-            nama: statusArsip.nama,
-            deskripsi: statusArsip.deskripsi ?? '',
-            status: statusArsip.status,
-        } : emptyForm);
+        form.setData(
+            statusArsip
+                ? {
+                      kode: statusArsip.kode,
+                      nama: statusArsip.nama,
+                      deskripsi: statusArsip.deskripsi ?? '',
+                      status: statusArsip.status,
+                  }
+                : emptyForm,
+        );
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, statusArsip]);
@@ -173,7 +177,9 @@ function StatusArsipFormDialog({
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
-                        {mode === 'create' ? 'Tambah Status Arsip' : 'Edit Status Arsip'}
+                        {mode === 'create'
+                            ? 'Tambah Status Arsip'
+                            : 'Edit Status Arsip'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
                         Lengkapi data status arsip yang digunakan.
@@ -187,7 +193,9 @@ function StatusArsipFormDialog({
                             <Input
                                 id="kode"
                                 value={form.data.kode}
-                                onChange={(event) => form.setData('kode', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('kode', event.target.value)
+                                }
                                 placeholder="Contoh: ST-001"
                                 maxLength={50}
                             />
@@ -198,14 +206,20 @@ function StatusArsipFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: StatusArsipFormData['status']) => form.setData('status', value)}
+                                onValueChange={(
+                                    value: StatusArsipFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -217,7 +231,9 @@ function StatusArsipFormDialog({
                         <Input
                             id="nama"
                             value={form.data.nama}
-                            onChange={(event) => form.setData('nama', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('nama', event.target.value)
+                            }
                             placeholder="Nama status arsip"
                             maxLength={255}
                         />
@@ -229,7 +245,9 @@ function StatusArsipFormDialog({
                         <Input
                             id="deskripsi"
                             value={form.data.deskripsi}
-                            onChange={(event) => form.setData('deskripsi', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('deskripsi', event.target.value)
+                            }
                             placeholder="Deskripsi status arsip"
                         />
                         <InputError message={form.errors.deskripsi} />
@@ -265,7 +283,9 @@ function DetailDialog({
         <Dialog open={statusArsip !== null} onOpenChange={onOpenChange}>
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">Detail Status Arsip</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">
+                        Detail Status Arsip
+                    </DialogTitle>
                     <DialogDescription className="text-xs">
                         Informasi lengkap status arsip.
                     </DialogDescription>
@@ -275,12 +295,25 @@ function DetailDialog({
                     <div className="grid gap-3 text-sm">
                         <DetailRow label="Kode" value={statusArsip.kode} mono />
                         <DetailRow label="Nama" value={statusArsip.nama} />
-                        <DetailRow label="Deskripsi" value={statusArsip.deskripsi || '-'} />
-                        <DetailRow label="Dibuat Pada" value={statusArsip.created_at || '-'} />
-                        <DetailRow label="Diperbarui Pada" value={statusArsip.updated_at || '-'} />
+                        <DetailRow
+                            label="Deskripsi"
+                            value={statusArsip.deskripsi || '-'}
+                        />
+                        <DetailRow
+                            label="Dibuat Pada"
+                            value={statusArsip.created_at || '-'}
+                        />
+                        <DetailRow
+                            label="Diperbarui Pada"
+                            value={statusArsip.updated_at || '-'}
+                        />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
-                            <StatusBadge variant={statusVariant(statusArsip.status)}>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
+                            <StatusBadge
+                                variant={statusVariant(statusArsip.status)}
+                            >
                                 {statusLabel(statusArsip.status)}
                             </StatusBadge>
                         </div>
@@ -291,11 +324,25 @@ function DetailDialog({
     );
 }
 
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
             <span className="text-muted-foreground">{label}</span>
-            <span className={mono ? 'font-mono text-xs text-right' : 'font-medium text-right'}>
+            <span
+                className={
+                    mono
+                        ? 'text-right font-mono text-xs'
+                        : 'text-right font-medium'
+                }
+            >
                 {value}
             </span>
         </div>
@@ -310,13 +357,18 @@ export default function StatusArsipIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-    const [selectedStatusArsip, setSelectedStatusArsip] = useState<StatusArsip | null>(null);
-    const [detailStatusArsip, setDetailStatusArsip] = useState<StatusArsip | null>(null);
-    const [deleteStatusArsip, setDeleteStatusArsip] = useState<StatusArsip | null>(null);
+    const [selectedStatusArsip, setSelectedStatusArsip] =
+        useState<StatusArsip | null>(null);
+    const [detailStatusArsip, setDetailStatusArsip] =
+        useState<StatusArsip | null>(null);
+    const [deleteStatusArsip, setDeleteStatusArsip] =
+        useState<StatusArsip | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -361,10 +413,14 @@ export default function StatusArsipIndex({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index().url, {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index().url,
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const confirmDelete = () => {
@@ -379,7 +435,9 @@ export default function StatusArsipIndex({
             preserveScroll: true,
             onSuccess: () => setDeleteStatusArsip(null),
             onError: (errors) => {
-                setDeleteError(errors.status_arsip || 'Status arsip gagal dihapus.');
+                setDeleteError(
+                    errors.status_arsip || 'Status arsip gagal dihapus.',
+                );
             },
             onFinish: () => setDeleting(false),
         });
@@ -423,23 +481,28 @@ export default function StatusArsipIndex({
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Daftar Status Arsip" description="Data status arsip yang tersedia dalam repositori">
+                <ContentCard
+                    title="Daftar Status Arsip"
+                    description="Data status arsip yang tersedia dalam repositori"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari kode, nama, atau deskripsi..."
-                            filters={hasFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Reset Filter
-                                </Button>
-                            )}
+                            filters={
+                                hasFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="mr-1 h-4 w-4" />
+                                        Reset Filter
+                                    </Button>
+                                )
+                            }
                         />
 
                         {statusArsips.data.length === 0 ? (
@@ -454,90 +517,151 @@ export default function StatusArsipIndex({
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[130px] font-semibold">Kode</TableHead>
-                                                <TableHead className="font-semibold">Nama</TableHead>
-                                                <TableHead className="font-semibold">Deskripsi</TableHead>
-                                                <TableHead className="w-[110px] font-semibold">Status</TableHead>
-                                                <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="w-[130px] font-semibold">
+                                                    Kode
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Nama
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Deskripsi
+                                                </TableHead>
+                                                <TableHead className="w-[110px] font-semibold">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead className="w-[170px] font-semibold">
+                                                    Dibuat Pada
+                                                </TableHead>
+                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {statusArsips.data.map((statusArsip) => (
-                                                <TableRow key={statusArsip.id} className="transition-colors hover:bg-muted/30">
-                                                    <TableCell className="font-mono text-xs text-muted-foreground">
-                                                        {statusArsip.kode}
-                                                    </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {statusArsip.nama}
-                                                    </TableCell>
-                                                    <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
-                                                        {statusArsip.deskripsi || '-'}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusBadge variant={statusVariant(statusArsip.status)} className="w-fit">
-                                                            {statusLabel(statusArsip.status)}
-                                                        </StatusBadge>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
-                                                        {statusArsip.created_at || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <span className="sr-only">Menu aksi</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => setDetailStatusArsip(statusArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                            {statusArsips.data.map(
+                                                (statusArsip) => (
+                                                    <TableRow
+                                                        key={statusArsip.id}
+                                                        className="transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                                            {statusArsip.kode}
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">
+                                                            {statusArsip.nama}
+                                                        </TableCell>
+                                                        <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
+                                                            {statusArsip.deskripsi ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <StatusBadge
+                                                                variant={statusVariant(
+                                                                    statusArsip.status,
+                                                                )}
+                                                                className="w-fit"
+                                                            >
+                                                                {statusLabel(
+                                                                    statusArsip.status,
+                                                                )}
+                                                            </StatusBadge>
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-muted-foreground">
+                                                            {statusArsip.created_at ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    asChild
                                                                 >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    Detail
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => openEditDialog(statusArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8"
+                                                                    >
+                                                                        <span className="sr-only">
+                                                                            Menu
+                                                                            aksi
+                                                                        </span>
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent
+                                                                    align="end"
+                                                                    className="w-40"
                                                                 >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                    Edit
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setDeleteError(null);
-                                                                        setDeleteStatusArsip(statusArsip);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Hapus
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            setDetailStatusArsip(
+                                                                                statusArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        Detail
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            openEditDialog(
+                                                                                statusArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setDeleteError(
+                                                                                null,
+                                                                            );
+                                                                            setDeleteStatusArsip(
+                                                                                statusArsip,
+                                                                            );
+                                                                        }}
+                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Hapus
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
 
                                 <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
-                                        Menampilkan {statusArsips.from || 0} hingga {statusArsips.to || 0} dari {statusArsips.total} status
+                                        Menampilkan {statusArsips.from || 0}{' '}
+                                        hingga {statusArsips.to || 0} dari{' '}
+                                        {statusArsips.total} status
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!statusArsips.prev_page_url}
-                                            asChild={Boolean(statusArsips.prev_page_url)}
+                                            disabled={
+                                                !statusArsips.prev_page_url
+                                            }
+                                            asChild={Boolean(
+                                                statusArsips.prev_page_url,
+                                            )}
                                         >
                                             {statusArsips.prev_page_url ? (
-                                                <Link href={statusArsips.prev_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        statusArsips.prev_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Sebelumnya
                                                 </Link>
                                             ) : (
@@ -547,11 +671,20 @@ export default function StatusArsipIndex({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!statusArsips.next_page_url}
-                                            asChild={Boolean(statusArsips.next_page_url)}
+                                            disabled={
+                                                !statusArsips.next_page_url
+                                            }
+                                            asChild={Boolean(
+                                                statusArsips.next_page_url,
+                                            )}
                                         >
                                             {statusArsips.next_page_url ? (
-                                                <Link href={statusArsips.next_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        statusArsips.next_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Selanjutnya
                                                 </Link>
                                             ) : (
@@ -572,7 +705,10 @@ export default function StatusArsipIndex({
                 statusArsip={selectedStatusArsip}
                 onOpenChange={setFormOpen}
             />
-            <DetailDialog statusArsip={detailStatusArsip} onOpenChange={(open) => !open && setDetailStatusArsip(null)} />
+            <DetailDialog
+                statusArsip={detailStatusArsip}
+                onOpenChange={(open) => !open && setDetailStatusArsip(null)}
+            />
             <ConfirmDialog
                 isOpen={deleteStatusArsip !== null}
                 onClose={() => {
@@ -581,7 +717,10 @@ export default function StatusArsipIndex({
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Status Arsip"
-                description={deleteError || `Hapus status arsip "${deleteStatusArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+                description={
+                    deleteError ||
+                    `Hapus status arsip "${deleteStatusArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
+                }
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -591,7 +730,11 @@ export default function StatusArsipIndex({
 }
 
 function StatValue({ value }: { value: number }) {
-    return <div className="text-2xl font-semibold tracking-normal text-foreground">{value.toLocaleString('id-ID')}</div>;
+    return (
+        <div className="text-2xl font-semibold tracking-normal text-foreground">
+            {value.toLocaleString('id-ID')}
+        </div>
+    );
 }
 
 StatusArsipIndex.layout = {

@@ -15,12 +15,16 @@ export function Forbidden({
     backLabel = 'Kembali ke Dashboard',
 }: ForbiddenProps) {
     return (
-        <div className="flex min-h-[400px] flex-col items-center justify-center text-center p-6 border border-border/60 rounded-xl bg-card">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/10 mb-6">
+        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-xl border border-border/60 bg-card p-6 text-center">
+            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/10">
                 <ShieldAlert className="h-8 w-8 text-rose-500" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">{title}</h1>
-            <p className="mt-3 max-w-sm text-sm text-muted-foreground leading-relaxed">{description}</p>
+            <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                {title}
+            </h1>
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                {description}
+            </p>
             {onBack && (
                 <Button onClick={onBack} size="sm" className="mt-6">
                     {backLabel}

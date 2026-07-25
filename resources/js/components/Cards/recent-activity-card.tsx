@@ -16,11 +16,16 @@ interface RecentActivityCardProps {
     isLoading?: boolean;
 }
 
-export function RecentActivityCard({ rows = [], isLoading = false }: RecentActivityCardProps) {
+export function RecentActivityCard({
+    rows = [],
+    isLoading = false,
+}: RecentActivityCardProps) {
     return (
         <Card className="border-border/60">
             <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold">Aktivitas Terbaru</CardTitle>
+                <CardTitle className="text-sm font-semibold">
+                    Aktivitas Terbaru
+                </CardTitle>
             </CardHeader>
             <CardContent>
                 {isLoading ? (
@@ -61,11 +66,16 @@ export function RecentActivityCard({ rows = [], isLoading = false }: RecentActiv
                             </thead>
                             <tbody>
                                 {rows.map((row) => (
-                                    <tr key={row.id} className="border-b border-border/40 last:border-0">
+                                    <tr
+                                        key={row.id}
+                                        className="border-b border-border/40 last:border-0"
+                                    >
                                         <td className="py-2.5 text-xs text-muted-foreground">
                                             {row.date}
                                         </td>
-                                        <td className="py-2.5 text-xs">{row.activity}</td>
+                                        <td className="py-2.5 text-xs">
+                                            {row.activity}
+                                        </td>
                                         <td className="py-2.5 text-xs text-muted-foreground">
                                             {row.user}
                                         </td>

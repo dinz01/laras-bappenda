@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
 import { Button } from '@/components/ui/button';
-import { ArsipCreateDialog, MasterItem } from './create-dialog';
 import { index, create } from '@/routes/arsip';
+import type { MasterItem } from './create-dialog';
+import { ArsipCreateDialog } from './create-dialog';
 
 type CreateProps = {
     klasifikasis?: MasterItem[];

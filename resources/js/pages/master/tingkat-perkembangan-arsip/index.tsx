@@ -52,7 +52,12 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { dashboard } from '@/routes';
-import { destroy, index, store, update } from '@/routes/master/tingkat-perkembangan-arsip';
+import {
+    destroy,
+    index,
+    store,
+    update,
+} from '@/routes/master/tingkat-perkembangan-arsip';
 
 type TingkatPerkembanganArsip = {
     id: number;
@@ -137,12 +142,16 @@ function TingkatPerkembanganArsipFormDialog({
             return;
         }
 
-        form.setData(tingkatPerkembanganArsip ? {
-            kode: tingkatPerkembanganArsip.kode,
-            nama: tingkatPerkembanganArsip.nama,
-            deskripsi: tingkatPerkembanganArsip.deskripsi ?? '',
-            status: tingkatPerkembanganArsip.status,
-        } : emptyForm);
+        form.setData(
+            tingkatPerkembanganArsip
+                ? {
+                      kode: tingkatPerkembanganArsip.kode,
+                      nama: tingkatPerkembanganArsip.nama,
+                      deskripsi: tingkatPerkembanganArsip.deskripsi ?? '',
+                      status: tingkatPerkembanganArsip.status,
+                  }
+                : emptyForm,
+        );
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, tingkatPerkembanganArsip]);
@@ -151,10 +160,15 @@ function TingkatPerkembanganArsipFormDialog({
         event.preventDefault();
 
         if (mode === 'edit' && tingkatPerkembanganArsip) {
-            form.put(update({ tingkatPerkembanganArsip: tingkatPerkembanganArsip.id }).url, {
-                preserveScroll: true,
-                onSuccess: () => onOpenChange(false),
-            });
+            form.put(
+                update({
+                    tingkatPerkembanganArsip: tingkatPerkembanganArsip.id,
+                }).url,
+                {
+                    preserveScroll: true,
+                    onSuccess: () => onOpenChange(false),
+                },
+            );
 
             return;
         }
@@ -173,7 +187,9 @@ function TingkatPerkembanganArsipFormDialog({
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
-                        {mode === 'create' ? 'Tambah Tingkat Perkembangan Arsip' : 'Edit Tingkat Perkembangan Arsip'}
+                        {mode === 'create'
+                            ? 'Tambah Tingkat Perkembangan Arsip'
+                            : 'Edit Tingkat Perkembangan Arsip'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
                         Lengkapi data tingkat perkembangan arsip.
@@ -187,7 +203,9 @@ function TingkatPerkembanganArsipFormDialog({
                             <Input
                                 id="kode"
                                 value={form.data.kode}
-                                onChange={(event) => form.setData('kode', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('kode', event.target.value)
+                                }
                                 placeholder="Contoh: TPA-00001"
                                 maxLength={50}
                             />
@@ -198,14 +216,20 @@ function TingkatPerkembanganArsipFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: TingkatPerkembanganArsipFormData['status']) => form.setData('status', value)}
+                                onValueChange={(
+                                    value: TingkatPerkembanganArsipFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -217,7 +241,9 @@ function TingkatPerkembanganArsipFormDialog({
                         <Input
                             id="nama"
                             value={form.data.nama}
-                            onChange={(event) => form.setData('nama', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('nama', event.target.value)
+                            }
                             placeholder="Nama tingkat perkembangan arsip"
                             maxLength={255}
                         />
@@ -229,7 +255,9 @@ function TingkatPerkembanganArsipFormDialog({
                         <Input
                             id="deskripsi"
                             value={form.data.deskripsi}
-                            onChange={(event) => form.setData('deskripsi', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('deskripsi', event.target.value)
+                            }
                             placeholder="Deskripsi tingkat perkembangan arsip"
                         />
                         <InputError message={form.errors.deskripsi} />
@@ -262,10 +290,15 @@ function DetailDialog({
     onOpenChange: (open: boolean) => void;
 }) {
     return (
-        <Dialog open={tingkatPerkembanganArsip !== null} onOpenChange={onOpenChange}>
+        <Dialog
+            open={tingkatPerkembanganArsip !== null}
+            onOpenChange={onOpenChange}
+        >
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">Detail Tingkat Perkembangan Arsip</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">
+                        Detail Tingkat Perkembangan Arsip
+                    </DialogTitle>
                     <DialogDescription className="text-xs">
                         Informasi lengkap tingkat perkembangan arsip.
                     </DialogDescription>
@@ -273,14 +306,36 @@ function DetailDialog({
 
                 {tingkatPerkembanganArsip && (
                     <div className="grid gap-3 text-sm">
-                        <DetailRow label="Kode" value={tingkatPerkembanganArsip.kode} mono />
-                        <DetailRow label="Nama" value={tingkatPerkembanganArsip.nama} />
-                        <DetailRow label="Deskripsi" value={tingkatPerkembanganArsip.deskripsi || '-'} />
-                        <DetailRow label="Dibuat Pada" value={tingkatPerkembanganArsip.created_at || '-'} />
-                        <DetailRow label="Diperbarui Pada" value={tingkatPerkembanganArsip.updated_at || '-'} />
+                        <DetailRow
+                            label="Kode"
+                            value={tingkatPerkembanganArsip.kode}
+                            mono
+                        />
+                        <DetailRow
+                            label="Nama"
+                            value={tingkatPerkembanganArsip.nama}
+                        />
+                        <DetailRow
+                            label="Deskripsi"
+                            value={tingkatPerkembanganArsip.deskripsi || '-'}
+                        />
+                        <DetailRow
+                            label="Dibuat Pada"
+                            value={tingkatPerkembanganArsip.created_at || '-'}
+                        />
+                        <DetailRow
+                            label="Diperbarui Pada"
+                            value={tingkatPerkembanganArsip.updated_at || '-'}
+                        />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
-                            <StatusBadge variant={statusVariant(tingkatPerkembanganArsip.status)}>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
+                            <StatusBadge
+                                variant={statusVariant(
+                                    tingkatPerkembanganArsip.status,
+                                )}
+                            >
                                 {statusLabel(tingkatPerkembanganArsip.status)}
                             </StatusBadge>
                         </div>
@@ -291,11 +346,25 @@ function DetailDialog({
     );
 }
 
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
             <span className="text-muted-foreground">{label}</span>
-            <span className={mono ? 'font-mono text-xs text-right' : 'font-medium text-right'}>
+            <span
+                className={
+                    mono
+                        ? 'text-right font-mono text-xs'
+                        : 'text-right font-medium'
+                }
+            >
                 {value}
             </span>
         </div>
@@ -310,13 +379,20 @@ export default function TingkatPerkembanganArsipIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-    const [selectedTingkatPerkembanganArsip, setSelectedTingkatPerkembanganArsip] = useState<TingkatPerkembanganArsip | null>(null);
-    const [detailTingkatPerkembanganArsip, setDetailTingkatPerkembanganArsip] = useState<TingkatPerkembanganArsip | null>(null);
-    const [deleteTingkatPerkembanganArsip, setDeleteTingkatPerkembanganArsip] = useState<TingkatPerkembanganArsip | null>(null);
+    const [
+        selectedTingkatPerkembanganArsip,
+        setSelectedTingkatPerkembanganArsip,
+    ] = useState<TingkatPerkembanganArsip | null>(null);
+    const [detailTingkatPerkembanganArsip, setDetailTingkatPerkembanganArsip] =
+        useState<TingkatPerkembanganArsip | null>(null);
+    const [deleteTingkatPerkembanganArsip, setDeleteTingkatPerkembanganArsip] =
+        useState<TingkatPerkembanganArsip | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -353,7 +429,9 @@ export default function TingkatPerkembanganArsipIndex({
         setFormOpen(true);
     };
 
-    const openEditDialog = (tingkatPerkembanganArsip: TingkatPerkembanganArsip) => {
+    const openEditDialog = (
+        tingkatPerkembanganArsip: TingkatPerkembanganArsip,
+    ) => {
         setSelectedTingkatPerkembanganArsip(tingkatPerkembanganArsip);
         setFormMode('edit');
         setFormOpen(true);
@@ -361,10 +439,14 @@ export default function TingkatPerkembanganArsipIndex({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index().url, {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index().url,
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const confirmDelete = () => {
@@ -375,14 +457,22 @@ export default function TingkatPerkembanganArsipIndex({
         setDeleting(true);
         setDeleteError(null);
 
-        router.delete(destroy({ tingkatPerkembanganArsip: deleteTingkatPerkembanganArsip.id }).url, {
-            preserveScroll: true,
-            onSuccess: () => setDeleteTingkatPerkembanganArsip(null),
-            onError: (errors) => {
-                setDeleteError(errors.tingkat_perkembangan_arsip || 'Tingkat perkembangan arsip gagal dihapus.');
+        router.delete(
+            destroy({
+                tingkatPerkembanganArsip: deleteTingkatPerkembanganArsip.id,
+            }).url,
+            {
+                preserveScroll: true,
+                onSuccess: () => setDeleteTingkatPerkembanganArsip(null),
+                onError: (errors) => {
+                    setDeleteError(
+                        errors.tingkat_perkembangan_arsip ||
+                            'Tingkat perkembangan arsip gagal dihapus.',
+                    );
+                },
+                onFinish: () => setDeleting(false),
             },
-            onFinish: () => setDeleting(false),
-        });
+        );
     };
 
     const hasFilters = Boolean(filters.search);
@@ -398,7 +488,10 @@ export default function TingkatPerkembanganArsipIndex({
                     breadcrumb={[
                         { title: 'Dashboard', href: dashboard.url() },
                         { title: 'Master Data', href: '#' },
-                        { title: 'Tingkat Perkembangan Arsip', href: index.url() },
+                        {
+                            title: 'Tingkat Perkembangan Arsip',
+                            href: index.url(),
+                        },
                     ]}
                     actions={
                         <Button size="sm" onClick={openCreateDialog}>
@@ -410,7 +503,9 @@ export default function TingkatPerkembanganArsipIndex({
 
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <ContentCard title="Total Tingkat Perkembangan">
-                        <StatValue value={stats.total_tingkat_perkembangan_arsip} />
+                        <StatValue
+                            value={stats.total_tingkat_perkembangan_arsip}
+                        />
                     </ContentCard>
                     <ContentCard title="Aktif">
                         <StatValue value={stats.aktif} />
@@ -423,23 +518,28 @@ export default function TingkatPerkembanganArsipIndex({
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Daftar Tingkat Perkembangan Arsip" description="Data tingkat perkembangan arsip yang tersedia">
+                <ContentCard
+                    title="Daftar Tingkat Perkembangan Arsip"
+                    description="Data tingkat perkembangan arsip yang tersedia"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari kode, nama, atau deskripsi..."
-                            filters={hasFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Reset Filter
-                                </Button>
-                            )}
+                            filters={
+                                hasFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="mr-1 h-4 w-4" />
+                                        Reset Filter
+                                    </Button>
+                                )
+                            }
                         />
 
                         {tingkatPerkembanganArsips.data.length === 0 ? (
@@ -454,90 +554,159 @@ export default function TingkatPerkembanganArsipIndex({
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[130px] font-semibold">Kode</TableHead>
-                                                <TableHead className="font-semibold">Nama</TableHead>
-                                                <TableHead className="font-semibold">Deskripsi</TableHead>
-                                                <TableHead className="w-[110px] font-semibold">Status</TableHead>
-                                                <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="w-[130px] font-semibold">
+                                                    Kode
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Nama
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Deskripsi
+                                                </TableHead>
+                                                <TableHead className="w-[110px] font-semibold">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead className="w-[170px] font-semibold">
+                                                    Dibuat Pada
+                                                </TableHead>
+                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {tingkatPerkembanganArsips.data.map((tingkatPerkembanganArsip) => (
-                                                <TableRow key={tingkatPerkembanganArsip.id} className="transition-colors hover:bg-muted/30">
-                                                    <TableCell className="font-mono text-xs text-muted-foreground">
-                                                        {tingkatPerkembanganArsip.kode}
-                                                    </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {tingkatPerkembanganArsip.nama}
-                                                    </TableCell>
-                                                    <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
-                                                        {tingkatPerkembanganArsip.deskripsi || '-'}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusBadge variant={statusVariant(tingkatPerkembanganArsip.status)} className="w-fit">
-                                                            {statusLabel(tingkatPerkembanganArsip.status)}
-                                                        </StatusBadge>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
-                                                        {tingkatPerkembanganArsip.created_at || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <span className="sr-only">Menu aksi</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => setDetailTingkatPerkembanganArsip(tingkatPerkembanganArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                            {tingkatPerkembanganArsips.data.map(
+                                                (tingkatPerkembanganArsip) => (
+                                                    <TableRow
+                                                        key={
+                                                            tingkatPerkembanganArsip.id
+                                                        }
+                                                        className="transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                                            {
+                                                                tingkatPerkembanganArsip.kode
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">
+                                                            {
+                                                                tingkatPerkembanganArsip.nama
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
+                                                            {tingkatPerkembanganArsip.deskripsi ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <StatusBadge
+                                                                variant={statusVariant(
+                                                                    tingkatPerkembanganArsip.status,
+                                                                )}
+                                                                className="w-fit"
+                                                            >
+                                                                {statusLabel(
+                                                                    tingkatPerkembanganArsip.status,
+                                                                )}
+                                                            </StatusBadge>
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-muted-foreground">
+                                                            {tingkatPerkembanganArsip.created_at ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    asChild
                                                                 >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    Detail
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => openEditDialog(tingkatPerkembanganArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8"
+                                                                    >
+                                                                        <span className="sr-only">
+                                                                            Menu
+                                                                            aksi
+                                                                        </span>
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent
+                                                                    align="end"
+                                                                    className="w-40"
                                                                 >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                    Edit
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setDeleteError(null);
-                                                                        setDeleteTingkatPerkembanganArsip(tingkatPerkembanganArsip);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Hapus
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            setDetailTingkatPerkembanganArsip(
+                                                                                tingkatPerkembanganArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        Detail
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            openEditDialog(
+                                                                                tingkatPerkembanganArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setDeleteError(
+                                                                                null,
+                                                                            );
+                                                                            setDeleteTingkatPerkembanganArsip(
+                                                                                tingkatPerkembanganArsip,
+                                                                            );
+                                                                        }}
+                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Hapus
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
 
                                 <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
-                                        Menampilkan {tingkatPerkembanganArsips.from || 0} hingga {tingkatPerkembanganArsips.to || 0} dari {tingkatPerkembanganArsips.total} akses
+                                        Menampilkan{' '}
+                                        {tingkatPerkembanganArsips.from || 0}{' '}
+                                        hingga{' '}
+                                        {tingkatPerkembanganArsips.to || 0} dari{' '}
+                                        {tingkatPerkembanganArsips.total} akses
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!tingkatPerkembanganArsips.prev_page_url}
-                                            asChild={Boolean(tingkatPerkembanganArsips.prev_page_url)}
+                                            disabled={
+                                                !tingkatPerkembanganArsips.prev_page_url
+                                            }
+                                            asChild={Boolean(
+                                                tingkatPerkembanganArsips.prev_page_url,
+                                            )}
                                         >
                                             {tingkatPerkembanganArsips.prev_page_url ? (
-                                                <Link href={tingkatPerkembanganArsips.prev_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        tingkatPerkembanganArsips.prev_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Sebelumnya
                                                 </Link>
                                             ) : (
@@ -547,11 +716,20 @@ export default function TingkatPerkembanganArsipIndex({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!tingkatPerkembanganArsips.next_page_url}
-                                            asChild={Boolean(tingkatPerkembanganArsips.next_page_url)}
+                                            disabled={
+                                                !tingkatPerkembanganArsips.next_page_url
+                                            }
+                                            asChild={Boolean(
+                                                tingkatPerkembanganArsips.next_page_url,
+                                            )}
                                         >
                                             {tingkatPerkembanganArsips.next_page_url ? (
-                                                <Link href={tingkatPerkembanganArsips.next_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        tingkatPerkembanganArsips.next_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Selanjutnya
                                                 </Link>
                                             ) : (
@@ -572,7 +750,12 @@ export default function TingkatPerkembanganArsipIndex({
                 tingkatPerkembanganArsip={selectedTingkatPerkembanganArsip}
                 onOpenChange={setFormOpen}
             />
-            <DetailDialog tingkatPerkembanganArsip={detailTingkatPerkembanganArsip} onOpenChange={(open) => !open && setDetailTingkatPerkembanganArsip(null)} />
+            <DetailDialog
+                tingkatPerkembanganArsip={detailTingkatPerkembanganArsip}
+                onOpenChange={(open) =>
+                    !open && setDetailTingkatPerkembanganArsip(null)
+                }
+            />
             <ConfirmDialog
                 isOpen={deleteTingkatPerkembanganArsip !== null}
                 onClose={() => {
@@ -581,7 +764,10 @@ export default function TingkatPerkembanganArsipIndex({
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Tingkat Perkembangan Arsip"
-                description={deleteError || `Hapus tingkat perkembangan arsip "${deleteTingkatPerkembanganArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+                description={
+                    deleteError ||
+                    `Hapus tingkat perkembangan arsip "${deleteTingkatPerkembanganArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
+                }
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -591,12 +777,19 @@ export default function TingkatPerkembanganArsipIndex({
 }
 
 function StatValue({ value }: { value: number }) {
-    return <div className="text-2xl font-semibold tracking-normal text-foreground">{value.toLocaleString('id-ID')}</div>;
+    return (
+        <div className="text-2xl font-semibold tracking-normal text-foreground">
+            {value.toLocaleString('id-ID')}
+        </div>
+    );
 }
 
 TingkatPerkembanganArsipIndex.layout = {
     breadcrumbs: [
         { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Tingkat Perkembangan Arsip', href: '/master/tingkat-perkembangan-arsip' },
+        {
+            title: 'Tingkat Perkembangan Arsip',
+            href: '/master/tingkat-perkembangan-arsip',
+        },
     ],
 };

@@ -52,7 +52,12 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { dashboard } from '@/routes';
-import { destroy, index, store, update } from '@/routes/master/klasifikasi-arsip';
+import {
+    destroy,
+    index,
+    store,
+    update,
+} from '@/routes/master/klasifikasi-arsip';
 
 type RetensiArsipOption = {
     id: number;
@@ -152,13 +157,19 @@ function KlasifikasiArsipFormDialog({
             return;
         }
 
-        form.setData(klasifikasiArsip ? {
-            kode: klasifikasiArsip.kode,
-            nama: klasifikasiArsip.nama,
-            deskripsi: klasifikasiArsip.deskripsi ?? '',
-            retensi_arsip_id: klasifikasiArsip.retensi_arsip_id ? String(klasifikasiArsip.retensi_arsip_id) : '',
-            status: klasifikasiArsip.status,
-        } : emptyForm);
+        form.setData(
+            klasifikasiArsip
+                ? {
+                      kode: klasifikasiArsip.kode,
+                      nama: klasifikasiArsip.nama,
+                      deskripsi: klasifikasiArsip.deskripsi ?? '',
+                      retensi_arsip_id: klasifikasiArsip.retensi_arsip_id
+                          ? String(klasifikasiArsip.retensi_arsip_id)
+                          : '',
+                      status: klasifikasiArsip.status,
+                  }
+                : emptyForm,
+        );
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, klasifikasiArsip]);
@@ -189,10 +200,13 @@ function KlasifikasiArsipFormDialog({
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
-                        {mode === 'create' ? 'Tambah Klasifikasi Arsip' : 'Edit Klasifikasi Arsip'}
+                        {mode === 'create'
+                            ? 'Tambah Klasifikasi Arsip'
+                            : 'Edit Klasifikasi Arsip'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
-                        Lengkapi data klasifikasi arsip sesuai standar kearsipan yang berlaku.
+                        Lengkapi data klasifikasi arsip sesuai standar kearsipan
+                        yang berlaku.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -203,7 +217,9 @@ function KlasifikasiArsipFormDialog({
                             <Input
                                 id="kode"
                                 value={form.data.kode}
-                                onChange={(event) => form.setData('kode', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('kode', event.target.value)
+                                }
                                 placeholder="Contoh: KA-001"
                                 maxLength={50}
                             />
@@ -214,14 +230,20 @@ function KlasifikasiArsipFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: KlasifikasiArsipFormData['status']) => form.setData('status', value)}
+                                onValueChange={(
+                                    value: KlasifikasiArsipFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -233,7 +255,9 @@ function KlasifikasiArsipFormDialog({
                         <Input
                             id="nama"
                             value={form.data.nama}
-                            onChange={(event) => form.setData('nama', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('nama', event.target.value)
+                            }
                             placeholder="Nama klasifikasi arsip"
                             maxLength={255}
                         />
@@ -241,18 +265,30 @@ function KlasifikasiArsipFormDialog({
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="retensi_arsip_id">Master Retensi Arsip</Label>
+                        <Label htmlFor="retensi_arsip_id">
+                            Master Retensi Arsip
+                        </Label>
                         <Select
                             value={form.data.retensi_arsip_id}
-                            onValueChange={(value: string) => form.setData('retensi_arsip_id', value)}
+                            onValueChange={(value: string) =>
+                                form.setData('retensi_arsip_id', value)
+                            }
                         >
-                            <SelectTrigger id="retensi_arsip_id" className="w-full">
+                            <SelectTrigger
+                                id="retensi_arsip_id"
+                                className="w-full"
+                            >
                                 <SelectValue placeholder="Pilih aturan retensi arsip..." />
                             </SelectTrigger>
                             <SelectContent>
                                 {retensiArsips.map((retensi) => (
-                                    <SelectItem key={retensi.id} value={String(retensi.id)}>
-                                        {retensi.nama} ({retensi.kode} — Aktif: {retensi.retensi_aktif} th, Inaktif: {retensi.retensi_inaktif} th)
+                                    <SelectItem
+                                        key={retensi.id}
+                                        value={String(retensi.id)}
+                                    >
+                                        {retensi.nama} ({retensi.kode} — Aktif:{' '}
+                                        {retensi.retensi_aktif} th, Inaktif:{' '}
+                                        {retensi.retensi_inaktif} th)
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -265,7 +301,9 @@ function KlasifikasiArsipFormDialog({
                         <Input
                             id="deskripsi"
                             value={form.data.deskripsi}
-                            onChange={(event) => form.setData('deskripsi', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('deskripsi', event.target.value)
+                            }
                             placeholder="Deskripsi klasifikasi arsip"
                         />
                         <InputError message={form.errors.deskripsi} />
@@ -301,7 +339,9 @@ function DetailDialog({
         <Dialog open={klasifikasiArsip !== null} onOpenChange={onOpenChange}>
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">Detail Klasifikasi Arsip</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">
+                        Detail Klasifikasi Arsip
+                    </DialogTitle>
                     <DialogDescription className="text-xs">
                         Informasi lengkap klasifikasi arsip.
                     </DialogDescription>
@@ -309,9 +349,16 @@ function DetailDialog({
 
                 {klasifikasiArsip && (
                     <div className="grid gap-3 text-sm">
-                        <DetailRow label="Kode" value={klasifikasiArsip.kode} mono />
+                        <DetailRow
+                            label="Kode"
+                            value={klasifikasiArsip.kode}
+                            mono
+                        />
                         <DetailRow label="Nama" value={klasifikasiArsip.nama} />
-                        <DetailRow label="Deskripsi" value={klasifikasiArsip.deskripsi || '-'} />
+                        <DetailRow
+                            label="Deskripsi"
+                            value={klasifikasiArsip.deskripsi || '-'}
+                        />
                         <DetailRow
                             label="Master Retensi"
                             value={
@@ -322,15 +369,31 @@ function DetailDialog({
                         />
                         {klasifikasiArsip.retensi_arsip && (
                             <>
-                                <DetailRow label="Retensi Aktif" value={`${klasifikasiArsip.retensi_arsip.retensi_aktif} tahun`} />
-                                <DetailRow label="Retensi Inaktif" value={`${klasifikasiArsip.retensi_arsip.retensi_inaktif} tahun`} />
+                                <DetailRow
+                                    label="Retensi Aktif"
+                                    value={`${klasifikasiArsip.retensi_arsip.retensi_aktif} tahun`}
+                                />
+                                <DetailRow
+                                    label="Retensi Inaktif"
+                                    value={`${klasifikasiArsip.retensi_arsip.retensi_inaktif} tahun`}
+                                />
                             </>
                         )}
-                        <DetailRow label="Dibuat Pada" value={klasifikasiArsip.created_at || '-'} />
-                        <DetailRow label="Diperbarui Pada" value={klasifikasiArsip.updated_at || '-'} />
+                        <DetailRow
+                            label="Dibuat Pada"
+                            value={klasifikasiArsip.created_at || '-'}
+                        />
+                        <DetailRow
+                            label="Diperbarui Pada"
+                            value={klasifikasiArsip.updated_at || '-'}
+                        />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
-                            <StatusBadge variant={statusVariant(klasifikasiArsip.status)}>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
+                            <StatusBadge
+                                variant={statusVariant(klasifikasiArsip.status)}
+                            >
                                 {statusLabel(klasifikasiArsip.status)}
                             </StatusBadge>
                         </div>
@@ -341,11 +404,25 @@ function DetailDialog({
     );
 }
 
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
             <span className="text-muted-foreground">{label}</span>
-            <span className={mono ? 'font-mono text-xs text-right' : 'font-medium text-right'}>
+            <span
+                className={
+                    mono
+                        ? 'text-right font-mono text-xs'
+                        : 'text-right font-medium'
+                }
+            >
                 {value}
             </span>
         </div>
@@ -361,13 +438,18 @@ export default function KlasifikasiArsipIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-    const [selectedKlasifikasiArsip, setSelectedKlasifikasiArsip] = useState<KlasifikasiArsip | null>(null);
-    const [detailKlasifikasiArsip, setDetailKlasifikasiArsip] = useState<KlasifikasiArsip | null>(null);
-    const [deleteKlasifikasiArsip, setDeleteKlasifikasiArsip] = useState<KlasifikasiArsip | null>(null);
+    const [selectedKlasifikasiArsip, setSelectedKlasifikasiArsip] =
+        useState<KlasifikasiArsip | null>(null);
+    const [detailKlasifikasiArsip, setDetailKlasifikasiArsip] =
+        useState<KlasifikasiArsip | null>(null);
+    const [deleteKlasifikasiArsip, setDeleteKlasifikasiArsip] =
+        useState<KlasifikasiArsip | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -412,10 +494,14 @@ export default function KlasifikasiArsipIndex({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index().url, {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index().url,
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const confirmDelete = () => {
@@ -426,14 +512,20 @@ export default function KlasifikasiArsipIndex({
         setDeleting(true);
         setDeleteError(null);
 
-        router.delete(destroy({ klasifikasiArsip: deleteKlasifikasiArsip.id }).url, {
-            preserveScroll: true,
-            onSuccess: () => setDeleteKlasifikasiArsip(null),
-            onError: (errors) => {
-                setDeleteError(errors.klasifikasi_arsip || 'Klasifikasi arsip gagal dihapus.');
+        router.delete(
+            destroy({ klasifikasiArsip: deleteKlasifikasiArsip.id }).url,
+            {
+                preserveScroll: true,
+                onSuccess: () => setDeleteKlasifikasiArsip(null),
+                onError: (errors) => {
+                    setDeleteError(
+                        errors.klasifikasi_arsip ||
+                            'Klasifikasi arsip gagal dihapus.',
+                    );
+                },
+                onFinish: () => setDeleting(false),
             },
-            onFinish: () => setDeleting(false),
-        });
+        );
     };
 
     const hasFilters = Boolean(filters.search);
@@ -474,23 +566,28 @@ export default function KlasifikasiArsipIndex({
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Daftar Klasifikasi Arsip" description="Data klasifikasi arsip berdasarkan standar kearsipan nasional">
+                <ContentCard
+                    title="Daftar Klasifikasi Arsip"
+                    description="Data klasifikasi arsip berdasarkan standar kearsipan nasional"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari kode, nama, atau deskripsi..."
-                            filters={hasFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Reset Filter
-                                </Button>
-                            )}
+                            filters={
+                                hasFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="mr-1 h-4 w-4" />
+                                        Reset Filter
+                                    </Button>
+                                )
+                            }
                         />
 
                         {klasifikasiArsips.data.length === 0 ? (
@@ -505,103 +602,194 @@ export default function KlasifikasiArsipIndex({
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[130px] font-semibold">Kode</TableHead>
-                                                <TableHead className="font-semibold">Nama</TableHead>
-                                                <TableHead className="font-semibold">Deskripsi</TableHead>
-                                                <TableHead className="w-[200px] font-semibold">Retensi Arsip</TableHead>
-                                                <TableHead className="w-[110px] font-semibold">Status</TableHead>
-                                                <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="w-[130px] font-semibold">
+                                                    Kode
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Nama
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Deskripsi
+                                                </TableHead>
+                                                <TableHead className="w-[200px] font-semibold">
+                                                    Retensi Arsip
+                                                </TableHead>
+                                                <TableHead className="w-[110px] font-semibold">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead className="w-[170px] font-semibold">
+                                                    Dibuat Pada
+                                                </TableHead>
+                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {klasifikasiArsips.data.map((klasifikasiArsip) => (
-                                                <TableRow key={klasifikasiArsip.id} className="transition-colors hover:bg-muted/30">
-                                                    <TableCell className="font-mono text-xs text-muted-foreground">
-                                                        {klasifikasiArsip.kode}
-                                                    </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {klasifikasiArsip.nama}
-                                                    </TableCell>
-                                                    <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
-                                                        {klasifikasiArsip.deskripsi || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-sm">
-                                                        {klasifikasiArsip.retensi_arsip ? (
-                                                            <div>
-                                                                <span className="font-medium">{klasifikasiArsip.retensi_arsip.nama}</span>
-                                                                <span className="block text-xs text-muted-foreground">
-                                                                    Aktif: {klasifikasiArsip.retensi_arsip.retensi_aktif} th | Inaktif: {klasifikasiArsip.retensi_arsip.retensi_inaktif} th
+                                            {klasifikasiArsips.data.map(
+                                                (klasifikasiArsip) => (
+                                                    <TableRow
+                                                        key={
+                                                            klasifikasiArsip.id
+                                                        }
+                                                        className="transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                                            {
+                                                                klasifikasiArsip.kode
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">
+                                                            {
+                                                                klasifikasiArsip.nama
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
+                                                            {klasifikasiArsip.deskripsi ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm">
+                                                            {klasifikasiArsip.retensi_arsip ? (
+                                                                <div>
+                                                                    <span className="font-medium">
+                                                                        {
+                                                                            klasifikasiArsip
+                                                                                .retensi_arsip
+                                                                                .nama
+                                                                        }
+                                                                    </span>
+                                                                    <span className="block text-xs text-muted-foreground">
+                                                                        Aktif:{' '}
+                                                                        {
+                                                                            klasifikasiArsip
+                                                                                .retensi_arsip
+                                                                                .retensi_aktif
+                                                                        }{' '}
+                                                                        th |
+                                                                        Inaktif:{' '}
+                                                                        {
+                                                                            klasifikasiArsip
+                                                                                .retensi_arsip
+                                                                                .retensi_inaktif
+                                                                        }{' '}
+                                                                        th
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-muted-foreground">
+                                                                    -
                                                                 </span>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-muted-foreground">-</span>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusBadge variant={statusVariant(klasifikasiArsip.status)} className="w-fit">
-                                                            {statusLabel(klasifikasiArsip.status)}
-                                                        </StatusBadge>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
-                                                        {klasifikasiArsip.created_at || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <span className="sr-only">Menu aksi</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => setDetailKlasifikasiArsip(klasifikasiArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <StatusBadge
+                                                                variant={statusVariant(
+                                                                    klasifikasiArsip.status,
+                                                                )}
+                                                                className="w-fit"
+                                                            >
+                                                                {statusLabel(
+                                                                    klasifikasiArsip.status,
+                                                                )}
+                                                            </StatusBadge>
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-muted-foreground">
+                                                            {klasifikasiArsip.created_at ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    asChild
                                                                 >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    Detail
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => openEditDialog(klasifikasiArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8"
+                                                                    >
+                                                                        <span className="sr-only">
+                                                                            Menu
+                                                                            aksi
+                                                                        </span>
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent
+                                                                    align="end"
+                                                                    className="w-40"
                                                                 >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                    Edit
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setDeleteError(null);
-                                                                        setDeleteKlasifikasiArsip(klasifikasiArsip);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Hapus
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            setDetailKlasifikasiArsip(
+                                                                                klasifikasiArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        Detail
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            openEditDialog(
+                                                                                klasifikasiArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setDeleteError(
+                                                                                null,
+                                                                            );
+                                                                            setDeleteKlasifikasiArsip(
+                                                                                klasifikasiArsip,
+                                                                            );
+                                                                        }}
+                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Hapus
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
 
                                 <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
-                                        Menampilkan {klasifikasiArsips.from || 0} hingga {klasifikasiArsips.to || 0} dari {klasifikasiArsips.total} klasifikasi
+                                        Menampilkan{' '}
+                                        {klasifikasiArsips.from || 0} hingga{' '}
+                                        {klasifikasiArsips.to || 0} dari{' '}
+                                        {klasifikasiArsips.total} klasifikasi
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!klasifikasiArsips.prev_page_url}
-                                            asChild={Boolean(klasifikasiArsips.prev_page_url)}
+                                            disabled={
+                                                !klasifikasiArsips.prev_page_url
+                                            }
+                                            asChild={Boolean(
+                                                klasifikasiArsips.prev_page_url,
+                                            )}
                                         >
                                             {klasifikasiArsips.prev_page_url ? (
-                                                <Link href={klasifikasiArsips.prev_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        klasifikasiArsips.prev_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Sebelumnya
                                                 </Link>
                                             ) : (
@@ -611,11 +799,20 @@ export default function KlasifikasiArsipIndex({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!klasifikasiArsips.next_page_url}
-                                            asChild={Boolean(klasifikasiArsips.next_page_url)}
+                                            disabled={
+                                                !klasifikasiArsips.next_page_url
+                                            }
+                                            asChild={Boolean(
+                                                klasifikasiArsips.next_page_url,
+                                            )}
                                         >
                                             {klasifikasiArsips.next_page_url ? (
-                                                <Link href={klasifikasiArsips.next_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        klasifikasiArsips.next_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Selanjutnya
                                                 </Link>
                                             ) : (
@@ -637,7 +834,12 @@ export default function KlasifikasiArsipIndex({
                 retensiArsips={retensiArsips}
                 onOpenChange={setFormOpen}
             />
-            <DetailDialog klasifikasiArsip={detailKlasifikasiArsip} onOpenChange={(open) => !open && setDetailKlasifikasiArsip(null)} />
+            <DetailDialog
+                klasifikasiArsip={detailKlasifikasiArsip}
+                onOpenChange={(open) =>
+                    !open && setDetailKlasifikasiArsip(null)
+                }
+            />
             <ConfirmDialog
                 isOpen={deleteKlasifikasiArsip !== null}
                 onClose={() => {
@@ -646,7 +848,10 @@ export default function KlasifikasiArsipIndex({
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Klasifikasi Arsip"
-                description={deleteError || `Hapus klasifikasi arsip "${deleteKlasifikasiArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+                description={
+                    deleteError ||
+                    `Hapus klasifikasi arsip "${deleteKlasifikasiArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
+                }
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -656,7 +861,11 @@ export default function KlasifikasiArsipIndex({
 }
 
 function StatValue({ value }: { value: number }) {
-    return <div className="text-2xl font-semibold tracking-normal text-foreground">{value.toLocaleString('id-ID')}</div>;
+    return (
+        <div className="text-2xl font-semibold tracking-normal text-foreground">
+            {value.toLocaleString('id-ID')}
+        </div>
+    );
 }
 
 KlasifikasiArsipIndex.layout = {

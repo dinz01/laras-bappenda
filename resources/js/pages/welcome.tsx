@@ -7,17 +7,20 @@ const features = [
     {
         icon: Archive,
         title: 'Manajemen Arsip',
-        description: 'Kelola seluruh arsip organisasi secara digital dengan terstruktur dan mudah ditelusuri.',
+        description:
+            'Kelola seluruh arsip organisasi secara digital dengan terstruktur dan mudah ditelusuri.',
     },
     {
         icon: FileSearch,
         title: 'Mudah Ditemukan',
-        description: 'Pencarian arsip yang cepat dan akurat berdasarkan berbagai kriteria klasifikasi.',
+        description:
+            'Pencarian arsip yang cepat dan akurat berdasarkan berbagai kriteria klasifikasi.',
     },
     {
         icon: Shield,
         title: 'Aman & Terpercaya',
-        description: 'Keamanan data terjamin dengan kontrol akses berbasis peran dan audit trail lengkap.',
+        description:
+            'Keamanan data terjamin dengan kontrol akses berbasis peran dan audit trail lengkap.',
     },
 ];
 
@@ -45,8 +48,10 @@ export default function Welcome() {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-sm font-bold leading-none">LARAS</p>
-                                <p className="text-xs text-muted-foreground leading-none mt-0.5">
+                                <p className="text-sm leading-none font-bold">
+                                    LARAS
+                                </p>
+                                <p className="mt-0.5 text-xs leading-none text-muted-foreground">
                                     Layanan Arsip Digital
                                 </p>
                             </div>
@@ -56,9 +61,7 @@ export default function Welcome() {
                                 <Link href={login()}>Masuk</Link>
                             </Button>
                             <Button size="sm" asChild>
-                                <Link href="#">
-                                    Ajukan Permohonan
-                                </Link>
+                                <Link href="#">Ajukan Permohonan</Link>
                             </Button>
                         </nav>
                     </div>
@@ -81,8 +84,10 @@ export default function Welcome() {
                                 </span>
                             </h1>
                             <p className="mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg">
-                                LARAS hadir untuk membantu instansi pemerintah mengelola arsip secara
-                                digital, efisien, transparan, dan sesuai regulasi kearsipan nasional.
+                                LARAS hadir untuk membantu instansi pemerintah
+                                mengelola arsip secara digital, efisien,
+                                transparan, dan sesuai regulasi kearsipan
+                                nasional.
                             </p>
                             <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                                 <Button size="lg" asChild>
@@ -108,7 +113,8 @@ export default function Welcome() {
                                     Dirancang untuk Instansi Pemerintah
                                 </h2>
                                 <p className="mt-3 text-muted-foreground">
-                                    Solusi pengelolaan arsip yang modern, aman, dan mudah digunakan.
+                                    Solusi pengelolaan arsip yang modern, aman,
+                                    dan mudah digunakan.
                                 </p>
                             </div>
                             <div className="grid gap-6 sm:grid-cols-3">
@@ -120,8 +126,10 @@ export default function Welcome() {
                                         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
                                             <feature.icon className="size-5 text-foreground" />
                                         </div>
-                                        <h3 className="mb-2 text-sm font-semibold">{feature.title}</h3>
-                                        <p className="text-sm text-muted-foreground leading-relaxed">
+                                        <h3 className="mb-2 text-sm font-semibold">
+                                            {feature.title}
+                                        </h3>
+                                        <p className="text-sm leading-relaxed text-muted-foreground">
                                             {feature.description}
                                         </p>
                                     </div>
@@ -135,8 +143,9 @@ export default function Welcome() {
                 <footer className="border-t border-border/60 py-6">
                     <div className="mx-auto max-w-6xl px-4 text-center md:px-6">
                         <p className="text-xs text-muted-foreground">
-                            © {new Date().getFullYear()} LARAS — Layanan Arsip Digital. Dikembangkan untuk
-                            pelayanan kearsipan yang lebih baik.
+                            © {new Date().getFullYear()} LARAS — Layanan Arsip
+                            Digital. Dikembangkan untuk pelayanan kearsipan yang
+                            lebih baik.
                         </p>
                     </div>
                 </footer>

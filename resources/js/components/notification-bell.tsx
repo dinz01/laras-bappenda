@@ -17,30 +17,32 @@ import type { NotificationItem } from '@/types/global';
 
 function timeAgo(dateString: string | null, fallback: string | null): string {
     if (!dateString) {
-return '-';
-}
+        return '-';
+    }
 
-    const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
+    const seconds = Math.floor(
+        (Date.now() - new Date(dateString).getTime()) / 1000,
+    );
 
     if (seconds < 60) {
-return 'Baru saja';
-}
+        return 'Baru saja';
+    }
 
     const minutes = Math.floor(seconds / 60);
 
     if (minutes < 60) {
-return `${minutes} mnt lalu`;
-}
+        return `${minutes} mnt lalu`;
+    }
 
     const hours = Math.floor(minutes / 60);
 
     if (hours < 24) {
-return `${hours} jam lalu`;
-}
+        return `${hours} jam lalu`;
+    }
 
     const days = Math.floor(hours / 24);
 
-    return days < 7 ? `${days} hari lalu` : fallback ?? dateString;
+    return days < 7 ? `${days} hari lalu` : (fallback ?? dateString);
 }
 
 export type NotificationBellProps = {
@@ -54,7 +56,8 @@ export function NotificationBell({
 }: NotificationBellProps = {}) {
     const { notifications: shared } = usePage().props as any;
 
-    const notifications: NotificationItem[] = propNotifications ?? shared?.latest ?? [];
+    const notifications: NotificationItem[] =
+        propNotifications ?? shared?.latest ?? [];
     const unreadCount = propUnreadCount ?? shared?.unread_count ?? 0;
 
     function handleMarkAll() {
@@ -70,7 +73,7 @@ export function NotificationBell({
             <DropdownMenuTrigger asChild>
                 <Button
                     variant="ghost"
-                    className="group flex items-center gap-1 h-9 px-2.5 cursor-pointer"
+                    className="group flex h-9 cursor-pointer items-center gap-1 px-2.5"
                     aria-label="Notifikasi"
                     id="notification-bell-trigger"
                 >
@@ -89,7 +92,7 @@ export function NotificationBell({
                 sideOffset={8}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b">
+                <div className="flex items-center justify-between border-b px-4 py-3">
                     <span className="text-sm font-semibold">Notifikasi</span>
                     {unreadCount > 0 && (
                         <Button
@@ -112,24 +115,29 @@ export function NotificationBell({
                         <p className="text-sm">Belum ada notifikasi</p>
                     </div>
                 ) : (
-                    <div className="max-h-80 overflow-y-auto divide-y">
+                    <div className="max-h-80 divide-y overflow-y-auto">
                         {notifications.map((notif) => (
                             <DropdownMenuItem
                                 key={notif.id}
-                                className={`flex flex-col items-start gap-1 px-4 py-3 cursor-pointer ${!notif.is_read ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}`}
+                                className={`flex cursor-pointer flex-col items-start gap-1 px-4 py-3 ${!notif.is_read ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}`}
                                 onClick={() => handleClick(notif)}
                                 id={`notification-item-${notif.id}`}
                             >
                                 <div className="flex w-full items-start justify-between gap-2">
-                                    <span className={`text-xs font-semibold leading-snug ${!notif.is_read ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                    <span
+                                        className={`text-xs leading-snug font-semibold ${!notif.is_read ? 'text-foreground' : 'text-muted-foreground'}`}
+                                    >
                                         {notif.title}
                                     </span>
                                     <div className="flex shrink-0 items-center gap-1">
                                         {!notif.is_read && (
                                             <span className="h-2 w-2 rounded-full bg-blue-500" />
                                         )}
-                                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                            {timeAgo(notif.created_at, notif.created_at_human)}
+                                        <span className="text-[10px] whitespace-nowrap text-muted-foreground">
+                                            {timeAgo(
+                                                notif.created_at,
+                                                notif.created_at_human,
+                                            )}
                                         </span>
                                     </div>
                                 </div>
@@ -147,7 +155,7 @@ export function NotificationBell({
                 <div className="px-2 py-2">
                     <Link
                         href={notificationsIndex.url()}
-                        className="flex items-center justify-center gap-1 w-full rounded-md py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                        className="flex w-full items-center justify-center gap-1 rounded-md py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                         id="notification-view-all"
                     >
                         Lihat Semua Notifikasi

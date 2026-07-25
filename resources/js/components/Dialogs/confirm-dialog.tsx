@@ -34,15 +34,22 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-md border-border/60">
+            <DialogContent className="border-border/60 sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
-                    <DialogDescription className="text-xs text-muted-foreground pt-1">
+                    <DialogTitle className="text-base font-semibold">
+                        {title}
+                    </DialogTitle>
+                    <DialogDescription className="pt-1 text-xs text-muted-foreground">
                         {description}
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="mt-4 gap-2 sm:gap-0">
-                    <Button variant="outline" size="sm" onClick={onClose} disabled={loading}>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onClose}
+                        disabled={loading}
+                    >
                         {cancelLabel}
                     </Button>
                     <Button

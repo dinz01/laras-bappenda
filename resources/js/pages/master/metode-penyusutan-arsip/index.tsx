@@ -52,7 +52,12 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { dashboard } from '@/routes';
-import { destroy, index, store, update } from '@/routes/master/metode-penyusutan-arsip';
+import {
+    destroy,
+    index,
+    store,
+    update,
+} from '@/routes/master/metode-penyusutan-arsip';
 
 type MetodePenyusutanArsip = {
     id: number;
@@ -137,12 +142,16 @@ function MetodePenyusutanArsipFormDialog({
             return;
         }
 
-        form.setData(metodePenyusutanArsip ? {
-            kode: metodePenyusutanArsip.kode,
-            nama: metodePenyusutanArsip.nama,
-            deskripsi: metodePenyusutanArsip.deskripsi ?? '',
-            status: metodePenyusutanArsip.status,
-        } : emptyForm);
+        form.setData(
+            metodePenyusutanArsip
+                ? {
+                      kode: metodePenyusutanArsip.kode,
+                      nama: metodePenyusutanArsip.nama,
+                      deskripsi: metodePenyusutanArsip.deskripsi ?? '',
+                      status: metodePenyusutanArsip.status,
+                  }
+                : emptyForm,
+        );
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, metodePenyusutanArsip]);
@@ -151,10 +160,13 @@ function MetodePenyusutanArsipFormDialog({
         event.preventDefault();
 
         if (mode === 'edit' && metodePenyusutanArsip) {
-            form.put(update({ metodePenyusutanArsip: metodePenyusutanArsip.id }).url, {
-                preserveScroll: true,
-                onSuccess: () => onOpenChange(false),
-            });
+            form.put(
+                update({ metodePenyusutanArsip: metodePenyusutanArsip.id }).url,
+                {
+                    preserveScroll: true,
+                    onSuccess: () => onOpenChange(false),
+                },
+            );
 
             return;
         }
@@ -173,10 +185,13 @@ function MetodePenyusutanArsipFormDialog({
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
-                        {mode === 'create' ? 'Tambah Metode Penyusutan Arsip' : 'Edit Metode Penyusutan Arsip'}
+                        {mode === 'create'
+                            ? 'Tambah Metode Penyusutan Arsip'
+                            : 'Edit Metode Penyusutan Arsip'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
-                        Lengkapi data metode penyusutan yang digunakan pada retensi arsip.
+                        Lengkapi data metode penyusutan yang digunakan pada
+                        retensi arsip.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -187,7 +202,9 @@ function MetodePenyusutanArsipFormDialog({
                             <Input
                                 id="kode"
                                 value={form.data.kode}
-                                onChange={(event) => form.setData('kode', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('kode', event.target.value)
+                                }
                                 placeholder="Contoh: MPA-001"
                                 maxLength={50}
                             />
@@ -198,14 +215,20 @@ function MetodePenyusutanArsipFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: MetodePenyusutanArsipFormData['status']) => form.setData('status', value)}
+                                onValueChange={(
+                                    value: MetodePenyusutanArsipFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -217,7 +240,9 @@ function MetodePenyusutanArsipFormDialog({
                         <Input
                             id="nama"
                             value={form.data.nama}
-                            onChange={(event) => form.setData('nama', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('nama', event.target.value)
+                            }
                             placeholder="Nama metode penyusutan"
                             maxLength={255}
                         />
@@ -229,7 +254,9 @@ function MetodePenyusutanArsipFormDialog({
                         <Input
                             id="deskripsi"
                             value={form.data.deskripsi}
-                            onChange={(event) => form.setData('deskripsi', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('deskripsi', event.target.value)
+                            }
                             placeholder="Deskripsi metode penyusutan"
                         />
                         <InputError message={form.errors.deskripsi} />
@@ -262,10 +289,15 @@ function DetailDialog({
     onOpenChange: (open: boolean) => void;
 }) {
     return (
-        <Dialog open={metodePenyusutanArsip !== null} onOpenChange={onOpenChange}>
+        <Dialog
+            open={metodePenyusutanArsip !== null}
+            onOpenChange={onOpenChange}
+        >
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">Detail Metode Penyusutan Arsip</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">
+                        Detail Metode Penyusutan Arsip
+                    </DialogTitle>
                     <DialogDescription className="text-xs">
                         Informasi lengkap metode penyusutan arsip.
                     </DialogDescription>
@@ -273,14 +305,36 @@ function DetailDialog({
 
                 {metodePenyusutanArsip && (
                     <div className="grid gap-3 text-sm">
-                        <DetailRow label="Kode" value={metodePenyusutanArsip.kode} mono />
-                        <DetailRow label="Nama" value={metodePenyusutanArsip.nama} />
-                        <DetailRow label="Deskripsi" value={metodePenyusutanArsip.deskripsi || '-'} />
-                        <DetailRow label="Dibuat Pada" value={metodePenyusutanArsip.created_at || '-'} />
-                        <DetailRow label="Diperbarui Pada" value={metodePenyusutanArsip.updated_at || '-'} />
+                        <DetailRow
+                            label="Kode"
+                            value={metodePenyusutanArsip.kode}
+                            mono
+                        />
+                        <DetailRow
+                            label="Nama"
+                            value={metodePenyusutanArsip.nama}
+                        />
+                        <DetailRow
+                            label="Deskripsi"
+                            value={metodePenyusutanArsip.deskripsi || '-'}
+                        />
+                        <DetailRow
+                            label="Dibuat Pada"
+                            value={metodePenyusutanArsip.created_at || '-'}
+                        />
+                        <DetailRow
+                            label="Diperbarui Pada"
+                            value={metodePenyusutanArsip.updated_at || '-'}
+                        />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
-                            <StatusBadge variant={statusVariant(metodePenyusutanArsip.status)}>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
+                            <StatusBadge
+                                variant={statusVariant(
+                                    metodePenyusutanArsip.status,
+                                )}
+                            >
                                 {statusLabel(metodePenyusutanArsip.status)}
                             </StatusBadge>
                         </div>
@@ -291,11 +345,25 @@ function DetailDialog({
     );
 }
 
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
             <span className="text-muted-foreground">{label}</span>
-            <span className={mono ? 'font-mono text-xs text-right' : 'font-medium text-right'}>
+            <span
+                className={
+                    mono
+                        ? 'text-right font-mono text-xs'
+                        : 'text-right font-medium'
+                }
+            >
                 {value}
             </span>
         </div>
@@ -310,13 +378,18 @@ export default function MetodePenyusutanArsipIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-    const [selectedMetodePenyusutanArsip, setSelectedMetodePenyusutanArsip] = useState<MetodePenyusutanArsip | null>(null);
-    const [detailMetodePenyusutanArsip, setDetailMetodePenyusutanArsip] = useState<MetodePenyusutanArsip | null>(null);
-    const [deleteMetodePenyusutanArsip, setDeleteMetodePenyusutanArsip] = useState<MetodePenyusutanArsip | null>(null);
+    const [selectedMetodePenyusutanArsip, setSelectedMetodePenyusutanArsip] =
+        useState<MetodePenyusutanArsip | null>(null);
+    const [detailMetodePenyusutanArsip, setDetailMetodePenyusutanArsip] =
+        useState<MetodePenyusutanArsip | null>(null);
+    const [deleteMetodePenyusutanArsip, setDeleteMetodePenyusutanArsip] =
+        useState<MetodePenyusutanArsip | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -361,10 +434,14 @@ export default function MetodePenyusutanArsipIndex({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index().url, {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index().url,
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const confirmDelete = () => {
@@ -375,14 +452,21 @@ export default function MetodePenyusutanArsipIndex({
         setDeleting(true);
         setDeleteError(null);
 
-        router.delete(destroy({ metodePenyusutanArsip: deleteMetodePenyusutanArsip.id }).url, {
-            preserveScroll: true,
-            onSuccess: () => setDeleteMetodePenyusutanArsip(null),
-            onError: (errors) => {
-                setDeleteError(errors.metode_penyusutan_arsip || 'Metode penyusutan arsip gagal dihapus.');
+        router.delete(
+            destroy({ metodePenyusutanArsip: deleteMetodePenyusutanArsip.id })
+                .url,
+            {
+                preserveScroll: true,
+                onSuccess: () => setDeleteMetodePenyusutanArsip(null),
+                onError: (errors) => {
+                    setDeleteError(
+                        errors.metode_penyusutan_arsip ||
+                            'Metode penyusutan arsip gagal dihapus.',
+                    );
+                },
+                onFinish: () => setDeleting(false),
             },
-            onFinish: () => setDeleting(false),
-        });
+        );
     };
 
     const hasFilters = Boolean(filters.search);
@@ -410,7 +494,9 @@ export default function MetodePenyusutanArsipIndex({
 
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <ContentCard title="Total Metode Penyusutan">
-                        <StatValue value={stats.total_metode_penyusutan_arsip} />
+                        <StatValue
+                            value={stats.total_metode_penyusutan_arsip}
+                        />
                     </ContentCard>
                     <ContentCard title="Aktif">
                         <StatValue value={stats.aktif} />
@@ -423,23 +509,28 @@ export default function MetodePenyusutanArsipIndex({
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Daftar Metode Penyusutan Arsip" description="Data metode penyusutan arsip yang tersedia">
+                <ContentCard
+                    title="Daftar Metode Penyusutan Arsip"
+                    description="Data metode penyusutan arsip yang tersedia"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari kode, nama, atau deskripsi..."
-                            filters={hasFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Reset Filter
-                                </Button>
-                            )}
+                            filters={
+                                hasFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="mr-1 h-4 w-4" />
+                                        Reset Filter
+                                    </Button>
+                                )
+                            }
                         />
 
                         {metodePenyusutanArsips.data.length === 0 ? (
@@ -454,90 +545,153 @@ export default function MetodePenyusutanArsipIndex({
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[130px] font-semibold">Kode</TableHead>
-                                                <TableHead className="font-semibold">Nama</TableHead>
-                                                <TableHead className="font-semibold">Deskripsi</TableHead>
-                                                <TableHead className="w-[110px] font-semibold">Status</TableHead>
-                                                <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="w-[130px] font-semibold">
+                                                    Kode
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Nama
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Deskripsi
+                                                </TableHead>
+                                                <TableHead className="w-[110px] font-semibold">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead className="w-[170px] font-semibold">
+                                                    Dibuat Pada
+                                                </TableHead>
+                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {metodePenyusutanArsips.data.map((item) => (
-                                                <TableRow key={item.id} className="transition-colors hover:bg-muted/30">
-                                                    <TableCell className="font-mono text-xs text-muted-foreground">
-                                                        {item.kode}
-                                                    </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {item.nama}
-                                                    </TableCell>
-                                                    <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
-                                                        {item.deskripsi || '-'}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusBadge variant={statusVariant(item.status)} className="w-fit">
-                                                            {statusLabel(item.status)}
-                                                        </StatusBadge>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
-                                                        {item.created_at || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <span className="sr-only">Menu aksi</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => setDetailMetodePenyusutanArsip(item)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                            {metodePenyusutanArsips.data.map(
+                                                (item) => (
+                                                    <TableRow
+                                                        key={item.id}
+                                                        className="transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                                            {item.kode}
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">
+                                                            {item.nama}
+                                                        </TableCell>
+                                                        <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
+                                                            {item.deskripsi ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <StatusBadge
+                                                                variant={statusVariant(
+                                                                    item.status,
+                                                                )}
+                                                                className="w-fit"
+                                                            >
+                                                                {statusLabel(
+                                                                    item.status,
+                                                                )}
+                                                            </StatusBadge>
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-muted-foreground">
+                                                            {item.created_at ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    asChild
                                                                 >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    Detail
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => openEditDialog(item)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8"
+                                                                    >
+                                                                        <span className="sr-only">
+                                                                            Menu
+                                                                            aksi
+                                                                        </span>
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent
+                                                                    align="end"
+                                                                    className="w-40"
                                                                 >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                    Edit
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setDeleteError(null);
-                                                                        setDeleteMetodePenyusutanArsip(item);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Hapus
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            setDetailMetodePenyusutanArsip(
+                                                                                item,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        Detail
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            openEditDialog(
+                                                                                item,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setDeleteError(
+                                                                                null,
+                                                                            );
+                                                                            setDeleteMetodePenyusutanArsip(
+                                                                                item,
+                                                                            );
+                                                                        }}
+                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Hapus
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
 
                                 <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
-                                        Menampilkan {metodePenyusutanArsips.from || 0} hingga {metodePenyusutanArsips.to || 0} dari {metodePenyusutanArsips.total} metode
+                                        Menampilkan{' '}
+                                        {metodePenyusutanArsips.from || 0}{' '}
+                                        hingga {metodePenyusutanArsips.to || 0}{' '}
+                                        dari {metodePenyusutanArsips.total}{' '}
+                                        metode
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!metodePenyusutanArsips.prev_page_url}
-                                            asChild={Boolean(metodePenyusutanArsips.prev_page_url)}
+                                            disabled={
+                                                !metodePenyusutanArsips.prev_page_url
+                                            }
+                                            asChild={Boolean(
+                                                metodePenyusutanArsips.prev_page_url,
+                                            )}
                                         >
                                             {metodePenyusutanArsips.prev_page_url ? (
-                                                <Link href={metodePenyusutanArsips.prev_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        metodePenyusutanArsips.prev_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Sebelumnya
                                                 </Link>
                                             ) : (
@@ -547,11 +701,20 @@ export default function MetodePenyusutanArsipIndex({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!metodePenyusutanArsips.next_page_url}
-                                            asChild={Boolean(metodePenyusutanArsips.next_page_url)}
+                                            disabled={
+                                                !metodePenyusutanArsips.next_page_url
+                                            }
+                                            asChild={Boolean(
+                                                metodePenyusutanArsips.next_page_url,
+                                            )}
                                         >
                                             {metodePenyusutanArsips.next_page_url ? (
-                                                <Link href={metodePenyusutanArsips.next_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        metodePenyusutanArsips.next_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Selanjutnya
                                                 </Link>
                                             ) : (
@@ -572,7 +735,12 @@ export default function MetodePenyusutanArsipIndex({
                 metodePenyusutanArsip={selectedMetodePenyusutanArsip}
                 onOpenChange={setFormOpen}
             />
-            <DetailDialog metodePenyusutanArsip={detailMetodePenyusutanArsip} onOpenChange={(open) => !open && setDetailMetodePenyusutanArsip(null)} />
+            <DetailDialog
+                metodePenyusutanArsip={detailMetodePenyusutanArsip}
+                onOpenChange={(open) =>
+                    !open && setDetailMetodePenyusutanArsip(null)
+                }
+            />
             <ConfirmDialog
                 isOpen={deleteMetodePenyusutanArsip !== null}
                 onClose={() => {
@@ -581,7 +749,10 @@ export default function MetodePenyusutanArsipIndex({
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Metode Penyusutan Arsip"
-                description={deleteError || `Hapus metode penyusutan "${deleteMetodePenyusutanArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+                description={
+                    deleteError ||
+                    `Hapus metode penyusutan "${deleteMetodePenyusutanArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
+                }
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -591,12 +762,19 @@ export default function MetodePenyusutanArsipIndex({
 }
 
 function StatValue({ value }: { value: number }) {
-    return <div className="text-2xl font-semibold tracking-normal text-foreground">{value.toLocaleString('id-ID')}</div>;
+    return (
+        <div className="text-2xl font-semibold tracking-normal text-foreground">
+            {value.toLocaleString('id-ID')}
+        </div>
+    );
 }
 
 MetodePenyusutanArsipIndex.layout = {
     breadcrumbs: [
         { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Metode Penyusutan Arsip', href: '/master/metode-penyusutan-arsip' },
+        {
+            title: 'Metode Penyusutan Arsip',
+            href: '/master/metode-penyusutan-arsip',
+        },
     ],
 };

@@ -53,7 +53,9 @@ function timeAgo(dateString: string | null, fallback: string | null): string {
         return '-';
     }
 
-    const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
+    const seconds = Math.floor(
+        (Date.now() - new Date(dateString).getTime()) / 1000,
+    );
 
     if (seconds < 60) {
         return 'Baru saja';
@@ -75,22 +77,32 @@ function timeAgo(dateString: string | null, fallback: string | null): string {
 }
 
 const colorMap: Record<string, string> = {
-    success: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+    success:
+        'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
     info: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-    warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+    warning:
+        'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
     danger: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
     secondary: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
 };
 
-export default function NotificationsIndex({ notifications, filters, types }: NotificationsProps) {
+export default function NotificationsIndex({
+    notifications,
+    filters,
+    types,
+}: NotificationsProps) {
     const { notifications: shared } = usePage().props;
     const [search, setSearch] = useState(filters.search ?? '');
 
     function applyFilter(newFilters: Record<string, string>) {
-        router.get(notificationsIndex.url({ query: { ...filters, ...newFilters } }), {}, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            notificationsIndex.url({ query: { ...filters, ...newFilters } }),
+            {},
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     }
 
     function handleSearch(e: React.FormEvent) {
@@ -99,10 +111,14 @@ export default function NotificationsIndex({ notifications, filters, types }: No
     }
 
     function handleMarkAll() {
-        router.post(markAllReadRoute.url(), {}, {
-            preserveScroll: true,
-            onSuccess: () => router.reload({ only: ['notifications'] }),
-        });
+        router.post(
+            markAllReadRoute.url(),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => router.reload({ only: ['notifications'] }),
+            },
+        );
     }
 
     function handleRowClick(notif: NotificationItem) {
@@ -127,18 +143,28 @@ export default function NotificationsIndex({ notifications, filters, types }: No
                         {/* Toolbar */}
                         <div className="mb-4 flex flex-wrap items-center gap-3">
                             {/* Search */}
-                            <form onSubmit={handleSearch} className="flex flex-1 min-w-48 items-center gap-2">
+                            <form
+                                onSubmit={handleSearch}
+                                className="flex min-w-48 flex-1 items-center gap-2"
+                            >
                                 <div className="relative flex-1">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         id="notification-search"
                                         placeholder="Cari notifikasi..."
                                         value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        className="pl-8 h-9"
+                                        onChange={(e) =>
+                                            setSearch(e.target.value)
+                                        }
+                                        className="h-9 pl-8"
                                     />
                                 </div>
-                                <Button type="submit" size="sm" variant="secondary" id="notification-search-btn">
+                                <Button
+                                    type="submit"
+                                    size="sm"
+                                    variant="secondary"
+                                    id="notification-search-btn"
+                                >
                                     Cari
                                 </Button>
                             </form>
@@ -146,16 +172,28 @@ export default function NotificationsIndex({ notifications, filters, types }: No
                             {/* Filter Type */}
                             <Select
                                 value={filters.type ?? 'all'}
-                                onValueChange={(v) => applyFilter({ type: v === 'all' ? '' : v })}
+                                onValueChange={(v) =>
+                                    applyFilter({ type: v === 'all' ? '' : v })
+                                }
                             >
-                                <SelectTrigger className="w-44 h-9" id="notification-filter-type">
+                                <SelectTrigger
+                                    className="h-9 w-44"
+                                    id="notification-filter-type"
+                                >
                                     <Filter className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
                                     <SelectValue placeholder="Jenis" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">Semua Jenis</SelectItem>
+                                    <SelectItem value="all">
+                                        Semua Jenis
+                                    </SelectItem>
                                     {types.map((t) => (
-                                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                                        <SelectItem
+                                            key={t.value}
+                                            value={t.value}
+                                        >
+                                            {t.label}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -163,15 +201,28 @@ export default function NotificationsIndex({ notifications, filters, types }: No
                             {/* Filter Status */}
                             <Select
                                 value={filters.status ?? 'all'}
-                                onValueChange={(v) => applyFilter({ status: v === 'all' ? '' : v })}
+                                onValueChange={(v) =>
+                                    applyFilter({
+                                        status: v === 'all' ? '' : v,
+                                    })
+                                }
                             >
-                                <SelectTrigger className="w-40 h-9" id="notification-filter-status">
+                                <SelectTrigger
+                                    className="h-9 w-40"
+                                    id="notification-filter-status"
+                                >
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">Semua Status</SelectItem>
-                                    <SelectItem value="unread">Belum Dibaca</SelectItem>
-                                    <SelectItem value="read">Sudah Dibaca</SelectItem>
+                                    <SelectItem value="all">
+                                        Semua Status
+                                    </SelectItem>
+                                    <SelectItem value="unread">
+                                        Belum Dibaca
+                                    </SelectItem>
+                                    <SelectItem value="read">
+                                        Sudah Dibaca
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
 
@@ -180,7 +231,7 @@ export default function NotificationsIndex({ notifications, filters, types }: No
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="gap-1.5 h-9"
+                                    className="h-9 gap-1.5"
                                     onClick={handleMarkAll}
                                     id="notification-mark-all-btn"
                                 >
@@ -199,16 +250,24 @@ export default function NotificationsIndex({ notifications, filters, types }: No
                             />
                         ) : (
                             <>
-                                <div className="rounded-md border overflow-hidden">
+                                <div className="overflow-hidden rounded-md border">
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead className="w-8"></TableHead>
                                                 <TableHead>Judul</TableHead>
-                                                <TableHead className="hidden md:table-cell">Pesan</TableHead>
-                                                <TableHead className="w-36">Jenis</TableHead>
-                                                <TableHead className="w-28">Waktu</TableHead>
-                                                <TableHead className="w-28">Status</TableHead>
+                                                <TableHead className="hidden md:table-cell">
+                                                    Pesan
+                                                </TableHead>
+                                                <TableHead className="w-36">
+                                                    Jenis
+                                                </TableHead>
+                                                <TableHead className="w-28">
+                                                    Waktu
+                                                </TableHead>
+                                                <TableHead className="w-28">
+                                                    Status
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -216,7 +275,9 @@ export default function NotificationsIndex({ notifications, filters, types }: No
                                                 <TableRow
                                                     key={notif.id}
                                                     className={`cursor-pointer hover:bg-muted/50 ${!notif.is_read ? 'bg-blue-50/40 dark:bg-blue-950/10' : ''}`}
-                                                    onClick={() => handleRowClick(notif)}
+                                                    onClick={() =>
+                                                        handleRowClick(notif)
+                                                    }
                                                     id={`notif-row-${notif.id}`}
                                                 >
                                                     <TableCell className="text-center">
@@ -224,23 +285,37 @@ export default function NotificationsIndex({ notifications, filters, types }: No
                                                             <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="font-medium text-sm">
+                                                    <TableCell className="text-sm font-medium">
                                                         {notif.title}
                                                     </TableCell>
-                                                    <TableCell className="hidden md:table-cell text-xs text-muted-foreground max-w-xs truncate">
+                                                    <TableCell className="hidden max-w-xs truncate text-xs text-muted-foreground md:table-cell">
                                                         {notif.message}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${colorMap[notif.type_color] ?? colorMap.secondary}`}>
+                                                        <span
+                                                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${colorMap[notif.type_color] ?? colorMap.secondary}`}
+                                                        >
                                                             {notif.type_label}
                                                         </span>
                                                     </TableCell>
                                                     <TableCell className="text-xs text-muted-foreground">
-                                                        {timeAgo(notif.created_at, notif.created_at_human)}
+                                                        {timeAgo(
+                                                            notif.created_at,
+                                                            notif.created_at_human,
+                                                        )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge variant={notif.is_read ? 'secondary' : 'default'} className="text-xs">
-                                                            {notif.is_read ? 'Dibaca' : 'Belum'}
+                                                        <Badge
+                                                            variant={
+                                                                notif.is_read
+                                                                    ? 'secondary'
+                                                                    : 'default'
+                                                            }
+                                                            className="text-xs"
+                                                        >
+                                                            {notif.is_read
+                                                                ? 'Dibaca'
+                                                                : 'Belum'}
                                                         </Badge>
                                                     </TableCell>
                                                 </TableRow>
@@ -252,17 +327,27 @@ export default function NotificationsIndex({ notifications, filters, types }: No
                                 {/* Pagination */}
                                 {notifications.last_page > 1 && (
                                     <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-                                        <span>Total: {notifications.total} notifikasi</span>
+                                        <span>
+                                            Total: {notifications.total}{' '}
+                                            notifikasi
+                                        </span>
                                         <div className="flex gap-1">
-                                            {notifications.links.map((link, i) => (
-                                                <button
-                                                    key={i}
-                                                    disabled={!link.url}
-                                                    onClick={() => link.url && router.get(link.url)}
-                                                    className={`rounded px-2.5 py-1 text-xs transition-colors ${link.active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed'}`}
-                                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                                />
-                                            ))}
+                                            {notifications.links.map(
+                                                (link, i) => (
+                                                    <button
+                                                        key={i}
+                                                        disabled={!link.url}
+                                                        onClick={() =>
+                                                            link.url &&
+                                                            router.get(link.url)
+                                                        }
+                                                        className={`rounded px-2.5 py-1 text-xs transition-colors ${link.active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40'}`}
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: link.label,
+                                                        }}
+                                                    />
+                                                ),
+                                            )}
                                         </div>
                                     </div>
                                 )}

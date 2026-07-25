@@ -152,17 +152,21 @@ function LokasiArsipFormDialog({
             return;
         }
 
-        form.setData(lokasiArsip ? {
-            kode: lokasiArsip.kode,
-            nama: lokasiArsip.nama,
-            gedung: lokasiArsip.gedung ?? '',
-            lantai: lokasiArsip.lantai ?? '',
-            ruangan: lokasiArsip.ruangan ?? '',
-            rak: lokasiArsip.rak ?? '',
-            box: lokasiArsip.box ?? '',
-            keterangan: lokasiArsip.keterangan ?? '',
-            status: lokasiArsip.status,
-        } : emptyForm);
+        form.setData(
+            lokasiArsip
+                ? {
+                      kode: lokasiArsip.kode,
+                      nama: lokasiArsip.nama,
+                      gedung: lokasiArsip.gedung ?? '',
+                      lantai: lokasiArsip.lantai ?? '',
+                      ruangan: lokasiArsip.ruangan ?? '',
+                      rak: lokasiArsip.rak ?? '',
+                      box: lokasiArsip.box ?? '',
+                      keterangan: lokasiArsip.keterangan ?? '',
+                      status: lokasiArsip.status,
+                  }
+                : emptyForm,
+        );
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, lokasiArsip]);
@@ -193,7 +197,9 @@ function LokasiArsipFormDialog({
             <DialogContent className="border-border/60 sm:max-w-2xl">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
-                        {mode === 'create' ? 'Tambah Lokasi Arsip' : 'Edit Lokasi Arsip'}
+                        {mode === 'create'
+                            ? 'Tambah Lokasi Arsip'
+                            : 'Edit Lokasi Arsip'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
                         Lengkapi data lokasi penyimpanan fisik arsip.
@@ -207,7 +213,9 @@ function LokasiArsipFormDialog({
                             <Input
                                 id="kode"
                                 value={form.data.kode}
-                                onChange={(event) => form.setData('kode', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('kode', event.target.value)
+                                }
                                 placeholder="Contoh: LOC-001"
                                 maxLength={50}
                             />
@@ -218,14 +226,20 @@ function LokasiArsipFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: LokasiArsipFormData['status']) => form.setData('status', value)}
+                                onValueChange={(
+                                    value: LokasiArsipFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -237,7 +251,9 @@ function LokasiArsipFormDialog({
                         <Input
                             id="nama"
                             value={form.data.nama}
-                            onChange={(event) => form.setData('nama', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('nama', event.target.value)
+                            }
                             placeholder="Nama lokasi arsip"
                             maxLength={255}
                         />
@@ -250,7 +266,9 @@ function LokasiArsipFormDialog({
                             <Input
                                 id="gedung"
                                 value={form.data.gedung}
-                                onChange={(event) => form.setData('gedung', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('gedung', event.target.value)
+                                }
                                 placeholder="Contoh: Gedung A"
                                 maxLength={100}
                             />
@@ -262,7 +280,9 @@ function LokasiArsipFormDialog({
                             <Input
                                 id="lantai"
                                 value={form.data.lantai}
-                                onChange={(event) => form.setData('lantai', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('lantai', event.target.value)
+                                }
                                 placeholder="Contoh: 1"
                                 maxLength={50}
                             />
@@ -274,7 +294,9 @@ function LokasiArsipFormDialog({
                             <Input
                                 id="ruangan"
                                 value={form.data.ruangan}
-                                onChange={(event) => form.setData('ruangan', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('ruangan', event.target.value)
+                                }
                                 placeholder="Contoh: Ruang 101"
                                 maxLength={100}
                             />
@@ -288,7 +310,9 @@ function LokasiArsipFormDialog({
                             <Input
                                 id="rak"
                                 value={form.data.rak}
-                                onChange={(event) => form.setData('rak', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('rak', event.target.value)
+                                }
                                 placeholder="Contoh: Rak A-01"
                                 maxLength={50}
                             />
@@ -300,7 +324,9 @@ function LokasiArsipFormDialog({
                             <Input
                                 id="box"
                                 value={form.data.box}
-                                onChange={(event) => form.setData('box', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('box', event.target.value)
+                                }
                                 placeholder="Contoh: BOX-001"
                                 maxLength={50}
                             />
@@ -313,7 +339,9 @@ function LokasiArsipFormDialog({
                         <Input
                             id="keterangan"
                             value={form.data.keterangan}
-                            onChange={(event) => form.setData('keterangan', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('keterangan', event.target.value)
+                            }
                             placeholder="Keterangan lokasi arsip"
                         />
                         <InputError message={form.errors.keterangan} />
@@ -349,7 +377,9 @@ function DetailDialog({
         <Dialog open={lokasiArsip !== null} onOpenChange={onOpenChange}>
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">Detail Lokasi Arsip</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">
+                        Detail Lokasi Arsip
+                    </DialogTitle>
                     <DialogDescription className="text-xs">
                         Informasi lengkap lokasi arsip.
                     </DialogDescription>
@@ -359,17 +389,39 @@ function DetailDialog({
                     <div className="grid gap-3 text-sm">
                         <DetailRow label="Kode" value={lokasiArsip.kode} mono />
                         <DetailRow label="Nama" value={lokasiArsip.nama} />
-                        <DetailRow label="Gedung" value={lokasiArsip.gedung || '-'} />
-                        <DetailRow label="Lantai" value={lokasiArsip.lantai || '-'} />
-                        <DetailRow label="Ruangan" value={lokasiArsip.ruangan || '-'} />
+                        <DetailRow
+                            label="Gedung"
+                            value={lokasiArsip.gedung || '-'}
+                        />
+                        <DetailRow
+                            label="Lantai"
+                            value={lokasiArsip.lantai || '-'}
+                        />
+                        <DetailRow
+                            label="Ruangan"
+                            value={lokasiArsip.ruangan || '-'}
+                        />
                         <DetailRow label="Rak" value={lokasiArsip.rak || '-'} />
                         <DetailRow label="Box" value={lokasiArsip.box || '-'} />
-                        <DetailRow label="Keterangan" value={lokasiArsip.keterangan || '-'} />
-                        <DetailRow label="Dibuat Pada" value={lokasiArsip.created_at || '-'} />
-                        <DetailRow label="Diperbarui Pada" value={lokasiArsip.updated_at || '-'} />
+                        <DetailRow
+                            label="Keterangan"
+                            value={lokasiArsip.keterangan || '-'}
+                        />
+                        <DetailRow
+                            label="Dibuat Pada"
+                            value={lokasiArsip.created_at || '-'}
+                        />
+                        <DetailRow
+                            label="Diperbarui Pada"
+                            value={lokasiArsip.updated_at || '-'}
+                        />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
-                            <StatusBadge variant={statusVariant(lokasiArsip.status)}>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
+                            <StatusBadge
+                                variant={statusVariant(lokasiArsip.status)}
+                            >
                                 {statusLabel(lokasiArsip.status)}
                             </StatusBadge>
                         </div>
@@ -380,11 +432,25 @@ function DetailDialog({
     );
 }
 
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
             <span className="text-muted-foreground">{label}</span>
-            <span className={mono ? 'font-mono text-xs text-right' : 'font-medium text-right'}>
+            <span
+                className={
+                    mono
+                        ? 'text-right font-mono text-xs'
+                        : 'text-right font-medium'
+                }
+            >
                 {value}
             </span>
         </div>
@@ -399,13 +465,18 @@ export default function LokasiArsipIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-    const [selectedLokasiArsip, setSelectedLokasiArsip] = useState<LokasiArsip | null>(null);
-    const [detailLokasiArsip, setDetailLokasiArsip] = useState<LokasiArsip | null>(null);
-    const [deleteLokasiArsip, setDeleteLokasiArsip] = useState<LokasiArsip | null>(null);
+    const [selectedLokasiArsip, setSelectedLokasiArsip] =
+        useState<LokasiArsip | null>(null);
+    const [detailLokasiArsip, setDetailLokasiArsip] =
+        useState<LokasiArsip | null>(null);
+    const [deleteLokasiArsip, setDeleteLokasiArsip] =
+        useState<LokasiArsip | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -450,10 +521,14 @@ export default function LokasiArsipIndex({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index().url, {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index().url,
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const confirmDelete = () => {
@@ -468,7 +543,9 @@ export default function LokasiArsipIndex({
             preserveScroll: true,
             onSuccess: () => setDeleteLokasiArsip(null),
             onError: (errors) => {
-                setDeleteError(errors.lokasi_arsip || 'Lokasi arsip gagal dihapus.');
+                setDeleteError(
+                    errors.lokasi_arsip || 'Lokasi arsip gagal dihapus.',
+                );
             },
             onFinish: () => setDeleting(false),
         });
@@ -512,23 +589,28 @@ export default function LokasiArsipIndex({
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Daftar Lokasi Arsip" description="Data lokasi penyimpanan arsip yang tersedia">
+                <ContentCard
+                    title="Daftar Lokasi Arsip"
+                    description="Data lokasi penyimpanan arsip yang tersedia"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari kode, nama, gedung, ruangan, rak, box..."
-                            filters={hasFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Reset Filter
-                                </Button>
-                            )}
+                            filters={
+                                hasFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="mr-1 h-4 w-4" />
+                                        Reset Filter
+                                    </Button>
+                                )
+                            }
                         />
 
                         {lokasiArsips.data.length === 0 ? (
@@ -543,102 +625,172 @@ export default function LokasiArsipIndex({
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[120px] font-semibold">Kode</TableHead>
-                                                <TableHead className="font-semibold">Nama</TableHead>
-                                                <TableHead className="w-[120px] font-semibold">Gedung</TableHead>
-                                                <TableHead className="w-[80px] font-semibold">Lantai</TableHead>
-                                                <TableHead className="w-[130px] font-semibold">Ruangan</TableHead>
-                                                <TableHead className="w-[120px] font-semibold">Rak</TableHead>
-                                                <TableHead className="w-[100px] font-semibold">Box</TableHead>
-                                                <TableHead className="w-[100px] font-semibold">Status</TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="w-[120px] font-semibold">
+                                                    Kode
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Nama
+                                                </TableHead>
+                                                <TableHead className="w-[120px] font-semibold">
+                                                    Gedung
+                                                </TableHead>
+                                                <TableHead className="w-[80px] font-semibold">
+                                                    Lantai
+                                                </TableHead>
+                                                <TableHead className="w-[130px] font-semibold">
+                                                    Ruangan
+                                                </TableHead>
+                                                <TableHead className="w-[120px] font-semibold">
+                                                    Rak
+                                                </TableHead>
+                                                <TableHead className="w-[100px] font-semibold">
+                                                    Box
+                                                </TableHead>
+                                                <TableHead className="w-[100px] font-semibold">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {lokasiArsips.data.map((lokasiArsip) => (
-                                                <TableRow key={lokasiArsip.id} className="transition-colors hover:bg-muted/30">
-                                                    <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
-                                                        {lokasiArsip.kode}
-                                                    </TableCell>
-                                                    <TableCell className="font-medium whitespace-nowrap">
-                                                        {lokasiArsip.nama}
-                                                    </TableCell>
-                                                    <TableCell className="text-sm whitespace-nowrap">
-                                                        {lokasiArsip.gedung || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-sm whitespace-nowrap">
-                                                        {lokasiArsip.lantai || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-sm whitespace-nowrap">
-                                                        {lokasiArsip.ruangan || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-sm whitespace-nowrap">
-                                                        {lokasiArsip.rak || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
-                                                        {lokasiArsip.box || '-'}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusBadge variant={statusVariant(lokasiArsip.status)} className="w-fit">
-                                                            {statusLabel(lokasiArsip.status)}
-                                                        </StatusBadge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <span className="sr-only">Menu aksi</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => setDetailLokasiArsip(lokasiArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                            {lokasiArsips.data.map(
+                                                (lokasiArsip) => (
+                                                    <TableRow
+                                                        key={lokasiArsip.id}
+                                                        className="transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <TableCell className="font-mono text-xs whitespace-nowrap text-muted-foreground">
+                                                            {lokasiArsip.kode}
+                                                        </TableCell>
+                                                        <TableCell className="font-medium whitespace-nowrap">
+                                                            {lokasiArsip.nama}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm whitespace-nowrap">
+                                                            {lokasiArsip.gedung ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm whitespace-nowrap">
+                                                            {lokasiArsip.lantai ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm whitespace-nowrap">
+                                                            {lokasiArsip.ruangan ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm whitespace-nowrap">
+                                                            {lokasiArsip.rak ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="font-mono text-xs whitespace-nowrap text-muted-foreground">
+                                                            {lokasiArsip.box ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <StatusBadge
+                                                                variant={statusVariant(
+                                                                    lokasiArsip.status,
+                                                                )}
+                                                                className="w-fit"
+                                                            >
+                                                                {statusLabel(
+                                                                    lokasiArsip.status,
+                                                                )}
+                                                            </StatusBadge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    asChild
                                                                 >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    Detail
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => openEditDialog(lokasiArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8"
+                                                                    >
+                                                                        <span className="sr-only">
+                                                                            Menu
+                                                                            aksi
+                                                                        </span>
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent
+                                                                    align="end"
+                                                                    className="w-40"
                                                                 >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                    Edit
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setDeleteError(null);
-                                                                        setDeleteLokasiArsip(lokasiArsip);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Hapus
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            setDetailLokasiArsip(
+                                                                                lokasiArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        Detail
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            openEditDialog(
+                                                                                lokasiArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setDeleteError(
+                                                                                null,
+                                                                            );
+                                                                            setDeleteLokasiArsip(
+                                                                                lokasiArsip,
+                                                                            );
+                                                                        }}
+                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Hapus
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
 
                                 <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
-                                        Menampilkan {lokasiArsips.from || 0} hingga {lokasiArsips.to || 0} dari {lokasiArsips.total} lokasi
+                                        Menampilkan {lokasiArsips.from || 0}{' '}
+                                        hingga {lokasiArsips.to || 0} dari{' '}
+                                        {lokasiArsips.total} lokasi
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!lokasiArsips.prev_page_url}
-                                            asChild={Boolean(lokasiArsips.prev_page_url)}
+                                            disabled={
+                                                !lokasiArsips.prev_page_url
+                                            }
+                                            asChild={Boolean(
+                                                lokasiArsips.prev_page_url,
+                                            )}
                                         >
                                             {lokasiArsips.prev_page_url ? (
-                                                <Link href={lokasiArsips.prev_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        lokasiArsips.prev_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Sebelumnya
                                                 </Link>
                                             ) : (
@@ -648,11 +800,20 @@ export default function LokasiArsipIndex({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!lokasiArsips.next_page_url}
-                                            asChild={Boolean(lokasiArsips.next_page_url)}
+                                            disabled={
+                                                !lokasiArsips.next_page_url
+                                            }
+                                            asChild={Boolean(
+                                                lokasiArsips.next_page_url,
+                                            )}
                                         >
                                             {lokasiArsips.next_page_url ? (
-                                                <Link href={lokasiArsips.next_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        lokasiArsips.next_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Selanjutnya
                                                 </Link>
                                             ) : (
@@ -673,7 +834,10 @@ export default function LokasiArsipIndex({
                 lokasiArsip={selectedLokasiArsip}
                 onOpenChange={setFormOpen}
             />
-            <DetailDialog lokasiArsip={detailLokasiArsip} onOpenChange={(open) => !open && setDetailLokasiArsip(null)} />
+            <DetailDialog
+                lokasiArsip={detailLokasiArsip}
+                onOpenChange={(open) => !open && setDetailLokasiArsip(null)}
+            />
             <ConfirmDialog
                 isOpen={deleteLokasiArsip !== null}
                 onClose={() => {
@@ -682,7 +846,10 @@ export default function LokasiArsipIndex({
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Lokasi Arsip"
-                description={deleteError || `Hapus lokasi arsip "${deleteLokasiArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+                description={
+                    deleteError ||
+                    `Hapus lokasi arsip "${deleteLokasiArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
+                }
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -692,7 +859,11 @@ export default function LokasiArsipIndex({
 }
 
 function StatValue({ value }: { value: number }) {
-    return <div className="text-2xl font-semibold tracking-normal text-foreground">{value.toLocaleString('id-ID')}</div>;
+    return (
+        <div className="text-2xl font-semibold tracking-normal text-foreground">
+            {value.toLocaleString('id-ID')}
+        </div>
+    );
 }
 
 LokasiArsipIndex.layout = {

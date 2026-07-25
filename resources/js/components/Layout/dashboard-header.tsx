@@ -6,11 +6,13 @@ interface DashboardHeaderProps {
 }
 
 function getGreeting(timeZone: string): string {
-    const hour = Number(new Intl.DateTimeFormat('id-ID', {
-        hour: '2-digit',
-        hour12: false,
-        timeZone,
-    }).format(new Date()));
+    const hour = Number(
+        new Intl.DateTimeFormat('id-ID', {
+            hour: '2-digit',
+            hour12: false,
+            timeZone,
+        }).format(new Date()),
+    );
 
     if (hour >= 5 && hour < 12) {
         return 'Selamat Pagi';
@@ -42,9 +44,12 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
         <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
             <div>
                 <p className="text-xs text-muted-foreground">{greeting},</p>
-                <h1 className="text-xl font-semibold tracking-tight">{user.name}</h1>
+                <h1 className="text-xl font-semibold tracking-tight">
+                    {user.name}
+                </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Selamat datang kembali di Sistem LARAS — Layanan Arsip Digital.
+                    Selamat datang kembali di Sistem LARAS — Layanan Arsip
+                    Digital.
                 </p>
             </div>
             <div className="mt-2 shrink-0 text-left sm:mt-0 sm:text-right">

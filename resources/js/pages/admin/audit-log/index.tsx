@@ -1,5 +1,14 @@
 import { Head, router } from '@inertiajs/react';
-import { Activity, CalendarDays, ChevronDown, Eye, FileClock, ListFilter, Users, X } from 'lucide-react';
+import {
+    Activity,
+    CalendarDays,
+    ChevronDown,
+    Eye,
+    FileClock,
+    ListFilter,
+    Users,
+    X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
@@ -40,7 +49,13 @@ import {
 import { dashboard } from '@/routes';
 import { index } from '@/routes/admin/audit-log';
 
-type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+type JsonValue =
+    | string
+    | number
+    | boolean
+    | null
+    | JsonValue[]
+    | { [key: string]: JsonValue };
 
 type AuditLog = {
     id: number;
@@ -170,7 +185,13 @@ function eventVariant(event: string): BadgeStatusVariant {
         return 'info';
     }
 
-    if (['dokumen.uploaded', 'dokumen.replaced', 'dokumen.version_created'].includes(event)) {
+    if (
+        [
+            'dokumen.uploaded',
+            'dokumen.replaced',
+            'dokumen.version_created',
+        ].includes(event)
+    ) {
         return 'warning';
     }
 
@@ -193,12 +214,18 @@ function prettyJson(value: JsonValue | null): string {
     return JSON.stringify(value, null, 2);
 }
 
-function isRecord(value: JsonValue | null): value is { [key: string]: JsonValue } {
+function isRecord(
+    value: JsonValue | null,
+): value is { [key: string]: JsonValue } {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function isSimpleValue(value: JsonValue | undefined): boolean {
-    return value === undefined || value === null || ['string', 'number', 'boolean'].includes(typeof value);
+    return (
+        value === undefined ||
+        value === null ||
+        ['string', 'number', 'boolean'].includes(typeof value)
+    );
 }
 
 function fieldLabel(field: string): string {
@@ -228,7 +255,9 @@ function changeItems(oldValues: JsonValue | null, newValues: JsonValue | null) {
 
     const oldRecord = isRecord(oldValues) ? oldValues : {};
     const newRecord = isRecord(newValues) ? newValues : {};
-    const fields = Array.from(new Set([...Object.keys(oldRecord), ...Object.keys(newRecord)]));
+    const fields = Array.from(
+        new Set([...Object.keys(oldRecord), ...Object.keys(newRecord)]),
+    );
 
     return fields.map((field) => {
         const oldValue = oldRecord[field];
@@ -247,7 +276,10 @@ function changeItems(oldValues: JsonValue | null, newValues: JsonValue | null) {
 
 function cleanFilters(filters: Filters): Filters {
     return Object.fromEntries(
-        Object.entries(filters).filter(([, value]) => value !== undefined && value !== null && value !== ''),
+        Object.entries(filters).filter(
+            ([, value]) =>
+                value !== undefined && value !== null && value !== '',
+        ),
     ) as Filters;
 }
 
@@ -265,11 +297,15 @@ export default function AuditLogIndex({
             ...newFilters,
         });
 
-        router.get(index.url({ query: params }), {}, {
-            preserveState: true,
-            replace: true,
-            preserveScroll: true,
-        });
+        router.get(
+            index.url({ query: params }),
+            {},
+            {
+                preserveState: true,
+                replace: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     useEffect(() => {
@@ -284,16 +320,24 @@ export default function AuditLogIndex({
     }, [search]);
 
     const hasFilters = Boolean(
-        filters.search || filters.event_category || filters.user_type || filters.date_from || filters.date_until,
+        filters.search ||
+        filters.event_category ||
+        filters.user_type ||
+        filters.date_from ||
+        filters.date_until,
     );
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index.url(), {}, {
-            preserveState: true,
-            replace: true,
-            preserveScroll: true,
-        });
+        router.get(
+            index.url(),
+            {},
+            {
+                preserveState: true,
+                replace: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     return (
@@ -314,31 +358,42 @@ export default function AuditLogIndex({
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <ContentCard title="Total Audit">
                         <div className="flex items-center justify-between gap-3">
-                            <p className="text-2xl font-semibold tabular-nums">{statistics.total}</p>
+                            <p className="text-2xl font-semibold tabular-nums">
+                                {statistics.total}
+                            </p>
                             <FileClock className="h-5 w-5 text-muted-foreground" />
                         </div>
                     </ContentCard>
                     <ContentCard title="Audit Hari Ini">
                         <div className="flex items-center justify-between gap-3">
-                            <p className="text-2xl font-semibold tabular-nums">{statistics.today}</p>
+                            <p className="text-2xl font-semibold tabular-nums">
+                                {statistics.today}
+                            </p>
                             <CalendarDays className="h-5 w-5 text-muted-foreground" />
                         </div>
                     </ContentCard>
                     <ContentCard title="User Aktif Hari Ini">
                         <div className="flex items-center justify-between gap-3">
-                            <p className="text-2xl font-semibold tabular-nums">{statistics.active_users_today}</p>
+                            <p className="text-2xl font-semibold tabular-nums">
+                                {statistics.active_users_today}
+                            </p>
                             <Users className="h-5 w-5 text-muted-foreground" />
                         </div>
                     </ContentCard>
                     <ContentCard title="Event Hari Ini">
                         <div className="flex items-center justify-between gap-3">
-                            <p className="text-2xl font-semibold tabular-nums">{statistics.events_today}</p>
+                            <p className="text-2xl font-semibold tabular-nums">
+                                {statistics.events_today}
+                            </p>
                             <Activity className="h-5 w-5 text-muted-foreground" />
                         </div>
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Daftar Audit Log" description="Lacak perubahan arsip, dokumen, workflow, dan OCR.">
+                <ContentCard
+                    title="Daftar Audit Log"
+                    description="Lacak perubahan arsip, dokumen, workflow, dan OCR."
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
@@ -348,33 +403,59 @@ export default function AuditLogIndex({
                                 <div className="flex flex-wrap items-center gap-2">
                                     <Select
                                         value={filters.event_category ?? 'all'}
-                                        onValueChange={(value) => updateFilters({ event_category: value === 'all' ? '' : value })}
+                                        onValueChange={(value) =>
+                                            updateFilters({
+                                                event_category:
+                                                    value === 'all'
+                                                        ? ''
+                                                        : value,
+                                            })
+                                        }
                                     >
                                         <SelectTrigger className="h-9 w-[140px] border-border/60">
                                             <ListFilter className="h-4 w-4 text-muted-foreground" />
                                             <SelectValue placeholder="Event" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">Semua Event</SelectItem>
-                                            {eventCategoryOptions.map((option) => (
-                                                <SelectItem key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </SelectItem>
-                                            ))}
+                                            <SelectItem value="all">
+                                                Semua Event
+                                            </SelectItem>
+                                            {eventCategoryOptions.map(
+                                                (option) => (
+                                                    <SelectItem
+                                                        key={option.value}
+                                                        value={option.value}
+                                                    >
+                                                        {option.label}
+                                                    </SelectItem>
+                                                ),
+                                            )}
                                         </SelectContent>
                                     </Select>
 
                                     <Select
                                         value={filters.user_type ?? 'all'}
-                                        onValueChange={(value) => updateFilters({ user_type: value === 'all' ? '' : value })}
+                                        onValueChange={(value) =>
+                                            updateFilters({
+                                                user_type:
+                                                    value === 'all'
+                                                        ? ''
+                                                        : value,
+                                            })
+                                        }
                                     >
                                         <SelectTrigger className="h-9 w-[130px] border-border/60">
                                             <SelectValue placeholder="User" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">Semua User</SelectItem>
+                                            <SelectItem value="all">
+                                                Semua User
+                                            </SelectItem>
                                             {userTypeOptions.map((option) => (
-                                                <SelectItem key={option.value} value={option.value}>
+                                                <SelectItem
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
                                                     {option.label}
                                                 </SelectItem>
                                             ))}
@@ -384,7 +465,11 @@ export default function AuditLogIndex({
                                     <Input
                                         type="date"
                                         value={filters.date_from ?? ''}
-                                        onChange={(event) => updateFilters({ date_from: event.target.value })}
+                                        onChange={(event) =>
+                                            updateFilters({
+                                                date_from: event.target.value,
+                                            })
+                                        }
                                         className="h-9 w-[150px] border-border/60"
                                         aria-label="Tanggal dari"
                                     />
@@ -392,7 +477,11 @@ export default function AuditLogIndex({
                                     <Input
                                         type="date"
                                         value={filters.date_until ?? ''}
-                                        onChange={(event) => updateFilters({ date_until: event.target.value })}
+                                        onChange={(event) =>
+                                            updateFilters({
+                                                date_until: event.target.value,
+                                            })
+                                        }
                                         className="h-9 w-[150px] border-border/60"
                                         aria-label="Tanggal sampai"
                                     />
@@ -425,33 +514,69 @@ export default function AuditLogIndex({
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="min-w-[150px] font-semibold">Waktu</TableHead>
-                                                <TableHead className="min-w-[180px] font-semibold">Pengguna</TableHead>
-                                                <TableHead className="min-w-[170px] font-semibold">Event</TableHead>
-                                                <TableHead className="min-w-[120px] font-semibold">Modul</TableHead>
-                                                <TableHead className="min-w-[220px] font-semibold">Nomor Arsip</TableHead>
-                                                <TableHead className="w-[90px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="min-w-[150px] font-semibold">
+                                                    Waktu
+                                                </TableHead>
+                                                <TableHead className="min-w-[180px] font-semibold">
+                                                    Pengguna
+                                                </TableHead>
+                                                <TableHead className="min-w-[170px] font-semibold">
+                                                    Event
+                                                </TableHead>
+                                                <TableHead className="min-w-[120px] font-semibold">
+                                                    Modul
+                                                </TableHead>
+                                                <TableHead className="min-w-[220px] font-semibold">
+                                                    Nomor Arsip
+                                                </TableHead>
+                                                <TableHead className="w-[90px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {auditLogs.data.map((auditLog) => (
-                                                <TableRow key={auditLog.id} className="transition-colors hover:bg-muted/30">
+                                                <TableRow
+                                                    key={auditLog.id}
+                                                    className="transition-colors hover:bg-muted/30"
+                                                >
                                                     <TableCell className="text-xs text-muted-foreground">
-                                                        {auditLog.created_at_human ?? '-'}
+                                                        {auditLog.created_at_human ??
+                                                            '-'}
                                                     </TableCell>
                                                     <TableCell>
                                                         {auditLog.user ? (
                                                             <div className="min-w-0">
-                                                                <p className="truncate text-sm font-medium">{auditLog.user.name}</p>
-                                                                <p className="truncate text-xs text-muted-foreground">{auditLog.user.email}</p>
+                                                                <p className="truncate text-sm font-medium">
+                                                                    {
+                                                                        auditLog
+                                                                            .user
+                                                                            .name
+                                                                    }
+                                                                </p>
+                                                                <p className="truncate text-xs text-muted-foreground">
+                                                                    {
+                                                                        auditLog
+                                                                            .user
+                                                                            .email
+                                                                    }
+                                                                </p>
                                                             </div>
                                                         ) : (
-                                                            <span className="text-sm text-muted-foreground">Sistem</span>
+                                                            <span className="text-sm text-muted-foreground">
+                                                                Sistem
+                                                            </span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <StatusBadge variant={eventVariant(auditLog.event)}>
-                                                            {eventLabel(auditLog.event)}
+                                                        <StatusBadge
+                                                            variant={eventVariant(
+                                                                auditLog.event,
+                                                            )}
+                                                        >
+                                                            {eventLabel(
+                                                                auditLog.event,
+                                                            )}
                                                         </StatusBadge>
                                                     </TableCell>
                                                     <TableCell className="text-sm text-muted-foreground">
@@ -460,13 +585,25 @@ export default function AuditLogIndex({
                                                     <TableCell>
                                                         {auditLog.archive ? (
                                                             <div className="min-w-0">
-                                                                <p className="font-mono text-xs font-medium">{auditLog.archive.nomor_arsip}</p>
+                                                                <p className="font-mono text-xs font-medium">
+                                                                    {
+                                                                        auditLog
+                                                                            .archive
+                                                                            .nomor_arsip
+                                                                    }
+                                                                </p>
                                                                 <p className="max-w-[260px] truncate text-xs text-muted-foreground">
-                                                                    {auditLog.archive.judul}
+                                                                    {
+                                                                        auditLog
+                                                                            .archive
+                                                                            .judul
+                                                                    }
                                                                 </p>
                                                             </div>
                                                         ) : (
-                                                            <span className="text-sm text-muted-foreground">-</span>
+                                                            <span className="text-sm text-muted-foreground">
+                                                                -
+                                                            </span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-right">
@@ -474,7 +611,11 @@ export default function AuditLogIndex({
                                                             type="button"
                                                             variant="outline"
                                                             size="sm"
-                                                            onClick={() => setSelectedLog(auditLog)}
+                                                            onClick={() =>
+                                                                setSelectedLog(
+                                                                    auditLog,
+                                                                )
+                                                            }
                                                         >
                                                             <Eye className="h-4 w-4" />
                                                             Detail
@@ -488,28 +629,42 @@ export default function AuditLogIndex({
 
                                 <div className="flex flex-col gap-3 pt-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
-                                        Menampilkan {auditLogs.from ?? 0} hingga {auditLogs.to ?? 0} dari {auditLogs.total} audit
+                                        Menampilkan {auditLogs.from ?? 0} hingga{' '}
+                                        {auditLogs.to ?? 0} dari{' '}
+                                        {auditLogs.total} audit
                                     </span>
                                     {auditLogs.last_page > 1 && (
                                         <div className="flex flex-wrap items-center gap-1">
-                                            {auditLogs.links.map((link, linkIndex) => (
-                                                <Button
-                                                    key={`${link.label}-${linkIndex}`}
-                                                    type="button"
-                                                    variant={link.active ? 'default' : 'outline'}
-                                                    size="sm"
-                                                    disabled={!link.url}
-                                                    onClick={() => {
-                                                        if (link.url) {
-                                                            router.get(link.url, {}, {
-                                                                preserveState: true,
-                                                                preserveScroll: true,
-                                                            });
+                                            {auditLogs.links.map(
+                                                (link, linkIndex) => (
+                                                    <Button
+                                                        key={`${link.label}-${linkIndex}`}
+                                                        type="button"
+                                                        variant={
+                                                            link.active
+                                                                ? 'default'
+                                                                : 'outline'
                                                         }
-                                                    }}
-                                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                                />
-                                            ))}
+                                                        size="sm"
+                                                        disabled={!link.url}
+                                                        onClick={() => {
+                                                            if (link.url) {
+                                                                router.get(
+                                                                    link.url,
+                                                                    {},
+                                                                    {
+                                                                        preserveState: true,
+                                                                        preserveScroll: true,
+                                                                    },
+                                                                );
+                                                            }
+                                                        }}
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: link.label,
+                                                        }}
+                                                    />
+                                                ),
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -519,18 +674,20 @@ export default function AuditLogIndex({
                 </ContentCard>
             </PageContainer>
 
-            <Dialog open={selectedLog !== null} onOpenChange={(open) => !open && setSelectedLog(null)}>
+            <Dialog
+                open={selectedLog !== null}
+                onOpenChange={(open) => !open && setSelectedLog(null)}
+            >
                 <DialogContent className="max-h-[90vh] overflow-hidden sm:max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>Detail Audit Log</DialogTitle>
                         <DialogDescription>
-                            {selectedLog ? eventLabel(selectedLog.event) : '-'} pada {selectedLog?.created_at_human ?? '-'}
+                            {selectedLog ? eventLabel(selectedLog.event) : '-'}{' '}
+                            pada {selectedLog?.created_at_human ?? '-'}
                         </DialogDescription>
                     </DialogHeader>
 
-                    {selectedLog && (
-                        <AuditLogDetail auditLog={selectedLog} />
-                    )}
+                    {selectedLog && <AuditLogDetail auditLog={selectedLog} />}
                 </DialogContent>
             </Dialog>
         </>
@@ -541,39 +698,80 @@ function AuditLogDetail({ auditLog }: { auditLog: AuditLog }) {
     return (
         <div className="max-h-[70vh] space-y-6 overflow-y-auto pr-2">
             <section className="grid gap-3 sm:grid-cols-2">
-                <DetailItem label="Aktivitas" value={eventLabel(auditLog.event)} />
-                <DetailItem label="Tanggal" value={auditLog.created_at_human ?? '-'} />
-                <DetailItem label="Pengguna" value={auditLog.user?.name ?? 'Sistem'} />
-                <DetailItem label="Nomor Arsip" value={auditLog.archive?.nomor_arsip ?? '-'} />
-                <DetailItem className="sm:col-span-2" label="Judul Arsip" value={auditLog.archive?.judul ?? '-'} />
+                <DetailItem
+                    label="Aktivitas"
+                    value={eventLabel(auditLog.event)}
+                />
+                <DetailItem
+                    label="Tanggal"
+                    value={auditLog.created_at_human ?? '-'}
+                />
+                <DetailItem
+                    label="Pengguna"
+                    value={auditLog.user?.name ?? 'Sistem'}
+                />
+                <DetailItem
+                    label="Nomor Arsip"
+                    value={auditLog.archive?.nomor_arsip ?? '-'}
+                />
+                <DetailItem
+                    className="sm:col-span-2"
+                    label="Judul Arsip"
+                    value={auditLog.archive?.judul ?? '-'}
+                />
             </section>
 
-            <ChangeSummary oldValues={auditLog.old_values} newValues={auditLog.new_values} />
+            <ChangeSummary
+                oldValues={auditLog.old_values}
+                newValues={auditLog.new_values}
+            />
 
             <section className="space-y-3 border-t border-border/60 pt-4">
                 <div>
                     <h3 className="text-sm font-semibold">Informasi Teknis</h3>
-                    <p className="text-xs text-muted-foreground">Data teknis untuk kebutuhan penelusuran lanjutan.</p>
+                    <p className="text-xs text-muted-foreground">
+                        Data teknis untuk kebutuhan penelusuran lanjutan.
+                    </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                    <DetailItem label="IP Address" value={auditLog.ip_address ?? '-'} />
-                    <DetailItem label="Browser/User Agent" value={auditLog.user_agent ?? '-'} />
+                    <DetailItem
+                        label="IP Address"
+                        value={auditLog.ip_address ?? '-'}
+                    />
+                    <DetailItem
+                        label="Browser/User Agent"
+                        value={auditLog.user_agent ?? '-'}
+                    />
                 </div>
             </section>
         </div>
     );
 }
 
-function DetailItem({ label, value, className = '' }: { label: string; value: string; className?: string }) {
+function DetailItem({
+    label,
+    value,
+    className = '',
+}: {
+    label: string;
+    value: string;
+    className?: string;
+}) {
     return (
         <div className={`rounded-md border border-border/60 p-3 ${className}`}>
             <p className="text-xs font-medium text-muted-foreground">{label}</p>
-            <p className="mt-1 break-words text-sm">{value}</p>
+            <p className="mt-1 text-sm break-words">{value}</p>
         </div>
     );
 }
 
-function ChangeSummary({ oldValues, newValues }: { oldValues: JsonValue | null; newValues: JsonValue | null }) {
+function ChangeSummary({
+    oldValues,
+    newValues,
+}: {
+    oldValues: JsonValue | null;
+    newValues: JsonValue | null;
+}) {
     const changes = changeItems(oldValues, newValues);
     const visibleChanges = changes.filter((change) => !change.isComplex);
     const hasComplexChanges = changes.some((change) => change.isComplex);
@@ -582,17 +780,30 @@ function ChangeSummary({ oldValues, newValues }: { oldValues: JsonValue | null; 
         <section className="space-y-3">
             <div>
                 <h3 className="text-sm font-semibold">Perubahan</h3>
-                <p className="text-xs text-muted-foreground">Ringkasan perubahan yang tercatat pada aktivitas ini.</p>
+                <p className="text-xs text-muted-foreground">
+                    Ringkasan perubahan yang tercatat pada aktivitas ini.
+                </p>
             </div>
 
             {visibleChanges.length > 0 ? (
                 <div className="space-y-3">
                     {visibleChanges.map((change) => (
-                        <div key={change.field} className="rounded-md border border-border/60 p-3">
-                            <p className="text-sm font-semibold">{change.label}</p>
+                        <div
+                            key={change.field}
+                            className="rounded-md border border-border/60 p-3"
+                        >
+                            <p className="text-sm font-semibold">
+                                {change.label}
+                            </p>
                             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                                <ValueBlock label="Sebelum" value={formatValue(change.oldValue)} />
-                                <ValueBlock label="Sesudah" value={formatValue(change.newValue)} />
+                                <ValueBlock
+                                    label="Sebelum"
+                                    value={formatValue(change.oldValue)}
+                                />
+                                <ValueBlock
+                                    label="Sesudah"
+                                    value={formatValue(change.newValue)}
+                                />
                             </div>
                         </div>
                     ))}
@@ -603,7 +814,9 @@ function ChangeSummary({ oldValues, newValues }: { oldValues: JsonValue | null; 
                 </p>
             )}
 
-            {hasComplexChanges && <FullData oldValues={oldValues} newValues={newValues} />}
+            {hasComplexChanges && (
+                <FullData oldValues={oldValues} newValues={newValues} />
+            )}
         </section>
     );
 }
@@ -612,16 +825,27 @@ function ValueBlock({ label, value }: { label: string; value: string }) {
     return (
         <div className="space-y-1 rounded-md bg-muted/40 p-3">
             <p className="text-xs font-medium text-muted-foreground">{label}</p>
-            <p className="break-words text-sm whitespace-pre-wrap">{value}</p>
+            <p className="text-sm break-words whitespace-pre-wrap">{value}</p>
         </div>
     );
 }
 
-function FullData({ oldValues, newValues }: { oldValues: JsonValue | null; newValues: JsonValue | null }) {
+function FullData({
+    oldValues,
+    newValues,
+}: {
+    oldValues: JsonValue | null;
+    newValues: JsonValue | null;
+}) {
     return (
         <Collapsible>
             <CollapsibleTrigger asChild>
-                <Button type="button" variant="ghost" size="sm" className="h-8 px-2 text-muted-foreground">
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-muted-foreground"
+                >
                     <ChevronDown className="h-4 w-4" />
                     Lihat Data Lengkap
                 </Button>
@@ -634,10 +858,18 @@ function FullData({ oldValues, newValues }: { oldValues: JsonValue | null; newVa
     );
 }
 
-function JsonBlock({ title, value }: { title: string; value: JsonValue | null }) {
+function JsonBlock({
+    title,
+    value,
+}: {
+    title: string;
+    value: JsonValue | null;
+}) {
     return (
         <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground">{title}</p>
+            <p className="text-xs font-semibold text-muted-foreground">
+                {title}
+            </p>
             <pre className="max-h-64 overflow-auto rounded-md border border-border/60 bg-muted/40 p-3 text-xs leading-relaxed">
                 {prettyJson(value)}
             </pre>

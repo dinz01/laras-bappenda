@@ -136,7 +136,8 @@ function UnitFormDialog({
                 kode: unit.kode,
                 nama: unit.nama,
                 singkatan: unit.singkatan ?? '',
-                parent_id: unit.parent_id !== null ? String(unit.parent_id) : '',
+                parent_id:
+                    unit.parent_id !== null ? String(unit.parent_id) : '',
                 status: unit.status,
             });
         } else if (prefilledParentId) {
@@ -178,7 +179,9 @@ function UnitFormDialog({
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
-                        {mode === 'create' ? 'Tambah Unit Organisasi' : 'Edit Unit Organisasi'}
+                        {mode === 'create'
+                            ? 'Tambah Unit Organisasi'
+                            : 'Edit Unit Organisasi'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
                         Lengkapi data unit organisasi sesuai struktur instansi.
@@ -192,7 +195,9 @@ function UnitFormDialog({
                             <Input
                                 id="kode"
                                 value={form.data.kode}
-                                onChange={(event) => form.setData('kode', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('kode', event.target.value)
+                                }
                                 placeholder="Contoh: UO-001"
                                 maxLength={30}
                             />
@@ -203,14 +208,20 @@ function UnitFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: UnitFormData['status']) => form.setData('status', value)}
+                                onValueChange={(
+                                    value: UnitFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -222,7 +233,9 @@ function UnitFormDialog({
                         <Input
                             id="nama"
                             value={form.data.nama}
-                            onChange={(event) => form.setData('nama', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('nama', event.target.value)
+                            }
                             placeholder="Nama unit organisasi"
                             maxLength={255}
                         />
@@ -234,7 +247,9 @@ function UnitFormDialog({
                         <Input
                             id="singkatan"
                             value={form.data.singkatan}
-                            onChange={(event) => form.setData('singkatan', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('singkatan', event.target.value)
+                            }
                             placeholder="Singkatan unit"
                             maxLength={50}
                         />
@@ -246,15 +261,25 @@ function UnitFormDialog({
                             <Label htmlFor="parent_id">Parent Unit</Label>
                             <Select
                                 value={form.data.parent_id}
-                                onValueChange={(value) => form.setData('parent_id', value)}
+                                onValueChange={(value) =>
+                                    form.setData('parent_id', value)
+                                }
                             >
-                                <SelectTrigger id="parent_id" className="w-full">
+                                <SelectTrigger
+                                    id="parent_id"
+                                    className="w-full"
+                                >
                                     <SelectValue placeholder="Tidak Ada (Root)" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">Tidak Ada (Root)</SelectItem>
+                                    <SelectItem value="">
+                                        Tidak Ada (Root)
+                                    </SelectItem>
                                     {parentOptions.map((opt) => (
-                                        <SelectItem key={opt.id} value={String(opt.id)}>
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={String(opt.id)}
+                                        >
                                             {opt.nama}
                                         </SelectItem>
                                     ))}
@@ -294,14 +319,17 @@ function DetailDialog({
 }) {
     const parentName =
         unit && unit.parent_id !== null
-            ? parentOptions.find((o) => o.id === unit.parent_id)?.nama ?? `Unit #${unit.parent_id}`
+            ? (parentOptions.find((o) => o.id === unit.parent_id)?.nama ??
+              `Unit #${unit.parent_id}`)
             : '-';
 
     return (
         <Dialog open={unit !== null} onOpenChange={onOpenChange}>
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">Detail Unit Organisasi</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">
+                        Detail Unit Organisasi
+                    </DialogTitle>
                     <DialogDescription className="text-xs">
                         Informasi lengkap unit organisasi dan struktur hierarki.
                     </DialogDescription>
@@ -310,14 +338,31 @@ function DetailDialog({
                 {unit && (
                     <div className="grid gap-3 text-sm">
                         <DetailRow label="Kode" value={unit.kode} mono />
-                        <DetailRow label="Nama Unit Organisasi" value={unit.nama} />
-                        <DetailRow label="Singkatan" value={unit.singkatan || '-'} />
+                        <DetailRow
+                            label="Nama Unit Organisasi"
+                            value={unit.nama}
+                        />
+                        <DetailRow
+                            label="Singkatan"
+                            value={unit.singkatan || '-'}
+                        />
                         <DetailRow label="Parent Unit" value={parentName} />
-                        <DetailRow label="Jumlah Turunan" value={`${unit.children_count} unit`} />
-                        <DetailRow label="Dibuat Pada" value={unit.created_at || '-'} />
-                        <DetailRow label="Diperbarui Pada" value={unit.updated_at || '-'} />
+                        <DetailRow
+                            label="Jumlah Turunan"
+                            value={`${unit.children_count} unit`}
+                        />
+                        <DetailRow
+                            label="Dibuat Pada"
+                            value={unit.created_at || '-'}
+                        />
+                        <DetailRow
+                            label="Diperbarui Pada"
+                            value={unit.updated_at || '-'}
+                        />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
                             <StatusBadge variant={statusVariant(unit.status)}>
                                 {statusLabel(unit.status)}
                             </StatusBadge>
@@ -329,11 +374,25 @@ function DetailDialog({
     );
 }
 
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
             <span className="text-muted-foreground">{label}</span>
-            <span className={mono ? 'font-mono text-xs text-right' : 'font-medium text-right'}>
+            <span
+                className={
+                    mono
+                        ? 'text-right font-mono text-xs'
+                        : 'text-right font-medium'
+                }
+            >
                 {value}
             </span>
         </div>
@@ -411,7 +470,9 @@ export default function UnitOrganisasiIndex({
 
     const hasFilters = Boolean(filters.search);
 
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -464,10 +525,14 @@ export default function UnitOrganisasiIndex({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index().url, {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index().url,
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const confirmDelete = () => {
@@ -481,7 +546,9 @@ export default function UnitOrganisasiIndex({
         router.delete(destroy({ unitOrganisasi: deleteUnit.id }).url, {
             preserveScroll: true,
             onError: (errors) => {
-                setDeleteError(errors.unit_organisasi || 'Unit organisasi gagal dihapus.');
+                setDeleteError(
+                    errors.unit_organisasi || 'Unit organisasi gagal dihapus.',
+                );
             },
             onSuccess: () => setDeleteUnit(null),
             onFinish: () => setDeleting(false),
@@ -573,23 +640,28 @@ export default function UnitOrganisasiIndex({
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Struktur Unit Organisasi" description="Struktur hierarki unit organisasi instansi">
+                <ContentCard
+                    title="Struktur Unit Organisasi"
+                    description="Struktur hierarki unit organisasi instansi"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari kode, nama, atau singkatan..."
-                            filters={hasFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Reset Filter
-                                </Button>
-                            )}
+                            filters={
+                                hasFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="mr-1 h-4 w-4" />
+                                        Reset Filter
+                                    </Button>
+                                )
+                            }
                         />
 
                         {visibleUnits.length === 0 ? (
@@ -601,33 +673,54 @@ export default function UnitOrganisasiIndex({
                         ) : (
                             <div className="overflow-hidden rounded-md border border-border/60">
                                 <div className="divide-y divide-border/50">
-                                    <div className="flex items-center gap-2 bg-muted/40 pl-2 pr-4 py-2.5">
+                                    <div className="flex items-center gap-2 bg-muted/40 py-2.5 pr-4 pl-2">
                                         <span className="w-4 shrink-0" />
                                         <div className="flex min-w-0 flex-1 items-center gap-3">
-                                            <span className="w-[80px] shrink-0 text-sm font-semibold">Kode</span>
-                                            <span className="text-sm font-semibold">Nama</span>
+                                            <span className="w-[80px] shrink-0 text-sm font-semibold">
+                                                Kode
+                                            </span>
+                                            <span className="text-sm font-semibold">
+                                                Nama
+                                            </span>
                                         </div>
-                                        <span className="w-[100px] shrink-0 text-sm font-semibold">Status</span>
-                                        <span className="w-7 shrink-0 text-right text-sm font-semibold">Aksi</span>
+                                        <span className="w-[100px] shrink-0 text-sm font-semibold">
+                                            Status
+                                        </span>
+                                        <span className="w-7 shrink-0 text-right text-sm font-semibold">
+                                            Aksi
+                                        </span>
                                     </div>
                                     {visibleUnits.map((unit) => {
                                         const key = getNodeKey(unit);
-                                        const hasChildren = childrenMap.get(key) !== undefined && childrenMap.get(key)!.length > 0;
+                                        const hasChildren =
+                                            childrenMap.get(key) !==
+                                                undefined &&
+                                            childrenMap.get(key)!.length > 0;
                                         const isExpanded = expandedIds.has(key);
 
                                         return (
                                             <div
                                                 key={key}
-                                                className="flex items-center gap-2 pr-4 py-2.5 transition-colors hover:bg-muted/30"
-                                                style={{ paddingLeft: `${8 + unit.depth * INDENT_PX}px` }}
+                                                className="flex items-center gap-2 py-2.5 pr-4 transition-colors hover:bg-muted/30"
+                                                style={{
+                                                    paddingLeft: `${8 + unit.depth * INDENT_PX}px`,
+                                                }}
                                             >
                                                 <div className="flex w-4 shrink-0 items-center justify-center">
                                                     {hasChildren ? (
                                                         <button
                                                             type="button"
-                                                            onClick={() => toggleExpand(key)}
+                                                            onClick={() =>
+                                                                toggleExpand(
+                                                                    key,
+                                                                )
+                                                            }
                                                             className="flex cursor-pointer items-center justify-center rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                                                            aria-label={isExpanded ? 'Ciutkan' : 'Perluas'}
+                                                            aria-label={
+                                                                isExpanded
+                                                                    ? 'Ciutkan'
+                                                                    : 'Perluas'
+                                                            }
                                                         >
                                                             {isExpanded ? (
                                                                 <ChevronDown className="h-4 w-4" />
@@ -641,7 +734,7 @@ export default function UnitOrganisasiIndex({
                                                 </div>
 
                                                 <div className="flex min-w-0 flex-1 items-center gap-3">
-                                                    <span className="font-mono text-xs text-muted-foreground shrink-0 w-[80px]">
+                                                    <span className="w-[80px] shrink-0 font-mono text-xs text-muted-foreground">
                                                         {unit.kode}
                                                     </span>
                                                     <span className="truncate text-sm font-medium">
@@ -655,28 +748,54 @@ export default function UnitOrganisasiIndex({
                                                 </div>
 
                                                 <div className="w-[100px] shrink-0">
-                                                    <StatusBadge variant={statusVariant(unit.status)} className="w-fit">
-                                                        {statusLabel(unit.status)}
+                                                    <StatusBadge
+                                                        variant={statusVariant(
+                                                            unit.status,
+                                                        )}
+                                                        className="w-fit"
+                                                    >
+                                                        {statusLabel(
+                                                            unit.status,
+                                                        )}
                                                     </StatusBadge>
                                                 </div>
 
                                                 <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
-                                                            <span className="sr-only">Menu aksi</span>
+                                                    <DropdownMenuTrigger
+                                                        asChild
+                                                    >
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7 shrink-0"
+                                                        >
+                                                            <span className="sr-only">
+                                                                Menu aksi
+                                                            </span>
                                                             <MoreHorizontal className="h-4 w-4" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-40">
+                                                    <DropdownMenuContent
+                                                        align="end"
+                                                        className="w-40"
+                                                    >
                                                         <DropdownMenuItem
-                                                            onClick={() => setDetailUnit(unit)}
+                                                            onClick={() =>
+                                                                setDetailUnit(
+                                                                    unit,
+                                                                )
+                                                            }
                                                             className="flex cursor-pointer items-center gap-2"
                                                         >
                                                             <Eye className="h-4 w-4" />
                                                             Detail
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
-                                                            onClick={() => openEditDialog(unit)}
+                                                            onClick={() =>
+                                                                openEditDialog(
+                                                                    unit,
+                                                                )
+                                                            }
                                                             className="flex cursor-pointer items-center gap-2"
                                                         >
                                                             <Pencil className="h-4 w-4" />
@@ -685,19 +804,28 @@ export default function UnitOrganisasiIndex({
                                                         {unit.depth === 0 && (
                                                             <>
                                                                 <DropdownMenuItem
-                                                                    onClick={() => openCreateSubUnitDialog(unit)}
+                                                                    onClick={() =>
+                                                                        openCreateSubUnitDialog(
+                                                                            unit,
+                                                                        )
+                                                                    }
                                                                     className="flex cursor-pointer items-center gap-2"
                                                                 >
                                                                     <PlusCircle className="h-4 w-4" />
-                                                                    Tambah Sub Bidang
+                                                                    Tambah Sub
+                                                                    Bidang
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
                                                             </>
                                                         )}
                                                         <DropdownMenuItem
                                                             onClick={() => {
-                                                                setDeleteError(null);
-                                                                setDeleteUnit(unit);
+                                                                setDeleteError(
+                                                                    null,
+                                                                );
+                                                                setDeleteUnit(
+                                                                    unit,
+                                                                );
                                                             }}
                                                             className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
                                                         >
@@ -724,7 +852,11 @@ export default function UnitOrganisasiIndex({
                 prefilledParentId={prefilledParentId}
                 onOpenChange={setFormOpen}
             />
-            <DetailDialog unit={detailUnit} parentOptions={parentOptions} onOpenChange={(open) => !open && setDetailUnit(null)} />
+            <DetailDialog
+                unit={detailUnit}
+                parentOptions={parentOptions}
+                onOpenChange={(open) => !open && setDetailUnit(null)}
+            />
             <ConfirmDialog
                 isOpen={deleteUnit !== null}
                 onClose={() => {
@@ -733,7 +865,10 @@ export default function UnitOrganisasiIndex({
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Unit Organisasi"
-                description={deleteError || `Hapus unit organisasi "${deleteUnit?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.${deleteUnit && childrenMap.get(getNodeKey(deleteUnit))?.length ? ' Unit ini memiliki turunan yang juga akan ikut terhapus.' : ''}`}
+                description={
+                    deleteError ||
+                    `Hapus unit organisasi "${deleteUnit?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.${deleteUnit && childrenMap.get(getNodeKey(deleteUnit))?.length ? ' Unit ini memiliki turunan yang juga akan ikut terhapus.' : ''}`
+                }
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -743,7 +878,11 @@ export default function UnitOrganisasiIndex({
 }
 
 function StatValue({ value }: { value: number }) {
-    return <div className="text-2xl font-semibold tracking-normal text-foreground">{value.toLocaleString('id-ID')}</div>;
+    return (
+        <div className="text-2xl font-semibold tracking-normal text-foreground">
+            {value.toLocaleString('id-ID')}
+        </div>
+    );
 }
 
 UnitOrganisasiIndex.layout = {

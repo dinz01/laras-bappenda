@@ -38,7 +38,8 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             {/* Footer publik */}
             <footer className="border-t border-border/60 py-4">
                 <div className="mx-auto max-w-6xl px-4 text-center text-xs text-muted-foreground">
-                    © {new Date().getFullYear()} LARAS — Layanan Arsip Digital. Hak cipta dilindungi.
+                    © {new Date().getFullYear()} LARAS — Layanan Arsip Digital.
+                    Hak cipta dilindungi.
                 </div>
             </footer>
         </div>

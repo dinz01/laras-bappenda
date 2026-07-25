@@ -159,16 +159,23 @@ function RetensiArsipFormDialog({
             return;
         }
 
-        form.setData(retensiArsip ? {
-            kode: retensiArsip.kode,
-            nama: retensiArsip.nama,
-            retensi_aktif: String(retensiArsip.retensi_aktif),
-            retensi_inaktif: String(retensiArsip.retensi_inaktif),
-            nasib_akhir: retensiArsip.nasib_akhir ?? '',
-            metode_penyusutan_arsip_id: retensiArsip.metode_penyusutan_arsip_id ? String(retensiArsip.metode_penyusutan_arsip_id) : '',
-            keterangan: retensiArsip.keterangan ?? '',
-            status: retensiArsip.status,
-        } : emptyForm);
+        form.setData(
+            retensiArsip
+                ? {
+                      kode: retensiArsip.kode,
+                      nama: retensiArsip.nama,
+                      retensi_aktif: String(retensiArsip.retensi_aktif),
+                      retensi_inaktif: String(retensiArsip.retensi_inaktif),
+                      nasib_akhir: retensiArsip.nasib_akhir ?? '',
+                      metode_penyusutan_arsip_id:
+                          retensiArsip.metode_penyusutan_arsip_id
+                              ? String(retensiArsip.metode_penyusutan_arsip_id)
+                              : '',
+                      keterangan: retensiArsip.keterangan ?? '',
+                      status: retensiArsip.status,
+                  }
+                : emptyForm,
+        );
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, retensiArsip]);
@@ -199,10 +206,13 @@ function RetensiArsipFormDialog({
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
-                        {mode === 'create' ? 'Tambah Retensi Arsip' : 'Edit Retensi Arsip'}
+                        {mode === 'create'
+                            ? 'Tambah Retensi Arsip'
+                            : 'Edit Retensi Arsip'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
-                        Lengkapi data jadwal retensi arsip sesuai ketentuan yang berlaku.
+                        Lengkapi data jadwal retensi arsip sesuai ketentuan yang
+                        berlaku.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -213,7 +223,9 @@ function RetensiArsipFormDialog({
                             <Input
                                 id="kode"
                                 value={form.data.kode}
-                                onChange={(event) => form.setData('kode', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('kode', event.target.value)
+                                }
                                 placeholder="Contoh: JRA-001"
                                 maxLength={50}
                             />
@@ -224,14 +236,20 @@ function RetensiArsipFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: RetensiArsipFormData['status']) => form.setData('status', value)}
+                                onValueChange={(
+                                    value: RetensiArsipFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -243,7 +261,9 @@ function RetensiArsipFormDialog({
                         <Input
                             id="nama"
                             value={form.data.nama}
-                            onChange={(event) => form.setData('nama', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('nama', event.target.value)
+                            }
                             placeholder="Nama retensi arsip"
                             maxLength={255}
                         />
@@ -252,26 +272,40 @@ function RetensiArsipFormDialog({
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="retensi_aktif">Retensi Aktif (Tahun)</Label>
+                            <Label htmlFor="retensi_aktif">
+                                Retensi Aktif (Tahun)
+                            </Label>
                             <Input
                                 id="retensi_aktif"
                                 type="number"
                                 min="0"
                                 value={form.data.retensi_aktif}
-                                onChange={(event) => form.setData('retensi_aktif', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'retensi_aktif',
+                                        event.target.value,
+                                    )
+                                }
                                 placeholder="0"
                             />
                             <InputError message={form.errors.retensi_aktif} />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="retensi_inaktif">Retensi Inaktif (Tahun)</Label>
+                            <Label htmlFor="retensi_inaktif">
+                                Retensi Inaktif (Tahun)
+                            </Label>
                             <Input
                                 id="retensi_inaktif"
                                 type="number"
                                 min="0"
                                 value={form.data.retensi_inaktif}
-                                onChange={(event) => form.setData('retensi_inaktif', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'retensi_inaktif',
+                                        event.target.value,
+                                    )
+                                }
                                 placeholder="0"
                             />
                             <InputError message={form.errors.retensi_inaktif} />
@@ -284,7 +318,12 @@ function RetensiArsipFormDialog({
                             <Input
                                 id="nasib_akhir"
                                 value={form.data.nasib_akhir}
-                                onChange={(event) => form.setData('nasib_akhir', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'nasib_akhir',
+                                        event.target.value,
+                                    )
+                                }
                                 placeholder="Contoh: Musnah / Permanen"
                                 maxLength={100}
                             />
@@ -292,23 +331,38 @@ function RetensiArsipFormDialog({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="metode_penyusutan_arsip_id">Metode Penyusutan</Label>
+                            <Label htmlFor="metode_penyusutan_arsip_id">
+                                Metode Penyusutan
+                            </Label>
                             <Select
                                 value={form.data.metode_penyusutan_arsip_id}
-                                onValueChange={(value: string) => form.setData('metode_penyusutan_arsip_id', value)}
+                                onValueChange={(value: string) =>
+                                    form.setData(
+                                        'metode_penyusutan_arsip_id',
+                                        value,
+                                    )
+                                }
                             >
-                                <SelectTrigger id="metode_penyusutan_arsip_id" className="w-full">
+                                <SelectTrigger
+                                    id="metode_penyusutan_arsip_id"
+                                    className="w-full"
+                                >
                                     <SelectValue placeholder="Pilih metode penyusutan..." />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {metodePenyusutanArsips.map((metode) => (
-                                        <SelectItem key={metode.id} value={String(metode.id)}>
+                                        <SelectItem
+                                            key={metode.id}
+                                            value={String(metode.id)}
+                                        >
                                             {metode.nama} ({metode.kode})
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <InputError message={form.errors.metode_penyusutan_arsip_id} />
+                            <InputError
+                                message={form.errors.metode_penyusutan_arsip_id}
+                            />
                         </div>
                     </div>
 
@@ -317,7 +371,9 @@ function RetensiArsipFormDialog({
                         <Input
                             id="keterangan"
                             value={form.data.keterangan}
-                            onChange={(event) => form.setData('keterangan', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('keterangan', event.target.value)
+                            }
                             placeholder="Keterangan retensi arsip"
                         />
                         <InputError message={form.errors.keterangan} />
@@ -353,7 +409,9 @@ function DetailDialog({
         <Dialog open={retensiArsip !== null} onOpenChange={onOpenChange}>
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">Detail Retensi Arsip</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">
+                        Detail Retensi Arsip
+                    </DialogTitle>
                     <DialogDescription className="text-xs">
                         Informasi lengkap jadwal retensi arsip.
                     </DialogDescription>
@@ -361,11 +419,24 @@ function DetailDialog({
 
                 {retensiArsip && (
                     <div className="grid gap-3 text-sm">
-                        <DetailRow label="Kode" value={retensiArsip.kode} mono />
+                        <DetailRow
+                            label="Kode"
+                            value={retensiArsip.kode}
+                            mono
+                        />
                         <DetailRow label="Nama" value={retensiArsip.nama} />
-                        <DetailRow label="Retensi Aktif" value={`${retensiArsip.retensi_aktif} Tahun`} />
-                        <DetailRow label="Retensi Inaktif" value={`${retensiArsip.retensi_inaktif} Tahun`} />
-                        <DetailRow label="Nasib Akhir" value={retensiArsip.nasib_akhir || '-'} />
+                        <DetailRow
+                            label="Retensi Aktif"
+                            value={`${retensiArsip.retensi_aktif} Tahun`}
+                        />
+                        <DetailRow
+                            label="Retensi Inaktif"
+                            value={`${retensiArsip.retensi_inaktif} Tahun`}
+                        />
+                        <DetailRow
+                            label="Nasib Akhir"
+                            value={retensiArsip.nasib_akhir || '-'}
+                        />
                         <DetailRow
                             label="Metode Penyusutan"
                             value={
@@ -374,12 +445,25 @@ function DetailDialog({
                                     : '-'
                             }
                         />
-                        <DetailRow label="Keterangan" value={retensiArsip.keterangan || '-'} />
-                        <DetailRow label="Dibuat Pada" value={retensiArsip.created_at || '-'} />
-                        <DetailRow label="Diperbarui Pada" value={retensiArsip.updated_at || '-'} />
+                        <DetailRow
+                            label="Keterangan"
+                            value={retensiArsip.keterangan || '-'}
+                        />
+                        <DetailRow
+                            label="Dibuat Pada"
+                            value={retensiArsip.created_at || '-'}
+                        />
+                        <DetailRow
+                            label="Diperbarui Pada"
+                            value={retensiArsip.updated_at || '-'}
+                        />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
-                            <StatusBadge variant={statusVariant(retensiArsip.status)}>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
+                            <StatusBadge
+                                variant={statusVariant(retensiArsip.status)}
+                            >
                                 {statusLabel(retensiArsip.status)}
                             </StatusBadge>
                         </div>
@@ -390,11 +474,25 @@ function DetailDialog({
     );
 }
 
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
             <span className="text-muted-foreground">{label}</span>
-            <span className={mono ? 'font-mono text-xs text-right' : 'font-medium text-right'}>
+            <span
+                className={
+                    mono
+                        ? 'text-right font-mono text-xs'
+                        : 'text-right font-medium'
+                }
+            >
                 {value}
             </span>
         </div>
@@ -410,13 +508,18 @@ export default function RetensiArsipIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-    const [selectedRetensiArsip, setSelectedRetensiArsip] = useState<RetensiArsip | null>(null);
-    const [detailRetensiArsip, setDetailRetensiArsip] = useState<RetensiArsip | null>(null);
-    const [deleteRetensiArsip, setDeleteRetensiArsip] = useState<RetensiArsip | null>(null);
+    const [selectedRetensiArsip, setSelectedRetensiArsip] =
+        useState<RetensiArsip | null>(null);
+    const [detailRetensiArsip, setDetailRetensiArsip] =
+        useState<RetensiArsip | null>(null);
+    const [deleteRetensiArsip, setDeleteRetensiArsip] =
+        useState<RetensiArsip | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -461,10 +564,14 @@ export default function RetensiArsipIndex({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index().url, {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index().url,
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const confirmDelete = () => {
@@ -479,7 +586,9 @@ export default function RetensiArsipIndex({
             preserveScroll: true,
             onSuccess: () => setDeleteRetensiArsip(null),
             onError: (errors) => {
-                setDeleteError(errors.retensi_arsip || 'Retensi arsip gagal dihapus.');
+                setDeleteError(
+                    errors.retensi_arsip || 'Retensi arsip gagal dihapus.',
+                );
             },
             onFinish: () => setDeleting(false),
         });
@@ -523,23 +632,28 @@ export default function RetensiArsipIndex({
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Daftar Retensi Arsip" description="Data jadwal retensi arsip yang tersedia">
+                <ContentCard
+                    title="Daftar Retensi Arsip"
+                    description="Data jadwal retensi arsip yang tersedia"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari kode, nama, nasib akhir, atau keterangan..."
-                            filters={hasFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Reset Filter
-                                </Button>
-                            )}
+                            filters={
+                                hasFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="mr-1 h-4 w-4" />
+                                        Reset Filter
+                                    </Button>
+                                )
+                            }
                         />
 
                         {retensiArsips.data.length === 0 ? (
@@ -554,98 +668,169 @@ export default function RetensiArsipIndex({
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[130px] font-semibold">Kode</TableHead>
-                                                <TableHead className="font-semibold">Nama</TableHead>
-                                                <TableHead className="w-[110px] font-semibold text-center">Retensi Aktif</TableHead>
-                                                <TableHead className="w-[110px] font-semibold text-center">Retensi Inaktif</TableHead>
-                                                <TableHead className="w-[130px] font-semibold">Nasib Akhir</TableHead>
-                                                <TableHead className="w-[110px] font-semibold">Status</TableHead>
-                                                <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="w-[130px] font-semibold">
+                                                    Kode
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Nama
+                                                </TableHead>
+                                                <TableHead className="w-[110px] text-center font-semibold">
+                                                    Retensi Aktif
+                                                </TableHead>
+                                                <TableHead className="w-[110px] text-center font-semibold">
+                                                    Retensi Inaktif
+                                                </TableHead>
+                                                <TableHead className="w-[130px] font-semibold">
+                                                    Nasib Akhir
+                                                </TableHead>
+                                                <TableHead className="w-[110px] font-semibold">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead className="w-[170px] font-semibold">
+                                                    Dibuat Pada
+                                                </TableHead>
+                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {retensiArsips.data.map((retensiArsip) => (
-                                                <TableRow key={retensiArsip.id} className="transition-colors hover:bg-muted/30">
-                                                    <TableCell className="font-mono text-xs text-muted-foreground">
-                                                        {retensiArsip.kode}
-                                                    </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {retensiArsip.nama}
-                                                    </TableCell>
-                                                    <TableCell className="text-center text-sm">
-                                                        {retensiArsip.retensi_aktif} Thn
-                                                    </TableCell>
-                                                    <TableCell className="text-center text-sm">
-                                                        {retensiArsip.retensi_inaktif} Thn
-                                                    </TableCell>
-                                                    <TableCell className="text-sm font-medium">
-                                                        {retensiArsip.nasib_akhir || '-'}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusBadge variant={statusVariant(retensiArsip.status)} className="w-fit">
-                                                            {statusLabel(retensiArsip.status)}
-                                                        </StatusBadge>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
-                                                        {retensiArsip.created_at || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <span className="sr-only">Menu aksi</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => setDetailRetensiArsip(retensiArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                            {retensiArsips.data.map(
+                                                (retensiArsip) => (
+                                                    <TableRow
+                                                        key={retensiArsip.id}
+                                                        className="transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                                            {retensiArsip.kode}
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">
+                                                            {retensiArsip.nama}
+                                                        </TableCell>
+                                                        <TableCell className="text-center text-sm">
+                                                            {
+                                                                retensiArsip.retensi_aktif
+                                                            }{' '}
+                                                            Thn
+                                                        </TableCell>
+                                                        <TableCell className="text-center text-sm">
+                                                            {
+                                                                retensiArsip.retensi_inaktif
+                                                            }{' '}
+                                                            Thn
+                                                        </TableCell>
+                                                        <TableCell className="text-sm font-medium">
+                                                            {retensiArsip.nasib_akhir ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <StatusBadge
+                                                                variant={statusVariant(
+                                                                    retensiArsip.status,
+                                                                )}
+                                                                className="w-fit"
+                                                            >
+                                                                {statusLabel(
+                                                                    retensiArsip.status,
+                                                                )}
+                                                            </StatusBadge>
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-muted-foreground">
+                                                            {retensiArsip.created_at ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    asChild
                                                                 >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    Detail
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => openEditDialog(retensiArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8"
+                                                                    >
+                                                                        <span className="sr-only">
+                                                                            Menu
+                                                                            aksi
+                                                                        </span>
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent
+                                                                    align="end"
+                                                                    className="w-40"
                                                                 >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                    Edit
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setDeleteError(null);
-                                                                        setDeleteRetensiArsip(retensiArsip);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Hapus
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            setDetailRetensiArsip(
+                                                                                retensiArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        Detail
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            openEditDialog(
+                                                                                retensiArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setDeleteError(
+                                                                                null,
+                                                                            );
+                                                                            setDeleteRetensiArsip(
+                                                                                retensiArsip,
+                                                                            );
+                                                                        }}
+                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Hapus
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
 
                                 <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
-                                        Menampilkan {retensiArsips.from || 0} hingga {retensiArsips.to || 0} dari {retensiArsips.total} retensi
+                                        Menampilkan {retensiArsips.from || 0}{' '}
+                                        hingga {retensiArsips.to || 0} dari{' '}
+                                        {retensiArsips.total} retensi
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!retensiArsips.prev_page_url}
-                                            asChild={Boolean(retensiArsips.prev_page_url)}
+                                            disabled={
+                                                !retensiArsips.prev_page_url
+                                            }
+                                            asChild={Boolean(
+                                                retensiArsips.prev_page_url,
+                                            )}
                                         >
                                             {retensiArsips.prev_page_url ? (
-                                                <Link href={retensiArsips.prev_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        retensiArsips.prev_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Sebelumnya
                                                 </Link>
                                             ) : (
@@ -655,11 +840,20 @@ export default function RetensiArsipIndex({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!retensiArsips.next_page_url}
-                                            asChild={Boolean(retensiArsips.next_page_url)}
+                                            disabled={
+                                                !retensiArsips.next_page_url
+                                            }
+                                            asChild={Boolean(
+                                                retensiArsips.next_page_url,
+                                            )}
                                         >
                                             {retensiArsips.next_page_url ? (
-                                                <Link href={retensiArsips.next_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        retensiArsips.next_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Selanjutnya
                                                 </Link>
                                             ) : (
@@ -681,7 +875,10 @@ export default function RetensiArsipIndex({
                 metodePenyusutanArsips={metodePenyusutanArsips}
                 onOpenChange={setFormOpen}
             />
-            <DetailDialog retensiArsip={detailRetensiArsip} onOpenChange={(open) => !open && setDetailRetensiArsip(null)} />
+            <DetailDialog
+                retensiArsip={detailRetensiArsip}
+                onOpenChange={(open) => !open && setDetailRetensiArsip(null)}
+            />
             <ConfirmDialog
                 isOpen={deleteRetensiArsip !== null}
                 onClose={() => {
@@ -690,7 +887,10 @@ export default function RetensiArsipIndex({
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Retensi Arsip"
-                description={deleteError || `Hapus retensi arsip "${deleteRetensiArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+                description={
+                    deleteError ||
+                    `Hapus retensi arsip "${deleteRetensiArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
+                }
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -700,7 +900,11 @@ export default function RetensiArsipIndex({
 }
 
 function StatValue({ value }: { value: number }) {
-    return <div className="text-2xl font-semibold tracking-normal text-foreground">{value.toLocaleString('id-ID')}</div>;
+    return (
+        <div className="text-2xl font-semibold tracking-normal text-foreground">
+            {value.toLocaleString('id-ID')}
+        </div>
+    );
 }
 
 RetensiArsipIndex.layout = {

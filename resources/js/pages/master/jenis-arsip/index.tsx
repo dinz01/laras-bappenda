@@ -137,12 +137,16 @@ function JenisArsipFormDialog({
             return;
         }
 
-        form.setData(jenisArsip ? {
-            kode: jenisArsip.kode,
-            nama: jenisArsip.nama,
-            deskripsi: jenisArsip.deskripsi ?? '',
-            status: jenisArsip.status,
-        } : emptyForm);
+        form.setData(
+            jenisArsip
+                ? {
+                      kode: jenisArsip.kode,
+                      nama: jenisArsip.nama,
+                      deskripsi: jenisArsip.deskripsi ?? '',
+                      status: jenisArsip.status,
+                  }
+                : emptyForm,
+        );
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, jenisArsip]);
@@ -173,10 +177,13 @@ function JenisArsipFormDialog({
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
-                        {mode === 'create' ? 'Tambah Jenis Arsip' : 'Edit Jenis Arsip'}
+                        {mode === 'create'
+                            ? 'Tambah Jenis Arsip'
+                            : 'Edit Jenis Arsip'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
-                        Lengkapi data jenis arsip sesuai kategori yang digunakan.
+                        Lengkapi data jenis arsip sesuai kategori yang
+                        digunakan.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -187,7 +194,9 @@ function JenisArsipFormDialog({
                             <Input
                                 id="kode"
                                 value={form.data.kode}
-                                onChange={(event) => form.setData('kode', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('kode', event.target.value)
+                                }
                                 placeholder="Contoh: JA-001"
                                 maxLength={50}
                             />
@@ -198,14 +207,20 @@ function JenisArsipFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: JenisArsipFormData['status']) => form.setData('status', value)}
+                                onValueChange={(
+                                    value: JenisArsipFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -217,7 +232,9 @@ function JenisArsipFormDialog({
                         <Input
                             id="nama"
                             value={form.data.nama}
-                            onChange={(event) => form.setData('nama', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('nama', event.target.value)
+                            }
                             placeholder="Nama jenis arsip"
                             maxLength={255}
                         />
@@ -229,7 +246,9 @@ function JenisArsipFormDialog({
                         <Input
                             id="deskripsi"
                             value={form.data.deskripsi}
-                            onChange={(event) => form.setData('deskripsi', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('deskripsi', event.target.value)
+                            }
                             placeholder="Deskripsi jenis arsip"
                         />
                         <InputError message={form.errors.deskripsi} />
@@ -265,7 +284,9 @@ function DetailDialog({
         <Dialog open={jenisArsip !== null} onOpenChange={onOpenChange}>
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle className="text-base font-semibold">Detail Jenis Arsip</DialogTitle>
+                    <DialogTitle className="text-base font-semibold">
+                        Detail Jenis Arsip
+                    </DialogTitle>
                     <DialogDescription className="text-xs">
                         Informasi lengkap jenis arsip.
                     </DialogDescription>
@@ -275,12 +296,25 @@ function DetailDialog({
                     <div className="grid gap-3 text-sm">
                         <DetailRow label="Kode" value={jenisArsip.kode} mono />
                         <DetailRow label="Nama" value={jenisArsip.nama} />
-                        <DetailRow label="Deskripsi" value={jenisArsip.deskripsi || '-'} />
-                        <DetailRow label="Dibuat Pada" value={jenisArsip.created_at || '-'} />
-                        <DetailRow label="Diperbarui Pada" value={jenisArsip.updated_at || '-'} />
+                        <DetailRow
+                            label="Deskripsi"
+                            value={jenisArsip.deskripsi || '-'}
+                        />
+                        <DetailRow
+                            label="Dibuat Pada"
+                            value={jenisArsip.created_at || '-'}
+                        />
+                        <DetailRow
+                            label="Diperbarui Pada"
+                            value={jenisArsip.updated_at || '-'}
+                        />
                         <div className="flex items-center justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
-                            <StatusBadge variant={statusVariant(jenisArsip.status)}>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
+                            <StatusBadge
+                                variant={statusVariant(jenisArsip.status)}
+                            >
                                 {statusLabel(jenisArsip.status)}
                             </StatusBadge>
                         </div>
@@ -291,11 +325,25 @@ function DetailDialog({
     );
 }
 
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function DetailRow({
+    label,
+    value,
+    mono = false,
+}: {
+    label: string;
+    value: string;
+    mono?: boolean;
+}) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
             <span className="text-muted-foreground">{label}</span>
-            <span className={mono ? 'font-mono text-xs text-right' : 'font-medium text-right'}>
+            <span
+                className={
+                    mono
+                        ? 'text-right font-mono text-xs'
+                        : 'text-right font-medium'
+                }
+            >
                 {value}
             </span>
         </div>
@@ -310,13 +358,20 @@ export default function JenisArsipIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-    const [selectedJenisArsip, setSelectedJenisArsip] = useState<JenisArsip | null>(null);
-    const [detailJenisArsip, setDetailJenisArsip] = useState<JenisArsip | null>(null);
-    const [deleteJenisArsip, setDeleteJenisArsip] = useState<JenisArsip | null>(null);
+    const [selectedJenisArsip, setSelectedJenisArsip] =
+        useState<JenisArsip | null>(null);
+    const [detailJenisArsip, setDetailJenisArsip] = useState<JenisArsip | null>(
+        null,
+    );
+    const [deleteJenisArsip, setDeleteJenisArsip] = useState<JenisArsip | null>(
+        null,
+    );
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
-    const updateFilters = (newParams: Record<string, string | null | undefined>) => {
+    const updateFilters = (
+        newParams: Record<string, string | null | undefined>,
+    ) => {
         const params = {
             ...filters,
             ...newParams,
@@ -361,10 +416,14 @@ export default function JenisArsipIndex({
 
     const clearFilters = () => {
         setSearch('');
-        router.get(index().url, {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            index().url,
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const confirmDelete = () => {
@@ -379,7 +438,9 @@ export default function JenisArsipIndex({
             preserveScroll: true,
             onSuccess: () => setDeleteJenisArsip(null),
             onError: (errors) => {
-                setDeleteError(errors.jenis_arsip || 'Jenis arsip gagal dihapus.');
+                setDeleteError(
+                    errors.jenis_arsip || 'Jenis arsip gagal dihapus.',
+                );
             },
             onFinish: () => setDeleting(false),
         });
@@ -423,23 +484,28 @@ export default function JenisArsipIndex({
                     </ContentCard>
                 </div>
 
-                <ContentCard title="Daftar Jenis Arsip" description="Data jenis arsip yang tersedia dalam repositori">
+                <ContentCard
+                    title="Daftar Jenis Arsip"
+                    description="Data jenis arsip yang tersedia dalam repositori"
+                >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari kode, nama, atau deskripsi..."
-                            filters={hasFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="mr-1 h-4 w-4" />
-                                    Reset Filter
-                                </Button>
-                            )}
+                            filters={
+                                hasFilters && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <X className="mr-1 h-4 w-4" />
+                                        Reset Filter
+                                    </Button>
+                                )
+                            }
                         />
 
                         {jenisArsips.data.length === 0 ? (
@@ -454,90 +520,151 @@ export default function JenisArsipIndex({
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[130px] font-semibold">Kode</TableHead>
-                                                <TableHead className="font-semibold">Nama</TableHead>
-                                                <TableHead className="font-semibold">Deskripsi</TableHead>
-                                                <TableHead className="w-[110px] font-semibold">Status</TableHead>
-                                                <TableHead className="w-[170px] font-semibold">Dibuat Pada</TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">Aksi</TableHead>
+                                                <TableHead className="w-[130px] font-semibold">
+                                                    Kode
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Nama
+                                                </TableHead>
+                                                <TableHead className="font-semibold">
+                                                    Deskripsi
+                                                </TableHead>
+                                                <TableHead className="w-[110px] font-semibold">
+                                                    Status
+                                                </TableHead>
+                                                <TableHead className="w-[170px] font-semibold">
+                                                    Dibuat Pada
+                                                </TableHead>
+                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                    Aksi
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {jenisArsips.data.map((jenisArsip) => (
-                                                <TableRow key={jenisArsip.id} className="transition-colors hover:bg-muted/30">
-                                                    <TableCell className="font-mono text-xs text-muted-foreground">
-                                                        {jenisArsip.kode}
-                                                    </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {jenisArsip.nama}
-                                                    </TableCell>
-                                                    <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
-                                                        {jenisArsip.deskripsi || '-'}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <StatusBadge variant={statusVariant(jenisArsip.status)} className="w-fit">
-                                                            {statusLabel(jenisArsip.status)}
-                                                        </StatusBadge>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
-                                                        {jenisArsip.created_at || '-'}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                    <span className="sr-only">Menu aksi</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => setDetailJenisArsip(jenisArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                            {jenisArsips.data.map(
+                                                (jenisArsip) => (
+                                                    <TableRow
+                                                        key={jenisArsip.id}
+                                                        className="transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                                            {jenisArsip.kode}
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">
+                                                            {jenisArsip.nama}
+                                                        </TableCell>
+                                                        <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground">
+                                                            {jenisArsip.deskripsi ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <StatusBadge
+                                                                variant={statusVariant(
+                                                                    jenisArsip.status,
+                                                                )}
+                                                                className="w-fit"
+                                                            >
+                                                                {statusLabel(
+                                                                    jenisArsip.status,
+                                                                )}
+                                                            </StatusBadge>
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-muted-foreground">
+                                                            {jenisArsip.created_at ||
+                                                                '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger
+                                                                    asChild
                                                                 >
-                                                                    <Eye className="h-4 w-4" />
-                                                                    Detail
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => openEditDialog(jenisArsip)}
-                                                                    className="flex cursor-pointer items-center gap-2"
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8"
+                                                                    >
+                                                                        <span className="sr-only">
+                                                                            Menu
+                                                                            aksi
+                                                                        </span>
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent
+                                                                    align="end"
+                                                                    className="w-40"
                                                                 >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                    Edit
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setDeleteError(null);
-                                                                        setDeleteJenisArsip(jenisArsip);
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Hapus
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            setDetailJenisArsip(
+                                                                                jenisArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                        Detail
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            openEditDialog(
+                                                                                jenisArsip,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setDeleteError(
+                                                                                null,
+                                                                            );
+                                                                            setDeleteJenisArsip(
+                                                                                jenisArsip,
+                                                                            );
+                                                                        }}
+                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Hapus
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )}
                                         </TableBody>
                                     </Table>
                                 </div>
 
                                 <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
-                                        Menampilkan {jenisArsips.from || 0} hingga {jenisArsips.to || 0} dari {jenisArsips.total} jenis
+                                        Menampilkan {jenisArsips.from || 0}{' '}
+                                        hingga {jenisArsips.to || 0} dari{' '}
+                                        {jenisArsips.total} jenis
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!jenisArsips.prev_page_url}
-                                            asChild={Boolean(jenisArsips.prev_page_url)}
+                                            disabled={
+                                                !jenisArsips.prev_page_url
+                                            }
+                                            asChild={Boolean(
+                                                jenisArsips.prev_page_url,
+                                            )}
                                         >
                                             {jenisArsips.prev_page_url ? (
-                                                <Link href={jenisArsips.prev_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        jenisArsips.prev_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Sebelumnya
                                                 </Link>
                                             ) : (
@@ -547,11 +674,20 @@ export default function JenisArsipIndex({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            disabled={!jenisArsips.next_page_url}
-                                            asChild={Boolean(jenisArsips.next_page_url)}
+                                            disabled={
+                                                !jenisArsips.next_page_url
+                                            }
+                                            asChild={Boolean(
+                                                jenisArsips.next_page_url,
+                                            )}
                                         >
                                             {jenisArsips.next_page_url ? (
-                                                <Link href={jenisArsips.next_page_url} preserveState>
+                                                <Link
+                                                    href={
+                                                        jenisArsips.next_page_url
+                                                    }
+                                                    preserveState
+                                                >
                                                     Selanjutnya
                                                 </Link>
                                             ) : (
@@ -572,7 +708,10 @@ export default function JenisArsipIndex({
                 jenisArsip={selectedJenisArsip}
                 onOpenChange={setFormOpen}
             />
-            <DetailDialog jenisArsip={detailJenisArsip} onOpenChange={(open) => !open && setDetailJenisArsip(null)} />
+            <DetailDialog
+                jenisArsip={detailJenisArsip}
+                onOpenChange={(open) => !open && setDetailJenisArsip(null)}
+            />
             <ConfirmDialog
                 isOpen={deleteJenisArsip !== null}
                 onClose={() => {
@@ -581,7 +720,10 @@ export default function JenisArsipIndex({
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Jenis Arsip"
-                description={deleteError || `Hapus jenis arsip "${deleteJenisArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
+                description={
+                    deleteError ||
+                    `Hapus jenis arsip "${deleteJenisArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
+                }
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -591,7 +733,11 @@ export default function JenisArsipIndex({
 }
 
 function StatValue({ value }: { value: number }) {
-    return <div className="text-2xl font-semibold tracking-normal text-foreground">{value.toLocaleString('id-ID')}</div>;
+    return (
+        <div className="text-2xl font-semibold tracking-normal text-foreground">
+            {value.toLocaleString('id-ID')}
+        </div>
+    );
 }
 
 JenisArsipIndex.layout = {
