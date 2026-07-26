@@ -3,7 +3,6 @@
 use App\Models\Arsip;
 use App\Models\DokumenArsip;
 use App\Models\DokumenArsipVersion;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -11,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = superAdmin();
 });
 
 it('tracks versions correctly when uploading and replacing files', function () {

@@ -16,8 +16,8 @@ use Spatie\Permission\Models\Role;
 uses(RefreshDatabase::class);
 
 test('user has spatie role and permission functionality', function () {
-    $role = Role::create(['name' => 'Super Admin']);
-    $permission = Permission::create(['name' => 'arsip.view']);
+    $role = Role::firstOrCreate(['name' => 'Super Admin']);
+    $permission = Permission::firstOrCreate(['name' => 'arsip.view']);
 
     $user = User::factory()->create();
 
@@ -29,11 +29,11 @@ test('user has spatie role and permission functionality', function () {
 });
 
 test('user helper methods check roles and permissions correctly', function () {
-    $superAdminRole = Role::create(['name' => 'Super Admin']);
-    $adminRole = Role::create(['name' => 'Administrator']);
-    $pimpinanRole = Role::create(['name' => 'Pimpinan']);
-    $permission = Permission::create(['name' => 'arsip.create']);
-    Permission::create(['name' => 'arsip.delete']);
+    $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin']);
+    $adminRole = Role::firstOrCreate(['name' => 'Administrator']);
+    $pimpinanRole = Role::firstOrCreate(['name' => 'Pimpinan']);
+    $permission = Permission::firstOrCreate(['name' => 'arsip.create']);
+    Permission::firstOrCreate(['name' => 'arsip.delete']);
 
     $superAdmin = User::factory()->create();
     $superAdmin->assignRole($superAdminRole);
@@ -79,8 +79,8 @@ test('user byUnit scope filters users by unit_organisasi_id', function () {
 });
 
 test('user byRole scope filters users by role name', function () {
-    $roleArsiparis = Role::create(['name' => 'Arsiparis']);
-    $roleStaff = Role::create(['name' => 'Staff']);
+    $roleArsiparis = Role::firstOrCreate(['name' => 'Arsiparis']);
+    $roleStaff = Role::firstOrCreate(['name' => 'Staff']);
 
     $user1 = User::factory()->create();
     $user1->assignRole($roleArsiparis);

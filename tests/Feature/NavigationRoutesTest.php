@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\User;
-
 $routes = [
     'record-center.index',
     'pemusnahan.index',
@@ -32,7 +30,7 @@ test('guests are redirected to the login page from navigation routes', function 
 });
 
 test('authenticated users can visit the navigation routes', function () use ($routes) {
-    $user = User::factory()->create();
+    $user = superAdmin();
     $this->actingAs($user);
 
     foreach ($routes as $routeName) {

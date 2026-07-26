@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\AppDateTime;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
@@ -18,6 +19,7 @@ class PermissionController extends Controller
      */
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', Permission::class);
         $search = $request->string('search')->trim()->toString();
 
         $permissions = Permission::query()

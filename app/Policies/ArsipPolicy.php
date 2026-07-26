@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
 use App\Models\Arsip;
@@ -12,7 +14,7 @@ class ArsipPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->can('arsip.view');
     }
 
     /**
@@ -20,7 +22,7 @@ class ArsipPolicy
      */
     public function viewTrash(User $user): bool
     {
-        return $user->hasRole('Super Administrator');
+        return $user->can('arsip.restore') || $user->can('arsip.delete');
     }
 
     /**
@@ -28,7 +30,7 @@ class ArsipPolicy
      */
     public function view(User $user, Arsip $arsip): bool
     {
-        return true;
+        return $user->can('arsip.view');
     }
 
     /**
@@ -36,7 +38,7 @@ class ArsipPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->can('arsip.create');
     }
 
     /**
@@ -44,7 +46,7 @@ class ArsipPolicy
      */
     public function update(User $user, Arsip $arsip): bool
     {
-        return true;
+        return $user->can('arsip.update');
     }
 
     /**
@@ -52,22 +54,22 @@ class ArsipPolicy
      */
     public function delete(User $user, Arsip $arsip): bool
     {
-        return true;
+        return $user->can('arsip.delete');
     }
 
     /**
-     * Hanya Super Admin yang dapat merestore arsip dari recycle bin.
+     * Determine whether the user can restore the model.
      */
     public function restore(User $user, Arsip $arsip): bool
     {
-        return $user->hasRole('Super Administrator');
+        return $user->can('arsip.restore');
     }
 
     /**
-     * Hanya Super Admin yang dapat menghapus arsip secara permanen.
+     * Determine whether the user can force delete the model.
      */
     public function forceDelete(User $user, Arsip $arsip): bool
     {
-        return $user->hasRole('Super Administrator');
+        return $user->can('arsip.delete');
     }
 }

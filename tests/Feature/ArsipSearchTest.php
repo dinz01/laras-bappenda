@@ -3,13 +3,12 @@
 use App\Models\Arsip;
 use App\Models\StatusArsip;
 use App\Models\UnitOrganisasi;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = superAdmin();
 });
 
 it('can search archives by nomor_arsip via controller', function () {

@@ -5,7 +5,6 @@ use App\Interfaces\OcrServiceInterface;
 use App\Jobs\ProcessOcrJob;
 use App\Models\Arsip;
 use App\Models\DokumenArsip;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
@@ -17,7 +16,7 @@ it('dispatches OCR job on archive store with file', function () {
     Queue::fake();
     Storage::fake('local');
 
-    $user = User::factory()->create();
+    $user = superAdmin();
     $this->actingAs($user);
 
     $arsipData = Arsip::factory()->raw();
@@ -77,7 +76,7 @@ it('handles OCR failure and updates status to failed', function () {
 it('dispatches OCR job again on reprocess', function () {
     Queue::fake();
 
-    $user = User::factory()->create();
+    $user = superAdmin();
     $this->actingAs($user);
 
     $arsip = Arsip::factory()->create();

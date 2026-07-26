@@ -6,7 +6,6 @@ use App\Models\ArsipWorkflowHistory;
 use App\Models\DokumenArsip;
 use App\Models\DokumenArsipVersion;
 use App\Models\KlasifikasiArsip;
-use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -15,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = superAdmin();
 });
 
 it('redirects guest to login', function () {

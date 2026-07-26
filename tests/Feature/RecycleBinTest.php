@@ -8,17 +8,18 @@ use App\Models\DokumenArsipVersion;
 use App\Models\StatusArsip;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    // Setup roles
-    Role::findOrCreate('Super Administrator');
-    Role::findOrCreate('Pegawai');
+    // Setup roles and permissions
+    $this->seed(RoleSeeder::class);
+    $this->seed(PermissionSeeder::class);
 
     // Populate required status arsip
     StatusArsip::factory()->create(['kode' => 'SA-00001', 'nama' => 'Aktif']);
@@ -70,6 +71,7 @@ it('restricts recycle bin actions to Super Administrator role', function () {
 
 it('performs soft delete and records audit log', function () {
     $user = User::factory()->create();
+    $user->givePermissionTo('arsip.delete');
     $arsip = Arsip::factory()->create(['created_by' => $user->id]);
 
     $this->actingAs($user)

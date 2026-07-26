@@ -10,6 +10,7 @@ use App\Models\Jabatan;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +21,8 @@ class JabatanController extends Controller
      */
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', Jabatan::class);
+
         $search = $request->string('search')->trim()->toString();
 
         $jabatans = Jabatan::query()
@@ -67,6 +70,8 @@ class JabatanController extends Controller
      */
     public function store(StoreJabatanRequest $request): RedirectResponse
     {
+        Gate::authorize('create', Jabatan::class);
+
         Jabatan::create($this->validatedData($request));
 
         return back()->with('success', 'Jabatan berhasil ditambahkan.');
@@ -77,6 +82,8 @@ class JabatanController extends Controller
      */
     public function update(StoreJabatanRequest $request, Jabatan $jabatan): RedirectResponse
     {
+        Gate::authorize('update', $jabatan);
+
         $jabatan->update($this->validatedData($request));
 
         return back()->with('success', 'Jabatan berhasil diperbarui.');
@@ -87,6 +94,7 @@ class JabatanController extends Controller
      */
     public function destroy(Jabatan $jabatan): RedirectResponse
     {
+        Gate::authorize('delete', $jabatan);
         $usageCount = $jabatan->users()->count();
 
         if ($usageCount > 0) {

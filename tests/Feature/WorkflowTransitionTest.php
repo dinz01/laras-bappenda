@@ -6,15 +6,23 @@ use App\Models\Arsip;
 use App\Models\ArsipWorkflowHistory;
 use App\Models\AuditLog;
 use App\Models\User;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    $this->seed(RoleSeeder::class);
+    $this->seed(PermissionSeeder::class);
+});
+
 it('advances workflow status via http request and logs activity', function () {
     Event::fake();
 
     $user = User::factory()->create();
+    $user->givePermissionTo('arsip.update');
     $this->actingAs($user);
 
     $arsip = Arsip::factory()->create(['workflow_status' => WorkflowStatus::Draft]);
@@ -60,6 +68,7 @@ it('advances workflow status via http request and logs activity', function () {
 
 it('rejects invalid workflow status transitions via http request', function () {
     $user = User::factory()->create();
+    $user->givePermissionTo('arsip.update');
     $this->actingAs($user);
 
     $arsip = Arsip::factory()->create(['workflow_status' => WorkflowStatus::Draft]);

@@ -109,9 +109,16 @@ function RoleFormDialog({
                 : emptyForm,
         );
         form.clearErrors();
-        setPermSearch('');
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, role]);
+
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (!nextOpen) {
+            setPermSearch('');
+        }
+
+        onOpenChange(nextOpen);
+    };
 
     const togglePermission = (perm: string) => {
         const current = form.data.permissions;
@@ -144,7 +151,10 @@ function RoleFormDialog({
         if (mode === 'edit' && role) {
             form.put(update({ role: role.id }).url, {
                 preserveScroll: true,
-                onSuccess: () => onOpenChange(false),
+                onSuccess: () => {
+                    setPermSearch('');
+                    onOpenChange(false);
+                },
             });
 
             return;
@@ -154,13 +164,14 @@ function RoleFormDialog({
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
+                setPermSearch('');
                 onOpenChange(false);
             },
         });
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="border-border/60 sm:max-w-xl">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">

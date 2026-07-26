@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,6 +25,7 @@ class PenggunaController extends Controller
      */
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', User::class);
         $search = $request->string('search')->trim()->toString();
         $statusFilter = $request->string('status')->trim()->toString();
         $roleFilter = $request->string('role')->trim()->toString();
@@ -86,6 +88,8 @@ class PenggunaController extends Controller
      */
     public function store(StorePenggunaRequest $request): RedirectResponse
     {
+        Gate::authorize('create', User::class);
+
         $validated = $request->validated();
 
         /** @var User $user */
@@ -110,6 +114,8 @@ class PenggunaController extends Controller
      */
     public function update(StorePenggunaRequest $request, User $pengguna): RedirectResponse
     {
+        Gate::authorize('update', $pengguna);
+
         $validated = $request->validated();
 
         $data = [
@@ -135,6 +141,7 @@ class PenggunaController extends Controller
      */
     public function destroy(User $pengguna): RedirectResponse
     {
+        Gate::authorize('delete', $pengguna);
         if ($pengguna->id === auth()->id()) {
             return back()->withErrors(['pengguna' => 'Tidak dapat menghapus akun yang sedang digunakan.']);
         }

@@ -6,6 +6,8 @@ use App\Interfaces\AiServiceInterface;
 use App\Interfaces\OcrServiceInterface;
 use App\Interfaces\SearchServiceInterface;
 use App\Interfaces\TteServiceInterface;
+use App\Policies\PermissionPolicy;
+use App\Policies\RolePolicy;
 use App\Services\MockOcrService;
 use App\Services\NullAiService;
 use App\Services\NullTteService;
@@ -16,6 +18,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,6 +42,9 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         Gate::before(fn ($user, $ability) => $user->hasRole('Super Administrator') ? true : null);
+
+        Gate::policy(Role::class, RolePolicy::class);
+        Gate::policy(Permission::class, PermissionPolicy::class);
     }
 
     /**

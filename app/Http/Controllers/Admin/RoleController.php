@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoleRequest;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
@@ -20,6 +21,8 @@ class RoleController extends Controller
      */
     public function index(): Response
     {
+        Gate::authorize('viewAny', Role::class);
+
         $roles = Role::query()
             ->withCount('users', 'permissions')
             ->orderBy('name')
@@ -54,6 +57,8 @@ class RoleController extends Controller
      */
     public function store(StoreRoleRequest $request): RedirectResponse
     {
+        Gate::authorize('create', Role::class);
+
         $validated = $request->validated();
 
         $role = Role::create([
@@ -73,6 +78,8 @@ class RoleController extends Controller
      */
     public function update(StoreRoleRequest $request, Role $role): RedirectResponse
     {
+        Gate::authorize('update', $role);
+
         $validated = $request->validated();
 
         $role->update(['name' => $validated['name']]);
@@ -86,6 +93,7 @@ class RoleController extends Controller
      */
     public function destroy(Role $role): RedirectResponse
     {
+        Gate::authorize('delete', $role);
         $usersCount = $role->users()->count();
 
         if ($usersCount > 0) {
