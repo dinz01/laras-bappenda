@@ -13,8 +13,8 @@ it('can run development seeder without exception and populate correct counts', f
     // Run DatabaseSeeder (calls all base seeders + DevelopmentSeeder in testing env)
     $this->seed(DatabaseSeeder::class);
 
-    // User: UserSeeder + 20 extra from DevelopmentSeeder
-    expect(User::count())->toBeGreaterThanOrEqual(20);
+    // User: 5 pengguna dari UserSeeder (1 per role), tanpa extra factory users
+    expect(User::count())->toBe(5);
 
     // Verify exact Arsip counts
     expect(Arsip::count())->toBe(500);

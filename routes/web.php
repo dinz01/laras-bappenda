@@ -97,8 +97,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── Administrasi ──────────────────────────────────────────────────────
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('pengguna', [PenggunaController::class, 'index'])->name('pengguna.index');
-        Route::get('role', [RoleController::class, 'index'])->name('role.index');
+        Route::resource('pengguna', PenggunaController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('role', RoleController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
         Route::get('permission', [PermissionController::class, 'index'])->name('permission.index');
         Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
 

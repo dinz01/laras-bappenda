@@ -29,8 +29,7 @@ class DevelopmentSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Tambah user development extra (base UserSeeder hanya buat 1-2 user)
-        $extraUsers = User::factory()->count(20)->create();
+        // User dari UserSeeder sudah cukup (5 pengguna, 1 per role)
 
         // 2. Ambil semua master data dari base seeders (tidak buat duplikat)
         $unitOrganisasis = UnitOrganisasi::all();

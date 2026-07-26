@@ -26,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property-read UnitOrganisasi|null $parent
  * @property-read Collection<int, UnitOrganisasi> $children
  * @property-read Collection<int, Arsip> $arsips
+ * @property-read Collection<int, User> $users
  *
  * @method static Builder<static> active()
  * @method static Builder<static> root()
@@ -85,6 +86,16 @@ class UnitOrganisasi extends Model
     public function arsips(): HasMany
     {
         return $this->hasMany(Arsip::class, 'unit_organisasi_id');
+    }
+
+    /**
+     * Relasi ke seluruh user yang berada di unit organisasi ini.
+     *
+     * @return HasMany<User, $this>
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class, 'unit_organisasi_id');
     }
 
     /**
