@@ -13,12 +13,14 @@ import {
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
 import { ConfirmDialog } from '@/components/Dialogs/confirm-dialog';
 import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { RouteGuard } from '@/components/RouteGuard';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
@@ -605,7 +607,7 @@ export default function UnitOrganisasiIndex({
     }
 
     return (
-        <>
+        <RouteGuard permission="master.view">
             <Head title="Unit Organisasi" />
 
             <PageContainer>
@@ -618,10 +620,12 @@ export default function UnitOrganisasiIndex({
                         { title: 'Unit Organisasi', href: index.url() },
                     ]}
                     actions={
-                        <Button size="sm" onClick={openCreateDialog}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tambah Unit
-                        </Button>
+                        <Can permission="master.create">
+                            <Button size="sm" onClick={openCreateDialog}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tambah Unit
+                            </Button>
+                        </Can>
                     }
                 />
 
@@ -790,17 +794,19 @@ export default function UnitOrganisasiIndex({
                                                             <Eye className="h-4 w-4" />
                                                             Detail
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            onClick={() =>
-                                                                openEditDialog(
-                                                                    unit,
-                                                                )
-                                                            }
-                                                            className="flex cursor-pointer items-center gap-2"
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                            Edit
-                                                        </DropdownMenuItem>
+                                                        <Can permission="master.update">
+                                                            <DropdownMenuItem
+                                                                onClick={() =>
+                                                                    openEditDialog(
+                                                                        unit,
+                                                                    )
+                                                                }
+                                                                className="flex cursor-pointer items-center gap-2"
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                                Edit
+                                                            </DropdownMenuItem>
+                                                        </Can>
                                                         {unit.depth === 0 && (
                                                             <>
                                                                 <DropdownMenuItem
@@ -818,20 +824,22 @@ export default function UnitOrganisasiIndex({
                                                                 <DropdownMenuSeparator />
                                                             </>
                                                         )}
-                                                        <DropdownMenuItem
-                                                            onClick={() => {
-                                                                setDeleteError(
-                                                                    null,
-                                                                );
-                                                                setDeleteUnit(
-                                                                    unit,
-                                                                );
-                                                            }}
-                                                            className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                            Hapus
-                                                        </DropdownMenuItem>
+                                                        <Can permission="master.delete">
+                                                            <DropdownMenuItem
+                                                                onClick={() => {
+                                                                    setDeleteError(
+                                                                        null,
+                                                                    );
+                                                                    setDeleteUnit(
+                                                                        unit,
+                                                                    );
+                                                                }}
+                                                                className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                                Hapus
+                                                            </DropdownMenuItem>
+                                                        </Can>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </div>
@@ -873,7 +881,7 @@ export default function UnitOrganisasiIndex({
                 loading={deleting}
                 destructive
             />
-        </>
+        </RouteGuard>
     );
 }
 

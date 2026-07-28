@@ -9,11 +9,13 @@ import {
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { ConfirmDialog } from '@/components/Dialogs/confirm-dialog';
 import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { RouteGuard } from '@/components/RouteGuard';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,12 +45,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { dashboard } from '@/routes';
-import {
-    destroy,
-    index,
-    store,
-    update,
-} from '@/routes/admin/role';
+import { destroy, index, store, update } from '@/routes/admin/role';
 
 type Role = {
     id: number;
@@ -208,16 +205,14 @@ function RoleFormDialog({
                             <Input
                                 placeholder="Cari permission..."
                                 value={permSearch}
-                                onChange={(e) =>
-                                    setPermSearch(e.target.value)
-                                }
+                                onChange={(e) => setPermSearch(e.target.value)}
                                 className="h-8 text-sm"
                             />
                             <div className="max-h-60 space-y-3 overflow-y-auto rounded-md border border-border/60 p-3">
                                 {Object.entries(grouped).map(
                                     ([group, perms]) => (
                                         <div key={group}>
-                                            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                                                 {group}
                                             </p>
                                             <div className="flex flex-wrap gap-1.5">
@@ -241,8 +236,7 @@ function RoleFormDialog({
                                                         {perm
                                                             .split('.')
                                                             .slice(1)
-                                                            .join('.') ||
-                                                            perm}
+                                                            .join('.') || perm}
                                                     </button>
                                                 ))}
                                             </div>
@@ -333,7 +327,7 @@ function DetailDialog({
                         <div className="space-y-3">
                             {Object.entries(grouped).map(([group, perms]) => (
                                 <div key={group}>
-                                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                                         {group}
                                     </p>
                                     <div className="flex flex-wrap gap-1">
@@ -405,7 +399,7 @@ export default function RoleIndex({ roles, stats, permissions }: IndexProps) {
     };
 
     return (
-        <>
+        <RouteGuard permission="role.view">
             <Head title="Role" />
 
             <PageContainer>
@@ -418,10 +412,12 @@ export default function RoleIndex({ roles, stats, permissions }: IndexProps) {
                         { title: 'Role', href: index.url() },
                     ]}
                     actions={
-                        <Button size="sm" onClick={openCreateDialog}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tambah Role
-                        </Button>
+                        <Can permission="role.create">
+                            <Button size="sm" onClick={openCreateDialog}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tambah Role
+                            </Button>
+                        </Can>
                     }
                 />
 
@@ -553,32 +549,36 @@ export default function RoleIndex({ roles, stats, permissions }: IndexProps) {
                                                             <Eye className="h-4 w-4" />
                                                             Detail
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            onClick={() =>
-                                                                openEditDialog(
-                                                                    role,
-                                                                )
-                                                            }
-                                                            className="flex cursor-pointer items-center gap-2"
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                            Edit
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem
-                                                            onClick={() => {
-                                                                setDeleteError(
-                                                                    null,
-                                                                );
-                                                                setDeleteRole(
-                                                                    role,
-                                                                );
-                                                            }}
-                                                            className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                            Hapus
-                                                        </DropdownMenuItem>
+                                                        <Can permission="role.update">
+                                                            <DropdownMenuItem
+                                                                onClick={() =>
+                                                                    openEditDialog(
+                                                                        role,
+                                                                    )
+                                                                }
+                                                                className="flex cursor-pointer items-center gap-2"
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                                Edit
+                                                            </DropdownMenuItem>
+                                                        </Can>
+                                                        <Can permission="role.delete">
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                                onClick={() => {
+                                                                    setDeleteError(
+                                                                        null,
+                                                                    );
+                                                                    setDeleteRole(
+                                                                        role,
+                                                                    );
+                                                                }}
+                                                                className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                                Hapus
+                                                            </DropdownMenuItem>
+                                                        </Can>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>
@@ -618,6 +618,6 @@ export default function RoleIndex({ roles, stats, permissions }: IndexProps) {
                 loading={deleting}
                 destructive
             />
-        </>
+        </RouteGuard>
     );
 }

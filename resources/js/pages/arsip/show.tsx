@@ -14,10 +14,12 @@ import {
     User,
 } from 'lucide-react';
 import { useState } from 'react';
+import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { RouteGuard } from '@/components/RouteGuard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -349,7 +351,7 @@ export default function Show({
     };
 
     return (
-        <>
+        <RouteGuard permission="arsip.view">
             <Head title={`Arsip — ${arsip.nomor_arsip}`} />
             <PageContainer>
                 <PageHeader
@@ -371,12 +373,14 @@ export default function Show({
                                     Kembali
                                 </Link>
                             </Button>
-                            <Button size="sm" asChild>
-                                <Link href={`/arsip/${arsip.id}/edit`}>
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Edit
-                                </Link>
-                            </Button>
+                            <Can permission="arsip.update">
+                                <Button size="sm" asChild>
+                                    <Link href={`/arsip/${arsip.id}/edit`}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Edit
+                                    </Link>
+                                </Button>
+                            </Can>
                         </div>
                     }
                 />
@@ -1173,23 +1177,25 @@ export default function Show({
                         </ContentCard>
 
                         {/* Aksi Bahaya */}
-                        <ContentCard title="Aksi">
-                            <div className="space-y-2">
-                                <Button
-                                    onClick={handleDelete}
-                                    variant="outline"
-                                    size="sm"
-                                    className="w-full justify-start gap-2 text-destructive hover:text-destructive"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                    Hapus Arsip
-                                </Button>
-                            </div>
-                        </ContentCard>
+                        <Can permission="arsip.delete">
+                            <ContentCard title="Aksi">
+                                <div className="space-y-2">
+                                    <Button
+                                        onClick={handleDelete}
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                        Hapus Arsip
+                                    </Button>
+                                </div>
+                            </ContentCard>
+                        </Can>
                     </div>
                 </div>
             </PageContainer>
-        </>
+        </RouteGuard>
     );
 }
 

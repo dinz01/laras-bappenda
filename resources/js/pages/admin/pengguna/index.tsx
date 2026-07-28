@@ -10,12 +10,14 @@ import {
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
 import { ConfirmDialog } from '@/components/Dialogs/confirm-dialog';
 import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { RouteGuard } from '@/components/RouteGuard';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Badge } from '@/components/ui/badge';
@@ -53,12 +55,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { dashboard } from '@/routes';
-import {
-    destroy,
-    index,
-    store,
-    update,
-} from '@/routes/admin/pengguna';
+import { destroy, index, store, update } from '@/routes/admin/pengguna';
 
 type Pengguna = {
     id: number;
@@ -218,7 +215,9 @@ function PenggunaFormDialog({
             <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
-                        {mode === 'create' ? 'Tambah Pengguna' : 'Edit Pengguna'}
+                        {mode === 'create'
+                            ? 'Tambah Pengguna'
+                            : 'Edit Pengguna'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
                         {mode === 'create'
@@ -247,16 +246,20 @@ function PenggunaFormDialog({
                             <Label htmlFor="status">Status</Label>
                             <Select
                                 value={form.data.status}
-                                onValueChange={(value: PenggunaFormData['status']) =>
-                                    form.setData('status', value)
-                                }
+                                onValueChange={(
+                                    value: PenggunaFormData['status'],
+                                ) => form.setData('status', value)}
                             >
                                 <SelectTrigger id="status" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Aktif</SelectItem>
-                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                    <SelectItem value="active">
+                                        Aktif
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Nonaktif
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.status} />
@@ -308,7 +311,10 @@ function PenggunaFormDialog({
                                     form.setData('unit_organisasi_id', v)
                                 }
                             >
-                                <SelectTrigger id="unit_organisasi_id" className="w-full">
+                                <SelectTrigger
+                                    id="unit_organisasi_id"
+                                    className="w-full"
+                                >
                                     <SelectValue placeholder="Pilih unit" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -322,7 +328,9 @@ function PenggunaFormDialog({
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <InputError message={form.errors.unit_organisasi_id} />
+                            <InputError
+                                message={form.errors.unit_organisasi_id}
+                            />
                         </div>
 
                         <div className="space-y-2">
@@ -333,7 +341,10 @@ function PenggunaFormDialog({
                                     form.setData('jabatan_id', v)
                                 }
                             >
-                                <SelectTrigger id="jabatan_id" className="w-full">
+                                <SelectTrigger
+                                    id="jabatan_id"
+                                    className="w-full"
+                                >
                                     <SelectValue placeholder="Pilih jabatan" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -432,17 +443,27 @@ function DetailDialog({
                             value={pengguna.created_at || '-'}
                         />
                         <div className="flex items-start justify-between gap-4 border-b border-border/50 pb-3 last:border-0">
-                            <span className="text-muted-foreground">Status</span>
-                            <StatusBadge variant={statusVariant(pengguna.status)}>
+                            <span className="text-muted-foreground">
+                                Status
+                            </span>
+                            <StatusBadge
+                                variant={statusVariant(pengguna.status)}
+                            >
                                 {statusLabel(pengguna.status)}
                             </StatusBadge>
                         </div>
                         {pengguna.roles.length > 0 && (
                             <div className="flex items-start justify-between gap-4">
-                                <span className="text-muted-foreground">Role</span>
+                                <span className="text-muted-foreground">
+                                    Role
+                                </span>
                                 <div className="flex flex-wrap justify-end gap-1">
                                     {pengguna.roles.map((r) => (
-                                        <Badge key={r} variant="outline" className="text-xs">
+                                        <Badge
+                                            key={r}
+                                            variant="outline"
+                                            className="text-xs"
+                                        >
                                             {r}
                                         </Badge>
                                     ))}
@@ -500,7 +521,9 @@ export default function PenggunaIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-    const [selectedPengguna, setSelectedPengguna] = useState<Pengguna | null>(null);
+    const [selectedPengguna, setSelectedPengguna] = useState<Pengguna | null>(
+        null,
+    );
     const [detailPengguna, setDetailPengguna] = useState<Pengguna | null>(null);
     const [deletePengguna, setDeletePengguna] = useState<Pengguna | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -571,10 +594,12 @@ export default function PenggunaIndex({
         });
     };
 
-    const hasFilters = Boolean(filters.search || filters.status || filters.role);
+    const hasFilters = Boolean(
+        filters.search || filters.status || filters.role,
+    );
 
     return (
-        <>
+        <RouteGuard permission="user.view">
             <Head title="Pengguna" />
 
             <PageContainer>
@@ -587,10 +612,12 @@ export default function PenggunaIndex({
                         { title: 'Pengguna', href: index.url() },
                     ]}
                     actions={
-                        <Button size="sm" onClick={openCreateDialog}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tambah Pengguna
-                        </Button>
+                        <Can permission="user.create">
+                            <Button size="sm" onClick={openCreateDialog}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tambah Pengguna
+                            </Button>
+                        </Can>
                     }
                 />
 
@@ -679,7 +706,9 @@ export default function PenggunaIndex({
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex flex-wrap gap-1">
-                                                            {pengguna.roles.length === 0 ? (
+                                                            {pengguna.roles
+                                                                .length ===
+                                                            0 ? (
                                                                 <span className="text-xs text-muted-foreground">
                                                                     —
                                                                 </span>
@@ -687,7 +716,9 @@ export default function PenggunaIndex({
                                                                 pengguna.roles.map(
                                                                     (r) => (
                                                                         <Badge
-                                                                            key={r}
+                                                                            key={
+                                                                                r
+                                                                            }
                                                                             variant="outline"
                                                                             className="text-xs"
                                                                         >
@@ -725,7 +756,8 @@ export default function PenggunaIndex({
                                                                     className="h-8 w-8"
                                                                 >
                                                                     <span className="sr-only">
-                                                                        Menu aksi
+                                                                        Menu
+                                                                        aksi
                                                                     </span>
                                                                     <MoreHorizontal className="h-4 w-4" />
                                                                 </Button>
@@ -745,32 +777,36 @@ export default function PenggunaIndex({
                                                                     <Eye className="h-4 w-4" />
                                                                     Detail
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() =>
-                                                                        openEditDialog(
-                                                                            pengguna,
-                                                                        )
-                                                                    }
-                                                                    className="flex cursor-pointer items-center gap-2"
-                                                                >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                    Edit
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setDeleteError(
-                                                                            null,
-                                                                        );
-                                                                        setDeletePengguna(
-                                                                            pengguna,
-                                                                        );
-                                                                    }}
-                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Hapus
-                                                                </DropdownMenuItem>
+                                                                <Can permission="user.update">
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            openEditDialog(
+                                                                                pengguna,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
+                                                                    </DropdownMenuItem>
+                                                                </Can>
+                                                                <Can permission="user.delete">
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setDeleteError(
+                                                                                null,
+                                                                            );
+                                                                            setDeletePengguna(
+                                                                                pengguna,
+                                                                            );
+                                                                        }}
+                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Hapus
+                                                                    </DropdownMenuItem>
+                                                                </Can>
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
                                                     </TableCell>
@@ -862,6 +898,6 @@ export default function PenggunaIndex({
                 loading={deleting}
                 destructive
             />
-        </>
+        </RouteGuard>
     );
 }

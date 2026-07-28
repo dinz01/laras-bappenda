@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import {
     Activity,
     Archive,
@@ -64,11 +64,13 @@ const utamaNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard.url(),
         icon: LayoutDashboard,
+        permission: 'dashboard.view',
     },
     {
         title: 'Repositori Arsip',
         href: arsipIndex.url(),
         icon: Archive,
+        permission: 'arsip.view',
     },
 ];
 
@@ -77,21 +79,25 @@ const pengelolaanNavItems: NavItem[] = [
         title: 'Record Center',
         href: recordCenterIndex.url(),
         icon: FileStack,
+        permission: 'arsip.view',
     },
     {
         title: 'Retensi Arsip',
         href: retensiArsipIndex.url(),
         icon: BookOpen,
+        permission: 'master.view',
     },
     {
         title: 'Pemusnahan',
         href: pemusnahanIndex.url(),
         icon: Trash2,
+        permission: 'arsip.delete',
     },
     {
         title: 'Permohonan',
         href: permohonanIndex.url(),
         icon: ArchiveRestore,
+        permission: 'workflow.view',
     },
 ];
 
@@ -100,61 +106,73 @@ const masterNavItems: NavItem[] = [
         title: 'Unit Organisasi',
         href: unitOrganisasiIndex.url(),
         icon: Building2,
+        permission: 'master.view',
     },
     {
         title: 'Jabatan',
         href: jabatanIndex.url(),
         icon: UserCog,
+        permission: 'master.view',
     },
     {
         title: 'Klasifikasi Arsip',
         href: klasifikasiArsipIndex.url(),
         icon: FolderOpen,
+        permission: 'master.view',
     },
     {
         title: 'Lokasi Arsip',
         href: lokasiArsipIndex.url(),
         icon: MapPin,
+        permission: 'master.view',
     },
     {
         title: 'Jenis Arsip',
         href: jenisArsipIndex.url(),
         icon: FileText,
+        permission: 'master.view',
     },
     {
         title: 'Media Arsip',
         href: mediaArsipIndex.url(),
         icon: ScrollText,
+        permission: 'master.view',
     },
     {
         title: 'Sifat Arsip',
         href: sifatArsipIndex.url(),
         icon: Lock,
+        permission: 'master.view',
     },
     {
         title: 'Status Arsip',
         href: statusArsipIndex.url(),
         icon: Flag,
+        permission: 'master.view',
     },
     {
         title: 'Tingkat Akses Arsip',
         href: tingkatAksesArsipIndex.url(),
         icon: Key,
+        permission: 'master.view',
     },
     {
         title: 'Tingkat Perkembangan Arsip',
         href: tingkatPerkembanganArsipIndex.url(),
         icon: Layers,
+        permission: 'master.view',
     },
     {
         title: 'Kondisi Arsip',
         href: kondisiArsipIndex.url(),
         icon: Activity,
+        permission: 'master.view',
     },
     {
         title: 'Metode Penyusutan Arsip',
         href: metodePenyusutanArsipIndex.url(),
         icon: FileText,
+        permission: 'master.view',
     },
 ];
 
@@ -163,39 +181,35 @@ const administrasiNavItems: NavItem[] = [
         title: 'Pengguna',
         href: penggunaIndex.url(),
         icon: Users,
+        permission: 'user.view',
     },
     {
         title: 'Role',
         href: roleIndex.url(),
         icon: ShieldCheck,
+        permission: 'role.view',
     },
     {
         title: 'Permission',
         href: permissionIndex.url(),
         icon: FileKey2,
+        permission: 'permission.view',
     },
     {
         title: 'Audit Log',
         href: auditLogIndex.url(),
         icon: ClipboardList,
+        permission: 'auditlog.view',
+    },
+    {
+        title: 'Riwayat Arsip Dihapus',
+        href: recycleBinIndex.url(),
+        icon: Trash2,
+        permission: 'arsip.restore',
     },
 ];
 
 export function AppSidebar() {
-    const { auth } = usePage().props;
-    const userRoles = (auth?.user as { roles?: string[] } | null)?.roles ?? [];
-    const isSuperAdmin = userRoles.includes('Super Administrator');
-
-    const adminItems = [...administrasiNavItems];
-
-    if (isSuperAdmin) {
-        adminItems.push({
-            title: 'Riwayat Arsip Dihapus',
-            href: recycleBinIndex.url(),
-            icon: Trash2,
-        });
-    }
-
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -214,7 +228,7 @@ export function AppSidebar() {
                 <NavMain items={utamaNavItems} label="Utama" />
                 <NavMain items={pengelolaanNavItems} label="Pengelolaan" />
                 <NavMain items={masterNavItems} label="Master Data" />
-                <NavMain items={adminItems} label="Administrasi" />
+                <NavMain items={administrasiNavItems} label="Administrasi" />
             </SidebarContent>
 
             <SidebarFooter>

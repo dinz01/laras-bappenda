@@ -1,10 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Archive, Eye, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { RouteGuard } from '@/components/RouteGuard';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
@@ -194,7 +196,7 @@ export default function Index({
     };
 
     return (
-        <>
+        <RouteGuard permission="arsip.view">
             <Head title="Repository Arsip" />
             <PageContainer>
                 <PageHeader
@@ -205,10 +207,15 @@ export default function Index({
                         { title: 'Repository Arsip', href: index() },
                     ]}
                     actions={
-                        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tambah Arsip
-                        </Button>
+                        <Can permission="arsip.create">
+                            <Button
+                                size="sm"
+                                onClick={() => setIsCreateOpen(true)}
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tambah Arsip
+                            </Button>
+                        </Can>
                     }
                 />
 
@@ -504,29 +511,33 @@ export default function Index({
                                                                         Detail
                                                                     </Link>
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    asChild
-                                                                >
-                                                                    <Link
-                                                                        href={`/arsip/${arsip.id}/edit`}
-                                                                        className="flex cursor-pointer items-center gap-2"
+                                                                <Can permission="arsip.update">
+                                                                    <DropdownMenuItem
+                                                                        asChild
                                                                     >
-                                                                        <Pencil className="h-4 w-4" />
-                                                                        Edit
-                                                                    </Link>
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() =>
-                                                                        handleDelete(
-                                                                            arsip.id,
-                                                                        )
-                                                                    }
-                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                    Hapus
-                                                                </DropdownMenuItem>
+                                                                        <Link
+                                                                            href={`/arsip/${arsip.id}/edit`}
+                                                                            className="flex cursor-pointer items-center gap-2"
+                                                                        >
+                                                                            <Pencil className="h-4 w-4" />
+                                                                            Edit
+                                                                        </Link>
+                                                                    </DropdownMenuItem>
+                                                                </Can>
+                                                                <Can permission="arsip.delete">
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            handleDelete(
+                                                                                arsip.id,
+                                                                            )
+                                                                        }
+                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                        Hapus
+                                                                    </DropdownMenuItem>
+                                                                </Can>
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
                                                     </TableCell>
@@ -537,7 +548,7 @@ export default function Index({
                                 </div>
 
                                 {/* Pagination */}
-                                <div className="flex items-center justify-between pt-4 text-sm text-muted-foreground">
+                                <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                     <span>
                                         Menampilkan {arsips.from || 0} hingga{' '}
                                         {arsips.to || 0} dari {arsips.total}{' '}
@@ -548,7 +559,9 @@ export default function Index({
                                             variant="outline"
                                             size="sm"
                                             disabled={!arsips.prev_page_url}
-                                            asChild={!!arsips.prev_page_url}
+                                            asChild={Boolean(
+                                                arsips.prev_page_url,
+                                            )}
                                         >
                                             {arsips.prev_page_url ? (
                                                 <Link
@@ -565,7 +578,9 @@ export default function Index({
                                             variant="outline"
                                             size="sm"
                                             disabled={!arsips.next_page_url}
-                                            asChild={!!arsips.next_page_url}
+                                            asChild={Boolean(
+                                                arsips.next_page_url,
+                                            )}
                                         >
                                             {arsips.next_page_url ? (
                                                 <Link
@@ -597,7 +612,7 @@ export default function Index({
                     lokasiArsips={lokasiArsips}
                 />
             </PageContainer>
-        </>
+        </RouteGuard>
     );
 }
 

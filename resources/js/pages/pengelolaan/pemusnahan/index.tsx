@@ -2,12 +2,13 @@ import { Head } from '@inertiajs/react';
 import { UnderDevelopment } from '@/components/Common/under-development';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { RouteGuard } from '@/components/RouteGuard';
 import { dashboard } from '@/routes';
 import { index } from '@/routes/pemusnahan';
 
 export default function PemusnahanIndex() {
     return (
-        <>
+        <RouteGuard permission="arsip.delete">
             <Head title="Pemusnahan Arsip" />
 
             <PageContainer>
@@ -22,6 +23,6 @@ export default function PemusnahanIndex() {
 
                 <UnderDevelopment featureName="Pemusnahan Arsip" />
             </PageContainer>
-        </>
+        </RouteGuard>
     );
 }

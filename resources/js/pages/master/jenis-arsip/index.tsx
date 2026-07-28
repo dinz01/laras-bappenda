@@ -10,12 +10,14 @@ import {
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
 import { ConfirmDialog } from '@/components/Dialogs/confirm-dialog';
 import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { RouteGuard } from '@/components/RouteGuard';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
@@ -449,7 +451,7 @@ export default function JenisArsipIndex({
     const hasFilters = Boolean(filters.search);
 
     return (
-        <>
+        <RouteGuard permission="master.view">
             <Head title="Jenis Arsip" />
 
             <PageContainer>
@@ -462,10 +464,12 @@ export default function JenisArsipIndex({
                         { title: 'Jenis Arsip', href: index.url() },
                     ]}
                     actions={
-                        <Button size="sm" onClick={openCreateDialog}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tambah Jenis
-                        </Button>
+                        <Can permission="master.create">
+                            <Button size="sm" onClick={openCreateDialog}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tambah Jenis
+                            </Button>
+                        </Can>
                     }
                 />
 
@@ -605,32 +609,36 @@ export default function JenisArsipIndex({
                                                                         <Eye className="h-4 w-4" />
                                                                         Detail
                                                                     </DropdownMenuItem>
-                                                                    <DropdownMenuItem
-                                                                        onClick={() =>
-                                                                            openEditDialog(
-                                                                                jenisArsip,
-                                                                            )
-                                                                        }
-                                                                        className="flex cursor-pointer items-center gap-2"
-                                                                    >
-                                                                        <Pencil className="h-4 w-4" />
-                                                                        Edit
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuSeparator />
-                                                                    <DropdownMenuItem
-                                                                        onClick={() => {
-                                                                            setDeleteError(
-                                                                                null,
-                                                                            );
-                                                                            setDeleteJenisArsip(
-                                                                                jenisArsip,
-                                                                            );
-                                                                        }}
-                                                                        className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                        Hapus
-                                                                    </DropdownMenuItem>
+                                                                    <Can permission="master.update">
+                                                                        <DropdownMenuItem
+                                                                            onClick={() =>
+                                                                                openEditDialog(
+                                                                                    jenisArsip,
+                                                                                )
+                                                                            }
+                                                                            className="flex cursor-pointer items-center gap-2"
+                                                                        >
+                                                                            <Pencil className="h-4 w-4" />
+                                                                            Edit
+                                                                        </DropdownMenuItem>
+                                                                    </Can>
+                                                                    <Can permission="master.delete">
+                                                                        <DropdownMenuSeparator />
+                                                                        <DropdownMenuItem
+                                                                            onClick={() => {
+                                                                                setDeleteError(
+                                                                                    null,
+                                                                                );
+                                                                                setDeleteJenisArsip(
+                                                                                    jenisArsip,
+                                                                                );
+                                                                            }}
+                                                                            className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                            Hapus
+                                                                        </DropdownMenuItem>
+                                                                    </Can>
                                                                 </DropdownMenuContent>
                                                             </DropdownMenu>
                                                         </TableCell>
@@ -728,7 +736,7 @@ export default function JenisArsipIndex({
                 loading={deleting}
                 destructive
             />
-        </>
+        </RouteGuard>
     );
 }
 

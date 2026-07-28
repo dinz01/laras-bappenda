@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import { ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -14,6 +15,8 @@ export function Forbidden({
     onBack,
     backLabel = 'Kembali ke Dashboard',
 }: ForbiddenProps) {
+    const handleBack = onBack ?? (() => router.visit('/dashboard'));
+
     return (
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-xl border border-border/60 bg-card p-6 text-center">
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/10">
@@ -25,11 +28,9 @@ export function Forbidden({
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
                 {description}
             </p>
-            {onBack && (
-                <Button onClick={onBack} size="sm" className="mt-6">
-                    {backLabel}
-                </Button>
-            )}
+            <Button onClick={handleBack} size="sm" className="mt-6">
+                {backLabel}
+            </Button>
         </div>
     );
 }

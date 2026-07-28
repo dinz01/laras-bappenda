@@ -1,8 +1,10 @@
 import { Head, router } from '@inertiajs/react';
 import { Trash2, RotateCcw, AlertTriangle, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Can } from '@/components/Can';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { RouteGuard } from '@/components/RouteGuard';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -90,7 +92,7 @@ export default function RecycleBinIndex({ arsips }: RecycleBinProps) {
     };
 
     return (
-        <>
+        <RouteGuard permission="arsip.restore">
             <Head title="Riwayat Arsip Dihapus" />
 
             <PageContainer>
@@ -190,32 +192,37 @@ export default function RecycleBinIndex({ arsips }: RecycleBinProps) {
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <div className="flex items-center justify-end gap-2">
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="h-8 gap-1.5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
-                                                                onClick={() =>
-                                                                    handleRestore(
-                                                                        arsip.id,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <RotateCcw className="h-3.5 w-3.5" />
-                                                                Pulihkan
-                                                            </Button>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="h-8 gap-1.5 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 hover:text-rose-700"
-                                                                onClick={() =>
-                                                                    handleForceDelete(
-                                                                        arsip.id,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <AlertTriangle className="h-3.5 w-3.5" />
-                                                                Hapus Permanen
-                                                            </Button>
+                                                            <Can permission="arsip.restore">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-8 gap-1.5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
+                                                                    onClick={() =>
+                                                                        handleRestore(
+                                                                            arsip.id,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <RotateCcw className="h-3.5 w-3.5" />
+                                                                    Pulihkan
+                                                                </Button>
+                                                            </Can>
+                                                            <Can permission="arsip.delete">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-8 gap-1.5 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 hover:text-rose-700"
+                                                                    onClick={() =>
+                                                                        handleForceDelete(
+                                                                            arsip.id,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <AlertTriangle className="h-3.5 w-3.5" />
+                                                                    Hapus
+                                                                    Permanen
+                                                                </Button>
+                                                            </Can>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
@@ -252,7 +259,7 @@ export default function RecycleBinIndex({ arsips }: RecycleBinProps) {
                     )}
                 </div>
             </PageContainer>
-        </>
+        </RouteGuard>
     );
 }
 

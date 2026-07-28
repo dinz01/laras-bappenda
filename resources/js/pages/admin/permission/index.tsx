@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ContentCard } from '@/components/Cards/content-card';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { RouteGuard } from '@/components/RouteGuard';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Badge } from '@/components/ui/badge';
@@ -119,7 +120,7 @@ export default function PermissionIndex({
     const hasFilters = Boolean(filters.search);
 
     return (
-        <>
+        <RouteGuard permission="permission.view">
             <Head title="Permission" />
 
             <PageContainer>
@@ -212,7 +213,9 @@ export default function PermissionIndex({
                                                             variant="secondary"
                                                             className="text-xs"
                                                         >
-                                                            {getGroup(perm.name)}
+                                                            {getGroup(
+                                                                perm.name,
+                                                            )}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell>
@@ -294,6 +297,6 @@ export default function PermissionIndex({
                     </div>
                 </ContentCard>
             </PageContainer>
-        </>
+        </RouteGuard>
     );
 }

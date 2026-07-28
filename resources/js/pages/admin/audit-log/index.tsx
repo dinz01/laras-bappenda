@@ -15,6 +15,7 @@ import { StatusBadge } from '@/components/Common/status-badge';
 import type { BadgeStatusVariant } from '@/components/Common/status-badge';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { RouteGuard } from '@/components/RouteGuard';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
@@ -341,7 +342,7 @@ export default function AuditLogIndex({
     };
 
     return (
-        <>
+        <RouteGuard permission="auditlog.view">
             <Head title="Audit Log" />
 
             <PageContainer>
@@ -690,7 +691,7 @@ export default function AuditLogIndex({
                     {selectedLog && <AuditLogDetail auditLog={selectedLog} />}
                 </DialogContent>
             </Dialog>
-        </>
+        </RouteGuard>
     );
 }
 

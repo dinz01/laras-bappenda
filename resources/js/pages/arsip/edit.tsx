@@ -5,6 +5,7 @@ import { ContentCard } from '@/components/Cards/content-card';
 import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import { RouteGuard } from '@/components/RouteGuard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -130,7 +131,7 @@ export default function Edit({
     };
 
     return (
-        <>
+        <RouteGuard permission="arsip.update">
             <Head title={`Edit Arsip — ${arsip.nomor_arsip}`} />
             <PageContainer>
                 <PageHeader
@@ -518,7 +519,7 @@ export default function Edit({
                     </div>
                 </form>
             </PageContainer>
-        </>
+        </RouteGuard>
     );
 }
 
