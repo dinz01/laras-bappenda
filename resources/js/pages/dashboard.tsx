@@ -3,7 +3,6 @@ import {
     Archive,
     FileStack,
     FileText,
-    LayoutDashboard,
     TrendingUp,
     Trash2,
     Users,
@@ -19,7 +18,6 @@ import {
     ChevronRight,
     Bell,
 } from 'lucide-react';
-import { QuickAccessCard } from '@/components/Cards/quick-access-card';
 import { StatisticCard } from '@/components/Cards/statistic-card';
 import { SystemInformationCard } from '@/components/Cards/system-information-card';
 import { EmptyState } from '@/components/Common/empty-state';
@@ -62,14 +60,6 @@ type DashboardProps = {
     }>;
     recycleBinCount?: number;
 };
-
-const quickAccessItems = [
-    { label: 'Repositori Arsip', href: '/arsip', icon: Archive },
-    { label: 'Record Center', href: '/record-center', icon: FileStack },
-    { label: 'Pemusnahan', href: '/pemusnahan', icon: Trash2 },
-    { label: 'Master Data', href: '/admin/klasifikasi-arsip', icon: FileText },
-    { label: 'Pengguna', href: '/admin/users', icon: Users },
-];
 
 const systemInfo = [
     { label: 'Nama Sistem', value: 'LARAS' },
@@ -204,7 +194,7 @@ export default function Dashboard({
                 </section>
 
                 {/* Grid Tengah: Tahap Arsip & Grafik Batang */}
-                <div className="grid gap-6 lg:grid-cols-3">
+                <div className="grid items-start gap-6 lg:grid-cols-3">
                     {/* Widget Tahap Arsip */}
                     <Card className="border-border/60">
                         <CardHeader className="pb-3">
@@ -240,7 +230,7 @@ export default function Dashboard({
                     </Card>
 
                     {/* Grafik Arsip per Tahun */}
-                    <Card className="border-border/60 lg:col-span-2">
+                    <Card className="self-start !h-fit border-border/60 lg:col-span-2">
                         <CardHeader className="pb-3">
                             <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -417,15 +407,6 @@ export default function Dashboard({
                     </Card>
                 </div>
 
-                {/* Quick Access */}
-                <section>
-                    <div className="mb-3 flex items-center gap-2">
-                        <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-                        <h2 className="text-sm font-semibold">Akses Cepat</h2>
-                    </div>
-                    <QuickAccessCard items={quickAccessItems} />
-                </section>
-
                 {/* Grid Bawah: Aktivitas Terbaru & Informasi Sistem / Retensi */}
                 <div className="grid gap-6 lg:grid-cols-3">
                     {/* Aktivitas Terbaru */}
@@ -491,116 +472,95 @@ export default function Dashboard({
 
                     {/* Widget Retensi / Informasi Sistem */}
                     <div className="space-y-6">
-                        {/* Notifikasi Belum Dibaca */}
-                        <Card className="border-blue-500/20 bg-blue-500/5">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-blue-500">
-                                    <Bell className="h-4 w-4" />
-                                    Notifikasi Belum Dibaca
-                                </CardTitle>
-                                <CardDescription className="text-xs text-blue-600/80">
-                                    Jumlah pemberitahuan baru yang belum Anda
-                                    baca.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl font-extrabold text-blue-600">
-                                        {sharedNotifications?.unread_count ?? 0}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                        pemberitahuan
-                                    </span>
-                                </div>
-                                <Link
-                                    href="/notifications"
-                                    className="mt-3.5 inline-flex items-center gap-0.5 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
-                                >
-                                    Lihat Notifikasi
-                                    <ChevronRight className="h-3 w-3" />
-                                </Link>
-                            </CardContent>
-                        </Card>
-
-                        {/* Arsip Menunggu Penghapusan (Super Admin Only) */}
-                        {isSuperAdmin && (
-                            <Card className="border-rose-500/20 bg-rose-500/5">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="flex items-center gap-2 text-sm font-semibold text-rose-500">
-                                        <Trash2 className="h-4 w-4" />
-                                        Arsip Menunggu Penghapusan
+                        {/* Notifikasi & Recycle Bin — digabung sejajar agar hemat tempat */}
+                        <div className={`grid gap-3 ${isSuperAdmin ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                            <Card className="border-blue-500/20 bg-blue-500/5">
+                                <CardHeader className="pb-1.5">
+                                    <CardTitle className="flex items-center gap-1.5 text-xs font-semibold text-blue-500">
+                                        <Bell className="h-3.5 w-3.5" />
+                                        Notifikasi
                                     </CardTitle>
-                                    <CardDescription className="text-xs text-rose-600/80">
-                                        Jumlah arsip di recycle bin yang akan
-                                        dimusnahkan permanen dalam 24 jam.
-                                    </CardDescription>
                                 </CardHeader>
-                                <CardContent>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-3xl font-extrabold text-rose-600">
-                                            {recycleBinCount}
+                                <CardContent className="pt-0">
+                                    <div className="flex items-baseline gap-1.5">
+                                        <span className="text-xl font-extrabold text-blue-600">
+                                            {sharedNotifications?.unread_count ?? 0}
                                         </span>
-                                        <span className="text-xs text-muted-foreground">
-                                            dokumen arsip
+                                        <span className="text-[10px] text-muted-foreground">
+                                            belum dibaca
                                         </span>
                                     </div>
-                                    {recycleBinCount > 0 && (
-                                        <Link
-                                            href="/admin/recycle-bin"
-                                            className="mt-3.5 inline-flex items-center gap-0.5 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline"
-                                        >
-                                            Kelola Recycle Bin
-                                            <ChevronRight className="h-3 w-3" />
-                                        </Link>
-                                    )}
+                                    <Link
+                                        href="/notifications"
+                                        className="mt-1.5 inline-flex items-center gap-0.5 text-[10px] font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                                    >
+                                        Lihat
+                                        <ChevronRight className="h-3 w-3" />
+                                    </Link>
                                 </CardContent>
                             </Card>
-                        )}
+
+                            {isSuperAdmin && (
+                                <Card className="border-rose-500/20 bg-rose-500/5">
+                                    <CardHeader className="pb-1.5">
+                                        <CardTitle className="flex items-center gap-1.5 text-xs font-semibold text-rose-500">
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                            Recycle Bin
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                        <div className="flex items-baseline gap-1.5">
+                                            <span className="text-xl font-extrabold text-rose-600">
+                                                {recycleBinCount}
+                                            </span>
+                                            <span className="text-[10px] text-muted-foreground">
+                                                arsip
+                                            </span>
+                                        </div>
+                                        {recycleBinCount > 0 && (
+                                            <Link
+                                                href="/admin/recycle-bin"
+                                                className="mt-1.5 inline-flex items-center gap-0.5 text-[10px] font-semibold text-rose-600 hover:text-rose-700 hover:underline"
+                                            >
+                                                Kelola
+                                                <ChevronRight className="h-3 w-3" />
+                                            </Link>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </div>
 
                         {/* Arsip Mendekati Retensi */}
                         <Card className="border-border/60">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                            <CardHeader className="pb-2">
+                                <CardTitle className="flex items-center gap-1.5 text-xs font-semibold">
+                                    <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
                                     Arsip Mendekati Retensi
                                 </CardTitle>
-                                <CardDescription className="text-xs">
-                                    Daftar arsip aktif yang mendekati batas
-                                    waktu penyimpanan
-                                </CardDescription>
                             </CardHeader>
-                            <CardContent className="max-h-72 overflow-y-auto">
+                            <CardContent className="max-h-48 overflow-y-auto pt-0">
                                 {mendekatiRetensi.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                                        <AlertCircle className="mb-2 h-8 w-8 text-muted-foreground/45" />
-                                        <p className="text-xs font-semibold text-muted-foreground">
+                                    <div className="flex flex-col items-center justify-center py-4 text-center">
+                                        <AlertCircle className="mb-1.5 h-6 w-6 text-muted-foreground/45" />
+                                        <p className="text-[11px] font-semibold text-muted-foreground">
                                             Tidak ada arsip
-                                        </p>
-                                        <p className="text-[10px] text-muted-foreground">
-                                            Tidak ada arsip yang mendekati
-                                            retensi aktif.
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-3">
+                                    <div className="space-y-2">
                                         {mendekatiRetensi.map((item, idx) => (
                                             <div
                                                 key={idx}
-                                                className="flex flex-col gap-1 border-b border-border/40 pb-2 last:border-0 last:pb-0"
+                                                className="flex flex-col gap-0.5 border-b border-border/40 pb-1.5 last:border-0 last:pb-0"
                                             >
-                                                <p className="truncate text-xs font-medium text-foreground">
+                                                <p className="truncate text-[11px] font-medium text-foreground">
                                                     {item.judul}
                                                 </p>
                                                 <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                                                    <span>
-                                                        {item.nomor_arsip}
-                                                    </span>
+                                                    <span>{item.nomor_arsip}</span>
                                                     <span className="rounded bg-amber-500/10 px-1.5 py-0.5 font-semibold text-amber-500">
-                                                        Retensi:{' '}
-                                                        {
-                                                            item.tahun_retensi_aktif
-                                                        }{' '}
-                                                        Thn
+                                                        {item.tahun_retensi_aktif} Thn
                                                     </span>
                                                 </div>
                                             </div>

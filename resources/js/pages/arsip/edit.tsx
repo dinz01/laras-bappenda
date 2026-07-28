@@ -42,7 +42,7 @@ type Arsip = {
     tanggal_arsip: string;
     klasifikasi_arsip_id: number;
     lokasi_arsip_id: number | null;
-    jenis_dokumen_id: number | null;
+    jenis_arsip_id: number | null;
     media_arsip_id: number | null;
     kondisi_arsip_id: number | null;
     status_arsip_id: number | null;
@@ -56,7 +56,7 @@ type Arsip = {
 type EditProps = {
     arsip: Arsip;
     klasifikasis: MasterItem[];
-    jenisDokumens: MasterItem[];
+    jenisArsips: MasterItem[];
     unitOrganisasis: MasterItem[];
     lokasiArsips: MasterItem[];
     statusArsips: MasterItem[];
@@ -77,7 +77,7 @@ function formatBytes(bytes: number) {
 export default function Edit({
     arsip,
     klasifikasis,
-    jenisDokumens,
+    jenisArsips,
     unitOrganisasis,
     lokasiArsips,
     statusArsips,
@@ -89,7 +89,7 @@ export default function Edit({
         deskripsi: arsip.deskripsi || '',
         tanggal_arsip: arsip.tanggal_arsip || '',
         klasifikasi_arsip_id: arsip.klasifikasi_arsip_id?.toString() || '',
-        jenis_dokumen_id: arsip.jenis_dokumen_id?.toString() || '',
+        jenis_arsip_id: arsip.jenis_arsip_id?.toString() || '',
         unit_organisasi_id: arsip.unit_organisasi_id?.toString() || '',
         lokasi_arsip_id: arsip.lokasi_arsip_id?.toString() || '',
         status_arsip_id: arsip.status_arsip_id?.toString() || '',
@@ -270,23 +270,23 @@ export default function Edit({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="jenis_dokumen_id">
-                                    Jenis Dokumen
+                                <Label htmlFor="jenis_arsip_id">
+                                    Jenis Arsip
                                 </Label>
                                 <Select
-                                    value={data.jenis_dokumen_id}
+                                    value={data.jenis_arsip_id}
                                     onValueChange={(val) =>
-                                        setData('jenis_dokumen_id', val)
+                                        setData('jenis_arsip_id', val)
                                     }
                                 >
                                     <SelectTrigger
-                                        id="jenis_dokumen_id"
+                                        id="jenis_arsip_id"
                                         className="border-border/60"
                                     >
-                                        <SelectValue placeholder="Pilih jenis dokumen..." />
+                                        <SelectValue placeholder="Pilih jenis arsip..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {jenisDokumens.map((opt) => (
+                                        {jenisArsips.map((opt) => (
                                             <SelectItem
                                                 key={opt.id}
                                                 value={opt.id.toString()}
@@ -296,7 +296,7 @@ export default function Edit({
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError message={errors.jenis_dokumen_id} />
+                                <InputError message={errors.jenis_arsip_id} />
                             </div>
 
                             <div className="space-y-2">
@@ -464,11 +464,10 @@ export default function Edit({
                                     onDragOver={handleDrag}
                                     onDragLeave={handleDrag}
                                     onDrop={handleDrop}
-                                    className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
-                                        dragActive
-                                            ? 'border-primary bg-primary/5'
-                                            : 'border-border/60 bg-muted/20'
-                                    }`}
+                                    className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors ${dragActive
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-border/60 bg-muted/20'
+                                        }`}
                                 >
                                     <UploadCloud className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
                                     <p className="text-sm font-medium">

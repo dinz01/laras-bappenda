@@ -12,7 +12,6 @@ import { ArsipCreateDialog } from './create-dialog';
 type CreateProps = {
     klasifikasis?: MasterItem[];
     jenisArsips?: MasterItem[];
-    jenisDokumens?: MasterItem[];
     sifatArsips?: MasterItem[];
     tingkatPerkembanganArsips?: MasterItem[];
     unitOrganisasis?: MasterItem[];

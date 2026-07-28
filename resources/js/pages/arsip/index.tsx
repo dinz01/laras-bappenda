@@ -35,6 +35,17 @@ import {
 import { index, show } from '@/routes/arsip';
 import type { MasterItem } from './create-dialog';
 import { ArsipCreateDialog } from './create-dialog';
+import { ArsipEditDialog } from './edit-dialog';
+
+type DokumenArsip = {
+    id: number;
+    nama_original: string;
+    nama_generated: string;
+    ukuran: number;
+    mime_type: string;
+    path_penyimpanan: string;
+    uploaded_at: string | null;
+};
 
 type Arsip = {
     id: number;
@@ -45,7 +56,9 @@ type Arsip = {
     file_path: string | null;
     klasifikasi_arsip_id: number;
     lokasi_arsip_id: number | null;
-    jenis_dokumen_id: number | null;
+    jenis_arsip_id: number | null;
+    sifat_arsip_id: number | null;
+    tingkat_perkembangan_arsip_id: number | null;
     media_arsip_id: number | null;
     kondisi_arsip_id: number | null;
     status_arsip_id: number | null;
@@ -57,6 +70,7 @@ type Arsip = {
     lokasi_arsip?: MasterItem | null;
     status_arsip?: MasterItem | null;
     unit_organisasi?: MasterItem | null;
+    dokumen?: DokumenArsip | null;
 };
 
 type PaginationLink = {
@@ -130,6 +144,7 @@ export default function Index({
 }: IndexProps) {
     const [search, setSearch] = useState(filters.search || '');
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [editingArsip, setEditingArsip] = useState<Arsip | null>(null);
 
     // Handle filter/search trigger
     const updateFilters = (
@@ -382,6 +397,9 @@ export default function Index({
                                                 <TableHead className="w-[180px] font-semibold">
                                                     Nomor Arsip
                                                 </TableHead>
+                                                <TableHead className="w-[110px] font-semibold">
+                                                    Tanggal Arsip
+                                                </TableHead>
                                                 <TableHead className="font-semibold">
                                                     Judul
                                                 </TableHead>
@@ -410,6 +428,15 @@ export default function Index({
                                                 >
                                                     <TableCell className="font-mono text-xs text-muted-foreground">
                                                         {arsip.nomor_arsip}
+                                                    </TableCell>
+                                                    <TableCell className="text-sm text-muted-foreground">
+                                                        {arsip.tanggal_arsip
+                                                            ? new Date(arsip.tanggal_arsip).toLocaleDateString('id-ID', {
+                                                                day: '2-digit',
+                                                                month: 'short',
+                                                                year: 'numeric',
+                                                            })
+                                                            : '-'}
                                                     </TableCell>
                                                     <TableCell className="max-w-[200px] truncate font-medium">
                                                         {arsip.judul}
@@ -513,15 +540,11 @@ export default function Index({
                                                                 </DropdownMenuItem>
                                                                 <Can permission="arsip.update">
                                                                     <DropdownMenuItem
-                                                                        asChild
+                                                                        onClick={() => setEditingArsip(arsip)}
+                                                                        className="flex cursor-pointer items-center gap-2"
                                                                     >
-                                                                        <Link
-                                                                            href={`/arsip/${arsip.id}/edit`}
-                                                                            className="flex cursor-pointer items-center gap-2"
-                                                                        >
-                                                                            <Pencil className="h-4 w-4" />
-                                                                            Edit
-                                                                        </Link>
+                                                                        <Pencil className="h-4 w-4" />
+                                                                        Edit
                                                                     </DropdownMenuItem>
                                                                 </Can>
                                                                 <Can permission="arsip.delete">
@@ -611,6 +634,22 @@ export default function Index({
                     tingkatPerkembanganArsips={tingkatPerkembanganArsips}
                     lokasiArsips={lokasiArsips}
                 />
+
+                {editingArsip && (
+                    <ArsipEditDialog
+                        key={editingArsip.id}
+                        open={!!editingArsip}
+                        onClose={() => setEditingArsip(null)}
+                        arsip={editingArsip}
+                        klasifikasis={klasifikasis}
+                        unitOrganisasis={unitOrganisasis}
+                        statusArsips={statusArsips}
+                        jenisArsips={jenisArsips}
+                        sifatArsips={sifatArsips}
+                        tingkatPerkembanganArsips={tingkatPerkembanganArsips}
+                        lokasiArsips={lokasiArsips}
+                    />
+                )}
             </PageContainer>
         </RouteGuard>
     );

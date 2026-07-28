@@ -53,7 +53,11 @@ class ArsipController extends Controller
 
         $query = $this->searchService->advancedSearch($request->all());
 
-        $arsips = $query->paginate(10)->withQueryString();
+        $arsips = $query
+            ->orderBy('tanggal_arsip', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
         // Master lists for filters & create dialog
         $klasifikasis = KlasifikasiArsip::active()->get(['id', 'kode', 'nama']);

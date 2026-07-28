@@ -31,7 +31,6 @@ export type ArsipCreateDialogProps = {
     onClose: () => void;
     klasifikasis?: MasterItem[];
     jenisArsips?: MasterItem[];
-    jenisDokumens?: MasterItem[];
     sifatArsips?: MasterItem[];
     tingkatPerkembanganArsips?: MasterItem[];
     unitOrganisasis?: MasterItem[];
@@ -44,14 +43,12 @@ export function ArsipCreateDialog({
     onClose,
     klasifikasis = [],
     jenisArsips = [],
-    jenisDokumens = [],
     sifatArsips = [],
     tingkatPerkembanganArsips = [],
     unitOrganisasis = [],
     lokasiArsips = [],
     statusArsips = [],
 }: ArsipCreateDialogProps) {
-    const jenisList = jenisArsips.length > 0 ? jenisArsips : jenisDokumens;
 
     const { data, setData, post, processing, errors, reset } = useForm({
         nomor_arsip: '',
@@ -233,7 +230,7 @@ export function ArsipCreateDialog({
                                     <SelectValue placeholder="Pilih jenis arsip..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {jenisList.map((opt) => (
+                                    {jenisArsips.map((opt) => (
                                         <SelectItem
                                             key={opt.id}
                                             value={opt.id.toString()}
@@ -433,11 +430,10 @@ export function ArsipCreateDialog({
                                     onDragOver={handleDrag}
                                     onDragLeave={handleDrag}
                                     onDrop={handleDrop}
-                                    className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
-                                        dragActive
-                                            ? 'border-primary bg-primary/5'
-                                            : 'border-border/60 bg-muted/20'
-                                    }`}
+                                    className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 text-center transition-colors ${dragActive
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-border/60 bg-muted/20'
+                                        }`}
                                 >
                                     <UploadCloud className="mx-auto mb-1 h-7 w-7 text-muted-foreground" />
                                     <p className="text-xs font-medium">
