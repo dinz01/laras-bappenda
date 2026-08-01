@@ -30,7 +30,15 @@ class ArsipPolicy
      */
     public function view(User $user, Arsip $arsip): bool
     {
-        return $user->can('arsip.view');
+        if (! $user->can('arsip.view')) {
+            return false;
+        }
+
+        if ($user->hasRole('Operator Unit Pengolah')) {
+            return $arsip->unit_organisasi_id === $user->unit_organisasi_id;
+        }
+
+        return true;
     }
 
     /**
@@ -46,7 +54,15 @@ class ArsipPolicy
      */
     public function update(User $user, Arsip $arsip): bool
     {
-        return $user->can('arsip.update');
+        if (! $user->can('arsip.update')) {
+            return false;
+        }
+
+        if ($user->hasRole('Operator Unit Pengolah')) {
+            return $arsip->unit_organisasi_id === $user->unit_organisasi_id;
+        }
+
+        return true;
     }
 
     /**

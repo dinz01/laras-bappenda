@@ -7,6 +7,9 @@ use App\Http\Controllers\Admin\RecycleBinController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\ArsipController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KelolaArsipController;
+use App\Http\Controllers\TteController;
+use App\Http\Controllers\VerifikasiArsipController;
 use App\Http\Controllers\Master\JabatanController;
 use App\Http\Controllers\Master\JenisArsipController;
 use App\Http\Controllers\Master\KlasifikasiArsipController;
@@ -37,7 +40,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
     Route::get('notifications/{notification}/redirect', [NotificationController::class, 'redirect'])->name('notifications.redirect');
 
+   // ── Kelola Arsip & Verifikasi ────────────────────────────────────────
+    Route::get('kelola-arsip', [KelolaArsipController::class, 'index'])->name('kelola-arsip.index');
+    Route::get('verifikasi-arsip', [VerifikasiArsipController::class, 'index'])->name('verifikasi-arsip.index');
+    Route::get('kelola-tte', [TteController::class, 'index'])->name('kelola-tte.index');
+    Route::post('arsip/{arsip}/ajukan-tte', [TteController::class, 'ajukan'])->name('arsip.ajukan-tte');
+
     // ── Repositori Arsip ──────────────────────────────────────────────────
+    Route::get('arsip/{arsip}/detail-json', [ArsipController::class, 'detailJson'])->name('arsip.detail-json');
     Route::get('arsip/{arsip}/download', [ArsipController::class, 'download'])->name('arsip.download');
     Route::post('arsip/{arsip}/upload', [ArsipController::class, 'uploadFile'])->name('arsip.upload-file');
     Route::post('arsip/{arsip}/replace', [ArsipController::class, 'replaceFile'])->name('arsip.replace-file');
@@ -45,8 +55,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('arsip/version/{version}/download', [ArsipController::class, 'downloadVersion'])->name('arsip.download-version');
     Route::post('arsip/{arsip}/ocr-reprocess', [ArsipController::class, 'reprocessOcr'])->name('arsip.ocr-reprocess');
     Route::post('arsip/{arsip}/workflow/advance', [ArsipController::class, 'advanceWorkflow'])->name('arsip.workflow.advance');
+    Route::post('arsip/{arsip}/verify', [ArsipController::class, 'verify'])->name('arsip.verify');
+    Route::post('arsip/{arsip}/reject', [ArsipController::class, 'reject'])->name('arsip.reject');
+    Route::post('arsip/{arsip}/resubmit', [ArsipController::class, 'resubmit'])->name('arsip.resubmit');
 
-    Route::resource('arsip', ArsipController::class);
+    Route::resource('arsip', ArsipController::class)->except(['show']);
 
     // ── Pengelolaan ───────────────────────────────────────────────────────
     Route::get('record-center', [RecordCenterController::class, 'index'])->name('record-center.index');

@@ -2,10 +2,8 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import {
     Archive,
     FileStack,
-    FileText,
     TrendingUp,
     Trash2,
-    Users,
     Activity,
     FolderOpen,
     Shield,
@@ -18,6 +16,7 @@ import {
     ChevronRight,
     Bell,
 } from 'lucide-react';
+
 import { StatisticCard } from '@/components/Cards/statistic-card';
 import { SystemInformationCard } from '@/components/Cards/system-information-card';
 import { EmptyState } from '@/components/Common/empty-state';

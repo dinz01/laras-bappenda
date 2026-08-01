@@ -56,6 +56,7 @@ type Unit = {
     kode: string;
     nama: string;
     singkatan: string | null;
+    tipe: 'bidang' | 'sub_bidang' | 'upt';
     parent_id: number | null;
     status: 'active' | 'inactive';
     depth: number;
@@ -89,6 +90,7 @@ type UnitFormData = {
     kode: string;
     nama: string;
     singkatan: string;
+    tipe: 'bidang' | 'upt' | '';
     parent_id: string;
     status: 'active' | 'inactive';
 };
@@ -97,6 +99,7 @@ const emptyForm: UnitFormData = {
     kode: '',
     nama: '',
     singkatan: '',
+    tipe: '',
     parent_id: '',
     status: 'active',
 };
@@ -138,6 +141,7 @@ function UnitFormDialog({
                 kode: unit.kode,
                 nama: unit.nama,
                 singkatan: unit.singkatan ?? '',
+                tipe: unit.tipe === 'sub_bidang' ? '' : unit.tipe,
                 parent_id:
                     unit.parent_id !== null ? String(unit.parent_id) : '',
                 status: unit.status,
@@ -182,11 +186,17 @@ function UnitFormDialog({
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
                         {mode === 'create'
-                            ? 'Tambah Unit Organisasi'
-                            : 'Edit Unit Organisasi'}
+                            ? prefilledParentId
+                                ? 'Tambah Sub Bidang'
+                                : 'Tambah Unit Organisasi'
+                            : unit?.tipe === 'sub_bidang'
+                                ? 'Edit Sub Bidang'
+                                : 'Edit Unit Organisasi'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
-                        Lengkapi data unit organisasi sesuai struktur instansi.
+                        {mode === 'create' && prefilledParentId
+                            ? 'Lengkapi data sub bidang untuk bidang terkait.'
+                            : 'Lengkapi data unit organisasi sesuai struktur instansi.'}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -260,34 +270,27 @@ function UnitFormDialog({
 
                     {mode === 'create' && !prefilledParentId && (
                         <div className="space-y-2">
-                            <Label htmlFor="parent_id">Parent Unit</Label>
+                            <Label htmlFor="tipe">
+                                Tipe Unit{' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
                             <Select
-                                value={form.data.parent_id}
-                                onValueChange={(value) =>
-                                    form.setData('parent_id', value)
+                                value={form.data.tipe}
+                                onValueChange={(value: 'bidang' | 'upt') =>
+                                    form.setData('tipe', value)
                                 }
                             >
-                                <SelectTrigger
-                                    id="parent_id"
-                                    className="w-full"
-                                >
-                                    <SelectValue placeholder="Tidak Ada (Root)" />
+                                <SelectTrigger id="tipe" className="w-full">
+                                    <SelectValue placeholder="Pilih tipe unit..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">
-                                        Tidak Ada (Root)
+                                    <SelectItem value="bidang">
+                                        Bidang
                                     </SelectItem>
-                                    {parentOptions.map((opt) => (
-                                        <SelectItem
-                                            key={opt.id}
-                                            value={String(opt.id)}
-                                        >
-                                            {opt.nama}
-                                        </SelectItem>
-                                    ))}
+                                    <SelectItem value="upt">UPT</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError message={form.errors.parent_id} />
+                            <InputError message={form.errors.tipe} />
                         </div>
                     )}
 
@@ -322,7 +325,7 @@ function DetailDialog({
     const parentName =
         unit && unit.parent_id !== null
             ? (parentOptions.find((o) => o.id === unit.parent_id)?.nama ??
-              `Unit #${unit.parent_id}`)
+                `Unit #${unit.parent_id}`)
             : '-';
 
     return (
@@ -442,17 +445,9 @@ export default function UnitOrganisasiIndex({
     const [deleteUnit, setDeleteUnit] = useState<Unit | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
-    const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
-        const set = new Set<string>();
-
-        for (const u of units) {
-            if (u.depth === 0) {
-                set.add(getNodeKey(u));
-            }
-        }
-
-        return set;
-    });
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(
+        () => new Set<string>(),
+    );
 
     const isSearching = (filters.search ?? '') !== '';
 
@@ -698,7 +693,7 @@ export default function UnitOrganisasiIndex({
                                         const key = getNodeKey(unit);
                                         const hasChildren =
                                             childrenMap.get(key) !==
-                                                undefined &&
+                                            undefined &&
                                             childrenMap.get(key)!.length > 0;
                                         const isExpanded = expandedIds.has(key);
 
@@ -807,7 +802,7 @@ export default function UnitOrganisasiIndex({
                                                                 Edit
                                                             </DropdownMenuItem>
                                                         </Can>
-                                                        {unit.depth === 0 && (
+                                                        {unit.tipe === 'bidang' && (
                                                             <>
                                                                 <DropdownMenuItem
                                                                     onClick={() =>

@@ -79,6 +79,43 @@ const emptyForm: RoleFormData = {
     permissions: [],
 };
 
+// Label grup (resource prefix)
+const groupLabels: Record<string, string> = {
+    dashboard:  'Dashboard',
+    profile:    'Profil',
+    arsip:      'Arsip',
+    dokumen:    'Dokumen',
+    workflow:   'Alur Kerja',
+    master:     'Data Master',
+    user:       'Pengguna',
+    role:       'Role',
+    permission: 'Permission',
+    auditlog:   'Log Audit',
+};
+
+// Label aksi (suffix setelah titik)
+const actionLabels: Record<string, string> = {
+    view:     'Lihat',
+    create:   'Tambah',
+    update:   'Ubah',
+    delete:   'Hapus',
+    restore:  'Pulihkan',
+    upload:   'Unggah',
+    download: 'Unduh',
+    verify:   'Verifikasi',
+    approve:  'Setujui',
+    reject:   'Tolak',
+};
+
+function formatPermLabel(perm: string): string {
+    const [, action] = perm.split('.');
+    return actionLabels[action ?? ''] ?? action ?? perm;
+}
+
+function formatGroupLabel(group: string): string {
+    return groupLabels[group] ?? group;
+}
+
 function RoleFormDialog({
     open,
     mode,
@@ -213,7 +250,7 @@ function RoleFormDialog({
                                     ([group, perms]) => (
                                         <div key={group}>
                                             <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                                                {group}
+                                                {formatGroupLabel(group)}
                                             </p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {perms.map((perm) => (
@@ -225,18 +262,14 @@ function RoleFormDialog({
                                                                 perm,
                                                             )
                                                         }
-                                                        className={`rounded border px-2 py-0.5 text-xs transition-colors ${
-                                                            form.data.permissions.includes(
-                                                                perm,
-                                                            )
+                                                        className={`rounded border px-2 py-0.5 text-xs transition-colors ${form.data.permissions.includes(
+                                                            perm,
+                                                        )
                                                                 ? 'border-primary bg-primary text-primary-foreground'
                                                                 : 'border-border bg-background text-muted-foreground hover:border-primary/50'
-                                                        }`}
+                                                            }`}
                                                     >
-                                                        {perm
-                                                            .split('.')
-                                                            .slice(1)
-                                                            .join('.') || perm}
+                                                        {formatPermLabel(perm)}
                                                     </button>
                                                 ))}
                                             </div>
@@ -295,7 +328,7 @@ function DetailDialog({
 
     return (
         <Dialog open={role !== null} onOpenChange={onOpenChange}>
-            <DialogContent className="border-border/60 sm:max-w-lg">
+            <DialogContent className="max-h-[90vh] overflow-y-auto border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
                         Detail Role
@@ -328,7 +361,7 @@ function DetailDialog({
                             {Object.entries(grouped).map(([group, perms]) => (
                                 <div key={group}>
                                     <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                                        {group}
+                                        {formatGroupLabel(group)}
                                     </p>
                                     <div className="flex flex-wrap gap-1">
                                         {perms.map((perm) => (
@@ -336,8 +369,9 @@ function DetailDialog({
                                                 key={perm}
                                                 variant="outline"
                                                 className="text-xs"
+                                                title={perm}
                                             >
-                                                {perm}
+                                                {formatPermLabel(perm)}
                                             </Badge>
                                         ))}
                                     </div>
@@ -477,7 +511,7 @@ export default function RoleIndex({ roles, stats, permissions }: IndexProps) {
                                             <TableCell>
                                                 <div className="flex flex-wrap gap-1">
                                                     {role.permissions_count ===
-                                                    0 ? (
+                                                        0 ? (
                                                         <span className="text-xs text-muted-foreground">
                                                             —
                                                         </span>
@@ -490,22 +524,23 @@ export default function RoleIndex({ roles, stats, permissions }: IndexProps) {
                                                                         key={p}
                                                                         variant="outline"
                                                                         className="text-xs"
+                                                                        title={p}
                                                                     >
-                                                                        {p}
+                                                                        {formatGroupLabel(p.split('.')[0] ?? p)}{' '}·{' '}{formatPermLabel(p)}
                                                                     </Badge>
                                                                 ))}
                                                             {role.permissions_count >
                                                                 3 && (
-                                                                <Badge
-                                                                    variant="secondary"
-                                                                    className="text-xs"
-                                                                >
-                                                                    +
-                                                                    {role.permissions_count -
-                                                                        3}{' '}
-                                                                    lainnya
-                                                                </Badge>
-                                                            )}
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className="text-xs"
+                                                                    >
+                                                                        +
+                                                                        {role.permissions_count -
+                                                                            3}{' '}
+                                                                        lainnya
+                                                                    </Badge>
+                                                                )}
                                                         </>
                                                     )}
                                                 </div>

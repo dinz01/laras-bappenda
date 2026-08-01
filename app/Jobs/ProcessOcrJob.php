@@ -90,7 +90,7 @@ class ProcessOcrJob implements ShouldQueue
                     NotificationType::OcrSelesai,
                     'OCR Selesai',
                     "Proses OCR untuk dokumen \"{$this->dokumen->nama_original}\" (arsip: {$arsip->nomor_arsip}) telah selesai.",
-                    route('arsip.show', $arsip),
+                    route('arsip.index'),
                 );
             }
 
@@ -138,7 +138,7 @@ class ProcessOcrJob implements ShouldQueue
                 NotificationType::OcrGagal,
                 'OCR Gagal',
                 "Proses OCR untuk dokumen \"{$this->dokumen->nama_original}\" (arsip: {$arsip->nomor_arsip}) gagal: ".$e->getMessage(),
-                route('arsip.show', $arsip),
+                route('arsip.index'),
             );
         }
     }

@@ -62,7 +62,7 @@ class RecycleBinService
             NotificationType::ArsipDipulihkan,
             'Arsip Dipulihkan',
             "Arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berhasil dipulihkan dari recycle bin.",
-            route('arsip.show', $arsip),
+            route('arsip.index'),
         );
     }
 

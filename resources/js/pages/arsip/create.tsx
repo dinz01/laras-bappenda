@@ -7,14 +7,16 @@ import { RouteGuard } from '@/components/RouteGuard';
 import { Button } from '@/components/ui/button';
 import { index, create } from '@/routes/arsip';
 import type { MasterItem } from './create-dialog';
+import type { UnitOrganisasiOption } from '@/components/unit-organisasi-select';
 import { ArsipCreateDialog } from './create-dialog';
 
 type CreateProps = {
     klasifikasis?: MasterItem[];
     jenisArsips?: MasterItem[];
+    jenisDokumens?: MasterItem[];
     sifatArsips?: MasterItem[];
     tingkatPerkembanganArsips?: MasterItem[];
-    unitOrganisasis?: MasterItem[];
+    unitOrganisasis?: UnitOrganisasiOption[];
     lokasiArsips?: MasterItem[];
     statusArsips?: MasterItem[];
 };

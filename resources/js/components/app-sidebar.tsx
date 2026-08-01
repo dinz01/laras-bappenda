@@ -1,12 +1,15 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     Activity,
     Archive,
     ArchiveRestore,
     BookOpen,
     Building2,
+    ClipboardCheck,
     ClipboardList,
     FileKey2,
+    FilePlus2,
+    FileSignature,
     FileStack,
     Key,
     Layers,
@@ -41,6 +44,9 @@ import { index as permissionIndex } from '@/routes/admin/permission';
 import { index as recycleBinIndex } from '@/routes/admin/recycle-bin';
 import { index as roleIndex } from '@/routes/admin/role';
 import { index as arsipIndex } from '@/routes/arsip';
+import { index as kelolaArsipIndex } from '@/routes/kelola-arsip';
+import { index as kelolaTteIndex } from '@/routes/kelola-tte';
+import { index as verifikasiArsipIndex } from '@/routes/verifikasi-arsip';
 import { index as jabatanIndex } from '@/routes/master/jabatan';
 import { index as jenisArsipIndex } from '@/routes/master/jenis-arsip';
 import { index as klasifikasiArsipIndex } from '@/routes/master/klasifikasi-arsip';
@@ -71,6 +77,24 @@ const utamaNavItems: NavItem[] = [
         href: arsipIndex.url(),
         icon: Archive,
         permission: 'arsip.view',
+    },
+    {
+        title: 'Kelola Arsip',
+        href: kelolaArsipIndex.url(),
+        icon: FilePlus2,
+        permission: 'arsip.create',
+    },
+    {
+        title: 'Verifikasi Arsip',
+        href: verifikasiArsipIndex.url(),
+        icon: ClipboardCheck,
+        permission: 'workflow.approve',
+    },
+    {
+        title: 'Kelola TTE',
+        href: kelolaTteIndex.url(),
+        icon: FileSignature,
+        permission: 'workflow.tte',
     },
 ];
 
@@ -210,6 +234,15 @@ const administrasiNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage<{
+        auth: { user: { roles?: string[] } | null };
+    }>().props;
+    const isOperatorUnit = auth.user?.roles?.includes('Operator Unit Pengolah') ?? false;
+
+    const filteredUtamaNavItems = isOperatorUnit
+        ? utamaNavItems.filter((item) => item.title !== 'Repositori Arsip')
+        : utamaNavItems;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -225,7 +258,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={utamaNavItems} label="Utama" />
+                <NavMain items={filteredUtamaNavItems} label="Utama" />
                 <NavMain items={pengelolaanNavItems} label="Pengelolaan" />
                 <NavMain items={masterNavItems} label="Master Data" />
                 <NavMain items={administrasiNavItems} label="Administrasi" />

@@ -75,23 +75,24 @@ class Arsip extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'nomor_arsip',
-        'judul',
-        'deskripsi',
-        'tanggal_arsip',
-        'jenis_arsip_id',
-        'klasifikasi_arsip_id',
-        'sifat_arsip_id',
-        'lokasi_arsip_id',
-        'media_arsip_id',
-        'kondisi_arsip_id',
-        'status_arsip_id',
-        'tingkat_akses_arsip_id',
-        'tingkat_perkembangan_arsip_id',
-        'retensi_arsip_id',
-        'unit_organisasi_id',
-        'created_by',
-        'workflow_status',
+    'nomor_arsip',
+    'judul',
+    'deskripsi',
+    'tanggal_arsip',
+    'jenis_arsip_id',
+    'klasifikasi_arsip_id',
+    'sifat_arsip_id',
+    'lokasi_arsip_id',
+    'media_arsip_id',
+    'kondisi_arsip_id',
+    'status_arsip_id',
+    'tingkat_akses_arsip_id',
+    'tingkat_perkembangan_arsip_id',
+    'retensi_arsip_id',
+    'unit_organisasi_id',
+    'created_by',
+    'workflow_status',
+    'catatan_revisi',
     ];
 
     /**
@@ -245,6 +246,16 @@ class Arsip extends Model
     public function dokumen(): HasOne
     {
         return $this->hasOne(DokumenArsip::class, 'arsip_id');
+    }
+
+    /**
+     * Relasi ke seluruh riwayat TTE arsip ini.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<TteSignature, $this>
+     */
+    public function tteSignatures(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TteSignature::class, 'arsip_id')->latest('signed_at');
     }
 
     /**

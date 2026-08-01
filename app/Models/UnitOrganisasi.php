@@ -54,6 +54,7 @@ class UnitOrganisasi extends Model
         'kode',
         'nama',
         'singkatan',
+        'tipe',
         'parent_id',
         'status',
     ];
@@ -76,6 +77,37 @@ class UnitOrganisasi extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    /**
+     * Format unit organisasi ini untuk keperluan tampilan (Bidang/Sub Bidang/UPT terpisah).
+     *
+     * @return array{bidang: string|null, sub_bidang: string|null, upt: string|null}
+     */
+    public function toDisplayArray(): array
+    {
+        return match ($this->tipe) {
+            'sub_bidang' => [
+                'bidang' => $this->parent?->nama,
+                'sub_bidang' => $this->nama,
+                'upt' => null,
+            ],
+            'bidang' => [
+                'bidang' => $this->nama,
+                'sub_bidang' => null,
+                'upt' => null,
+            ],
+            'upt' => [
+                'bidang' => null,
+                'sub_bidang' => null,
+                'upt' => $this->nama,
+            ],
+            default => [
+                'bidang' => null,
+                'sub_bidang' => null,
+                'upt' => null,
+            ],
+        };
     }
 
     /**

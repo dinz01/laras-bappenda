@@ -63,7 +63,8 @@ type Pengguna = {
     email: string;
     nip: string | null;
     status: 'active' | 'inactive';
-    unit_organisasi: string | null;
+    unit_organisasi_id: number | null;
+    unit_organisasi: UnitOrganisasiDisplay;
     jabatan: string | null;
     roles: string[];
     created_at: string | null;
@@ -87,7 +88,13 @@ type PaginatedPengguna = {
     links: PaginationLink[];
 };
 
-type UnitOrganisasi = { id: number; nama: string };
+type UnitOrganisasi = {
+    id: number;
+    nama: string;
+    tipe: 'bidang' | 'sub_bidang' | 'upt';
+    parent_id: number | null;
+};
+
 type Jabatan = { id: number; nama: string };
 
 type Stats = {
@@ -109,6 +116,12 @@ type IndexProps = {
         role?: string;
     };
 };
+
+type UnitOrganisasiDisplay = {
+    bidang: string | null;
+    sub_bidang: string | null;
+    upt: string | null;
+} | null;
 
 type PenggunaFormData = {
     name: string;
@@ -138,6 +151,36 @@ function statusLabel(status: Pengguna['status']) {
     return status === 'active' ? 'Aktif' : 'Nonaktif';
 }
 
+function renderUnitOrganisasi(unit: UnitOrganisasiDisplay) {
+    if (!unit || (!unit.bidang && !unit.sub_bidang && !unit.upt)) {
+        return <span className="text-muted-foreground">—</span>;
+    }
+    if (unit.upt) {
+        return (
+            <span className="block truncate" title={unit.upt}>
+                {unit.upt}
+            </span>
+        );
+    }
+    if (unit.sub_bidang) {
+        return (
+            <div className="flex flex-col leading-tight">
+                <span className="truncate font-medium text-foreground" title={unit.bidang ?? ''}>
+                    {unit.bidang}
+                </span>
+                <span className="truncate text-xs text-muted-foreground" title={unit.sub_bidang}>
+                    {unit.sub_bidang}
+                </span>
+            </div>
+        );
+    }
+    return (
+        <span className="block truncate" title={unit.bidang ?? ''}>
+            {unit.bidang}
+        </span>
+    );
+}
+
 function PenggunaFormDialog({
     open,
     mode,
@@ -156,6 +199,14 @@ function PenggunaFormDialog({
     onOpenChange: (open: boolean) => void;
 }) {
     const form = useForm<PenggunaFormData>(emptyForm);
+    const [kategori, setKategori] = useState<'' | 'bidang' | 'upt'>('');
+    const [selectedBidangId, setSelectedBidangId] = useState<string>('');
+
+    const bidangList = unitOrganisasis.filter((u) => u.tipe === 'bidang');
+    const uptList = unitOrganisasis.filter((u) => u.tipe === 'upt');
+    const subBidangList = unitOrganisasis.filter(
+        (u) => u.tipe === 'sub_bidang' && String(u.parent_id) === selectedBidangId,
+    );
 
     useEffect(() => {
         if (!open) {
@@ -165,19 +216,54 @@ function PenggunaFormDialog({
         form.setData(
             pengguna
                 ? {
-                      name: pengguna.name,
-                      email: pengguna.email,
-                      password: '',
-                      unit_organisasi_id: '',
-                      jabatan_id: '',
-                      status: pengguna.status,
-                      roles: pengguna.roles,
-                  }
+                    name: pengguna.name,
+                    email: pengguna.email,
+                    password: '',
+                    unit_organisasi_id: pengguna.unit_organisasi_id
+                        ? String(pengguna.unit_organisasi_id)
+                        : '',
+                    jabatan_id: '',
+                    status: pengguna.status,
+                    roles: pengguna.roles,
+                }
                 : emptyForm,
         );
+
+        if (pengguna?.unit_organisasi_id) {
+            const current = unitOrganisasis.find((u) => u.id === pengguna.unit_organisasi_id);
+            if (current?.tipe === 'upt') {
+                setKategori('upt');
+                setSelectedBidangId('');
+            } else if (current?.tipe === 'bidang') {
+                setKategori('bidang');
+                setSelectedBidangId(String(current.id));
+            } else if (current?.tipe === 'sub_bidang') {
+                setKategori('bidang');
+                setSelectedBidangId(String(current.parent_id));
+            }
+        } else {
+            setKategori('');
+            setSelectedBidangId('');
+        }
+
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, pengguna]);
+
+    const handleKategoriChange = (value: 'bidang' | 'upt') => {
+        setKategori(value);
+        setSelectedBidangId('');
+        form.setData('unit_organisasi_id', '');
+    };
+
+    const handleBidangChange = (bidangId: string) => {
+        setSelectedBidangId(bidangId);
+        form.setData('unit_organisasi_id', bidangId);
+    };
+
+    const handleSubBidangChange = (value: string) => {
+        form.setData('unit_organisasi_id', value === '__none__' ? selectedBidangId : value);
+    };
 
     const toggleRole = (role: string) => {
         const current = form.data.roles;
@@ -301,37 +387,85 @@ function PenggunaFormDialog({
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="unit_organisasi_id">
-                                Unit Organisasi
-                            </Label>
-                            <Select
-                                value={form.data.unit_organisasi_id}
-                                onValueChange={(v) =>
-                                    form.setData('unit_organisasi_id', v)
-                                }
-                            >
-                                <SelectTrigger
-                                    id="unit_organisasi_id"
-                                    className="w-full"
-                                >
-                                    <SelectValue placeholder="Pilih unit" />
+                        <div className="space-y-2 sm:col-span-2">
+                            <Label>Kategori Unit</Label>
+                            <Select value={kategori} onValueChange={handleKategoriChange}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Pilih kategori" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {unitOrganisasis.map((u) => (
-                                        <SelectItem
-                                            key={u.id}
-                                            value={String(u.id)}
-                                        >
-                                            {u.nama}
-                                        </SelectItem>
-                                    ))}
+                                    <SelectItem value="bidang">Bidang</SelectItem>
+                                    <SelectItem value="upt">UPT</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError
-                                message={form.errors.unit_organisasi_id}
-                            />
                         </div>
+
+                        {kategori === 'bidang' && (
+                            <div className="space-y-2">
+                                <Label>Bidang</Label>
+                                <Select value={selectedBidangId} onValueChange={handleBidangChange}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Pilih bidang" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {bidangList.map((b) => (
+                                            <SelectItem key={b.id} value={String(b.id)}>
+                                                {b.nama}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {kategori === 'bidang' && selectedBidangId && (
+                            <div className="space-y-2">
+                                <Label>Sub Bidang</Label>
+                                <Select
+                                    value={
+                                        form.data.unit_organisasi_id === selectedBidangId
+                                            ? '__none__'
+                                            : form.data.unit_organisasi_id
+                                    }
+                                    onValueChange={handleSubBidangChange}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Pilih sub bidang" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="__none__">Tidak ada (Kepala Bidang)</SelectItem>
+                                        {subBidangList.map((s) => (
+                                            <SelectItem key={s.id} value={String(s.id)}>
+                                                {s.nama}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {kategori === 'upt' && (
+                            <div className="space-y-2">
+                                <Label>UPT</Label>
+                                <Select
+                                    value={form.data.unit_organisasi_id}
+                                    onValueChange={(v) => form.setData('unit_organisasi_id', v)}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Pilih UPT" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {uptList.map((u) => (
+                                            <SelectItem key={u.id} value={String(u.id)}>
+                                                {u.nama}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        <InputError message={form.errors.unit_organisasi_id} />
 
                         <div className="space-y-2">
                             <Label htmlFor="jabatan_id">Jabatan</Label>
@@ -371,11 +505,10 @@ function PenggunaFormDialog({
                                         key={role}
                                         type="button"
                                         onClick={() => toggleRole(role)}
-                                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                                            form.data.roles.includes(role)
-                                                ? 'border-primary bg-primary text-primary-foreground'
-                                                : 'border-border bg-background text-muted-foreground hover:border-primary/50'
-                                        }`}
+                                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${form.data.roles.includes(role)
+                                            ? 'border-primary bg-primary text-primary-foreground'
+                                            : 'border-border bg-background text-muted-foreground hover:border-primary/50'
+                                            }`}
                                     >
                                         {role}
                                     </button>
@@ -430,10 +563,18 @@ function DetailDialog({
                         {pengguna.nip && (
                             <DetailRow label="NIP" value={pengguna.nip} mono />
                         )}
-                        <DetailRow
-                            label="Unit Organisasi"
-                            value={pengguna.unit_organisasi || '-'}
-                        />
+                        {pengguna.unit_organisasi?.upt ? (
+                            <DetailRow label="UPT" value={pengguna.unit_organisasi.upt} />
+                        ) : pengguna.unit_organisasi?.sub_bidang ? (
+                            <>
+                                <DetailRow label="Bidang" value={pengguna.unit_organisasi.bidang || '-'} />
+                                <DetailRow label="Sub Bidang" value={pengguna.unit_organisasi.sub_bidang} />
+                            </>
+                        ) : pengguna.unit_organisasi?.bidang ? (
+                            <DetailRow label="Bidang" value={pengguna.unit_organisasi.bidang} />
+                        ) : (
+                            <DetailRow label="Unit Organisasi" value="-" />
+                        )}
                         <DetailRow
                             label="Jabatan"
                             value={pengguna.jabatan || '-'}
@@ -669,25 +810,25 @@ export default function PenggunaIndex({
                         ) : (
                             <>
                                 <div className="overflow-hidden rounded-md border border-border/60">
-                                    <Table>
+                                    <Table className="table-fixed">
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="font-semibold">
+                                                <TableHead className="w-[160px] font-semibold">
                                                     Nama
                                                 </TableHead>
-                                                <TableHead className="font-semibold">
+                                                <TableHead className="w-[180px] font-semibold">
                                                     Email
                                                 </TableHead>
-                                                <TableHead className="font-semibold">
+                                                <TableHead className="w-[140px] font-semibold">
                                                     Role
                                                 </TableHead>
-                                                <TableHead className="font-semibold">
+                                                <TableHead className="w-[200px] font-semibold">
                                                     Unit
                                                 </TableHead>
-                                                <TableHead className="w-[110px] font-semibold">
+                                                <TableHead className="w-[90px] font-semibold">
                                                     Status
                                                 </TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">
+                                                <TableHead className="w-[60px] text-right font-semibold">
                                                     Aksi
                                                 </TableHead>
                                             </TableRow>
@@ -698,40 +839,33 @@ export default function PenggunaIndex({
                                                     key={pengguna.id}
                                                     className="transition-colors hover:bg-muted/30"
                                                 >
-                                                    <TableCell className="font-medium">
+                                                    <TableCell className="truncate font-medium" title={pengguna.name}>
                                                         {pengguna.name}
                                                     </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
+                                                    <TableCell className="truncate text-sm text-muted-foreground" title={pengguna.email}>
                                                         {pengguna.email}
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex flex-wrap gap-1">
-                                                            {pengguna.roles
-                                                                .length ===
-                                                            0 ? (
+                                                            {pengguna.roles.length === 0 ? (
                                                                 <span className="text-xs text-muted-foreground">
                                                                     —
                                                                 </span>
                                                             ) : (
-                                                                pengguna.roles.map(
-                                                                    (r) => (
-                                                                        <Badge
-                                                                            key={
-                                                                                r
-                                                                            }
-                                                                            variant="outline"
-                                                                            className="text-xs"
-                                                                        >
-                                                                            {r}
-                                                                        </Badge>
-                                                                    ),
-                                                                )
+                                                                pengguna.roles.map((r) => (
+                                                                    <Badge
+                                                                        key={r}
+                                                                        variant="outline"
+                                                                        className="text-xs"
+                                                                    >
+                                                                        {r}
+                                                                    </Badge>
+                                                                ))
                                                             )}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="text-sm text-muted-foreground">
-                                                        {pengguna.unit_organisasi ||
-                                                            '—'}
+                                                    <TableCell className="overflow-hidden text-sm">
+                                                        {renderUnitOrganisasi(pengguna.unit_organisasi)}
                                                     </TableCell>
                                                     <TableCell>
                                                         <StatusBadge

@@ -32,9 +32,13 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { index, show } from '@/routes/arsip';
+import type { UnitOrganisasiOption } from '@/components/unit-organisasi-select';
+import { index } from '@/routes/arsip';
+import { index as kelolaArsipIndex } from '@/routes/kelola-arsip';
 import type { MasterItem } from './create-dialog';
 import { ArsipCreateDialog } from './create-dialog';
+import { ArsipDetailDialog } from './detail-dialog';
+import type { DetailArsip } from './detail-dialog';
 import { ArsipEditDialog } from './edit-dialog';
 
 type DokumenArsip = {
@@ -94,7 +98,7 @@ type PaginatedArsips = {
 type IndexProps = {
     arsips: PaginatedArsips;
     klasifikasis?: MasterItem[];
-    unitOrganisasis?: MasterItem[];
+    unitOrganisasis?: UnitOrganisasiOption[];
     statusArsips?: MasterItem[];
     jenisArsips?: MasterItem[];
     sifatArsips?: MasterItem[];
@@ -146,6 +150,11 @@ export default function Index({
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingArsip, setEditingArsip] = useState<Arsip | null>(null);
 
+    const [detailArsip, setDetailArsip] = useState<DetailArsip | null>(null);
+    const [detailHistory, setDetailHistory] = useState([]);
+    const [detailTransitions, setDetailTransitions] = useState([]);
+    const [loadingDetailId, setLoadingDetailId] = useState<number | null>(null);
+
     // Handle filter/search trigger
     const updateFilters = (
         newParams: Record<string, string | null | undefined>,
@@ -191,6 +200,22 @@ export default function Index({
         }
     };
 
+    const openDetail = async (id: number) => {
+        setLoadingDetailId(id);
+
+        try {
+            const res = await fetch(`/arsip/${id}/detail-json`, {
+                headers: { Accept: 'application/json' },
+            });
+            const data = await res.json();
+            setDetailArsip(data.arsip);
+            setDetailHistory(data.workflowHistory);
+            setDetailTransitions(data.allowedTransitions);
+        } finally {
+            setLoadingDetailId(null);
+        }
+    };
+
     const hasFilters =
         filters.status_arsip_id ||
         filters.unit_organisasi_id ||
@@ -223,12 +248,11 @@ export default function Index({
                     ]}
                     actions={
                         <Can permission="arsip.create">
-                            <Button
-                                size="sm"
-                                onClick={() => setIsCreateOpen(true)}
-                            >
-                                <Plus className="mr-2 h-4 w-4" />
-                                Tambah Arsip
+                            <Button size="sm" asChild>
+                                <Link href={kelolaArsipIndex.url()}>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Input Arsip Baru
+                                </Link>
                             </Button>
                         </Can>
                     }
@@ -524,19 +548,12 @@ export default function Index({
                                                                 className="w-40"
                                                             >
                                                                 <DropdownMenuItem
-                                                                    asChild
+                                                                    disabled={loadingDetailId === arsip.id}
+                                                                    onClick={() => openDetail(arsip.id)}
+                                                                    className="flex cursor-pointer items-center gap-2"
                                                                 >
-                                                                    <Link
-                                                                        href={show(
-                                                                            {
-                                                                                arsip: arsip.id,
-                                                                            },
-                                                                        )}
-                                                                        className="flex cursor-pointer items-center gap-2"
-                                                                    >
-                                                                        <Eye className="h-4 w-4" />
-                                                                        Detail
-                                                                    </Link>
+                                                                    <Eye className="h-4 w-4" />
+                                                                    Detail
                                                                 </DropdownMenuItem>
                                                                 <Can permission="arsip.update">
                                                                     <DropdownMenuItem
@@ -648,6 +665,25 @@ export default function Index({
                         sifatArsips={sifatArsips}
                         tingkatPerkembanganArsips={tingkatPerkembanganArsips}
                         lokasiArsips={lokasiArsips}
+                    />
+                )}
+
+                {detailArsip && (
+                    <ArsipDetailDialog
+                        open={!!detailArsip}
+                        onClose={() => setDetailArsip(null)}
+                        arsip={detailArsip}
+                        workflowHistory={detailHistory}
+                        allowedTransitions={detailTransitions}
+                        onEdit={() => {
+                            setDetailArsip(null);
+
+                            const found = arsips.data.find((a) => a.id === detailArsip.id);
+
+                            if (found) {
+                                setEditingArsip(found);
+                            }
+                        }}
                     />
                 )}
             </PageContainer>

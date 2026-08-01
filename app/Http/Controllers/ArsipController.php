@@ -51,7 +51,25 @@ class ArsipController extends Controller
     {
         Gate::authorize('viewAny', Arsip::class);
 
+        /** @var User $user */
+        $user = $request->user();
+
         $query = $this->searchService->advancedSearch($request->all());
+
+        // Hanya arsip berstatus 'active' ke atas (bukan lagi draft/review/revisi/approved)
+        // yang boleh muncul di Repositori Arsip.
+        $finalStatuses = [
+            WorkflowStatus::Active->value,
+            WorkflowStatus::Retention->value,
+            WorkflowStatus::RecordCenter->value,
+            WorkflowStatus::Destruction->value,
+        ];
+        $query->whereIn('workflow_status', $finalStatuses);
+
+        // Operator Unit Pengolah hanya melihat arsip dari unitnya sendiri.
+        if ($user->hasRole('Operator Unit Pengolah')) {
+            $query->where('unit_organisasi_id', $user->unit_organisasi_id);
+        }
 
         $arsips = $query
             ->orderBy('tanggal_arsip', 'desc')
@@ -59,24 +77,16 @@ class ArsipController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Master lists for filters & create dialog
-        $klasifikasis = KlasifikasiArsip::active()->get(['id', 'kode', 'nama']);
-        $unitOrganisasis = UnitOrganisasi::active()->get(['id', 'kode', 'nama']);
+        // Master lists for filters
+        $klasifikasis = KlasifikasiArsip::with('retensiArsip')->active()->get(['id', 'kode', 'nama', 'retensi_arsip_id']);
+        $unitOrganisasis = UnitOrganisasi::active()->get(['id', 'kode', 'nama', 'tipe', 'parent_id']);
         $statusArsips = StatusArsip::active()->get(['id', 'kode', 'nama']);
-        $jenisArsips = JenisArsip::active()->get(['id', 'kode', 'nama']);
-        $sifatArsips = SifatArsip::active()->get(['id', 'kode', 'nama']);
-        $tingkatPerkembanganArsips = TingkatPerkembanganArsip::active()->get(['id', 'kode', 'nama']);
-        $lokasiArsips = LokasiArsip::active()->get(['id', 'kode', 'nama']);
 
         return Inertia::render('arsip/index', [
             'arsips' => $arsips,
             'klasifikasis' => $klasifikasis,
             'unitOrganisasis' => $unitOrganisasis,
             'statusArsips' => $statusArsips,
-            'jenisArsips' => $jenisArsips,
-            'sifatArsips' => $sifatArsips,
-            'tingkatPerkembanganArsips' => $tingkatPerkembanganArsips,
-            'lokasiArsips' => $lokasiArsips,
             'filters' => $request->only(['search', 'status_arsip_id', 'unit_organisasi_id', 'klasifikasi_arsip_id', 'tahun']),
         ]);
     }
@@ -89,13 +99,16 @@ class ArsipController extends Controller
         Gate::authorize('create', Arsip::class);
 
         return Inertia::render('arsip/create', [
-            'klasifikasis' => KlasifikasiArsip::active()->get(['id', 'kode', 'nama']),
+            'klasifikasis' => KlasifikasiArsip::with('retensiArsip')->active()->get(['id', 'kode', 'nama', 'retensi_arsip_id']),
             'jenisArsips' => JenisArsip::active()->get(['id', 'kode', 'nama']),
             'sifatArsips' => SifatArsip::active()->get(['id', 'kode', 'nama']),
             'tingkatPerkembanganArsips' => TingkatPerkembanganArsip::active()->get(['id', 'kode', 'nama']),
-            'unitOrganisasis' => UnitOrganisasi::active()->get(['id', 'kode', 'nama']),
+            'unitOrganisasis' => UnitOrganisasi::active()->get(['id', 'kode', 'nama', 'tipe', 'parent_id']),
             'lokasiArsips' => LokasiArsip::active()->get(['id', 'kode', 'nama']),
             'statusArsips' => StatusArsip::active()->get(['id', 'kode', 'nama']),
+            'mediaArsips' => \App\Models\MediaArsip::active()->get(['id', 'kode', 'nama']),
+            'kondisiArsips' => \App\Models\KondisiArsip::active()->get(['id', 'kode', 'nama']),
+            'tingkatAksesArsips' => \App\Models\TingkatAksesArsip::active()->get(['id', 'kode', 'nama']),
         ]);
     }
 
@@ -108,6 +121,7 @@ class ArsipController extends Controller
 
         $validated = $request->validated();
         $validated['created_by'] = auth()->id();
+        $validated['workflow_status'] = WorkflowStatus::Review;
 
         $arsip = Arsip::create($validated);
 
@@ -152,17 +166,17 @@ class ArsipController extends Controller
             NotificationType::ArsipBaru,
             'Arsip Berhasil Dibuat',
             "Arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berhasil disimpan.",
-            route('arsip.show', $arsip),
+            route('arsip.index'),
         );
 
-        return redirect()->route('arsip.index')
+        return redirect()->back()
             ->with('success', 'Arsip berhasil disimpan.');
     }
 
     /**
-     * Display the specified resource.
+     * Return arsip detail as JSON for dialog-based viewing.
      */
-    public function show(Arsip $arsip): Response
+    public function detailJson(Arsip $arsip): \Illuminate\Http\JsonResponse
     {
         Gate::authorize('view', $arsip);
 
@@ -186,7 +200,7 @@ class ArsipController extends Controller
         $workflowHistory = $this->workflowService->history($arsip);
         $allowedTransitions = $this->workflowService->allowedTransitions($arsip);
 
-        return Inertia::render('arsip/show', [
+        return response()->json([
             'arsip' => $this->formatArsipForShow($arsip),
             'workflowHistory' => $workflowHistory
                 ->map(fn (ArsipWorkflowHistory $history): array => $this->formatWorkflowHistoryForShow($history))
@@ -206,13 +220,16 @@ class ArsipController extends Controller
 
         return Inertia::render('arsip/edit', [
             'arsip' => $arsip,
-            'klasifikasis' => KlasifikasiArsip::active()->get(['id', 'kode', 'nama']),
+            'klasifikasis' => KlasifikasiArsip::with('retensiArsip')->active()->get(['id', 'kode', 'nama', 'retensi_arsip_id']),
             'jenisArsips' => JenisArsip::active()->get(['id', 'kode', 'nama']),
             'sifatArsips' => SifatArsip::active()->get(['id', 'kode', 'nama']),
             'tingkatPerkembanganArsips' => TingkatPerkembanganArsip::active()->get(['id', 'kode', 'nama']),
-            'unitOrganisasis' => UnitOrganisasi::active()->get(['id', 'kode', 'nama']),
+            'unitOrganisasis' => UnitOrganisasi::active()->get(['id', 'kode', 'nama', 'tipe', 'parent_id']),
             'lokasiArsips' => LokasiArsip::active()->get(['id', 'kode', 'nama']),
             'statusArsips' => StatusArsip::active()->get(['id', 'kode', 'nama']),
+            'mediaArsips' => \App\Models\MediaArsip::active()->get(['id', 'kode', 'nama']),
+            'kondisiArsips' => \App\Models\KondisiArsip::active()->get(['id', 'kode', 'nama']),
+            'tingkatAksesArsips' => \App\Models\TingkatAksesArsip::active()->get(['id', 'kode', 'nama']),
         ]);
     }
 
@@ -278,11 +295,11 @@ class ArsipController extends Controller
                 NotificationType::DokumenDiganti,
                 'Dokumen Berhasil Diganti',
                 "Dokumen arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berhasil diperbarui.",
-                route('arsip.show', $arsip),
+                route('arsip.index'),
             );
         }
 
-        return redirect()->route('arsip.show', $arsip)
+        return redirect()->back()
             ->with('success', 'Arsip berhasil diperbarui.');
     }
 
@@ -381,10 +398,10 @@ class ArsipController extends Controller
             NotificationType::DokumenDiunggah,
             'Dokumen Berhasil Diunggah',
             "Dokumen untuk arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berhasil diunggah.",
-            route('arsip.show', $arsip),
+            route('arsip.index'),
         );
 
-        return redirect()->route('arsip.show', $arsip)
+        return redirect()->back()
             ->with('success', 'Dokumen berhasil diunggah.');
     }
 
@@ -414,10 +431,10 @@ class ArsipController extends Controller
             NotificationType::DokumenDiganti,
             'Dokumen Berhasil Diganti',
             "Dokumen arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berhasil diperbarui.",
-            route('arsip.show', $arsip),
+            route('arsip.index'),
         );
 
-        return redirect()->route('arsip.show', $arsip)
+        return redirect()->back()
             ->with('success', 'Dokumen berhasil diperbarui.');
     }
 
@@ -435,7 +452,7 @@ class ArsipController extends Controller
             $arsip->dokumen->delete();
         }
 
-        return redirect()->route('arsip.show', $arsip)
+        return redirect()->back()
             ->with('success', 'Dokumen berhasil dihapus.');
     }
 
@@ -470,7 +487,7 @@ class ArsipController extends Controller
         if ($arsip->dokumen->ocr_status->isReprocessable()) {
             ProcessOcrJob::dispatch($arsip->dokumen);
 
-            return redirect()->route('arsip.show', $arsip)
+            return redirect()->back()
                 ->with('success', 'Proses ulang OCR berhasil diajukan.');
         }
 
@@ -510,8 +527,105 @@ class ArsipController extends Controller
             request: $request,
         );
 
-        return redirect()->route('arsip.show', $arsip)
+        return redirect()->back()
             ->with('success', "Tahap arsip berhasil dilanjutkan ke: {$targetStatus->label()}");
+    }
+
+    /**
+     * Verifikasi arsip oleh Arsiparis — menyetujui arsip yang berstatus review.
+     */
+    public function verify(Request $request, Arsip $arsip): RedirectResponse
+    {
+        Gate::authorize('workflow.approve');
+
+        if (! $this->workflowService->canTransition($arsip, WorkflowStatus::Approved)) {
+            return redirect()->back()->withErrors([
+                'workflow' => 'Arsip tidak dapat diverifikasi dari status saat ini.',
+            ]);
+        }
+
+        /** @var User $actor */
+        $actor = $request->user();
+
+        $arsip->update(['catatan_revisi' => null]);
+
+        $this->workflowService->transition(
+            arsip: $arsip,
+            target: WorkflowStatus::Approved,
+            keterangan: $request->string('keterangan')->value() ?: null,
+            actor: $actor,
+            request: $request,
+            action: 'verify',
+        );
+
+        return redirect()->back()
+            ->with('success', 'Arsip berhasil diverifikasi dan disetujui.');
+    }
+
+    /**
+     * Kembalikan arsip untuk direvisi oleh Operator Unit.
+     */
+    public function reject(Request $request, Arsip $arsip): RedirectResponse
+    {
+        Gate::authorize('workflow.reject');
+
+        $validated = $request->validate([
+            'catatan_revisi' => 'required|string|max:1000',
+        ]);
+
+        if (! $this->workflowService->canTransition($arsip, WorkflowStatus::Revisi)) {
+            return redirect()->back()->withErrors([
+                'workflow' => 'Arsip tidak dapat dikembalikan dari status saat ini.',
+            ]);
+        }
+
+        /** @var User $actor */
+        $actor = $request->user();
+
+        $arsip->update(['catatan_revisi' => $validated['catatan_revisi']]);
+
+        $this->workflowService->transition(
+            arsip: $arsip,
+            target: WorkflowStatus::Revisi,
+            keterangan: $validated['catatan_revisi'],
+            actor: $actor,
+            request: $request,
+            action: 'reject',
+        );
+
+        return redirect()->back()
+            ->with('success', 'Arsip dikembalikan untuk revisi.');
+    }
+
+    /**
+     * Ajukan ulang arsip yang sudah direvisi oleh Operator Unit.
+     */
+    public function resubmit(Request $request, Arsip $arsip): RedirectResponse
+    {
+        Gate::authorize('update', $arsip);
+
+        if (! $this->workflowService->canTransition($arsip, WorkflowStatus::Review)) {
+            return redirect()->back()->withErrors([
+                'workflow' => 'Arsip tidak dapat diajukan ulang dari status saat ini.',
+            ]);
+        }
+
+        /** @var User $actor */
+        $actor = $request->user();
+
+        $arsip->update(['catatan_revisi' => null]);
+
+        $this->workflowService->transition(
+            arsip: $arsip,
+            target: WorkflowStatus::Review,
+            keterangan: null,
+            actor: $actor,
+            request: $request,
+            action: 'resubmit',
+        );
+
+        return redirect()->back()
+            ->with('success', 'Arsip berhasil diajukan ulang untuk verifikasi.');
     }
 
     /**

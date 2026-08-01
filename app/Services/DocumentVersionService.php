@@ -86,7 +86,7 @@ class DocumentVersionService
                     NotificationType::VersiDokumenBaru,
                     'Versi Dokumen Baru Dibuat',
                     "Versi {$nextVersion} untuk dokumen \"{$namaFile}\" (arsip: {$arsip->nomor_arsip}) berhasil dibuat.",
-                    route('arsip.show', $arsip),
+                    route('arsip.index'),
                 );
             }
         }

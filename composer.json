@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "endroid/qr-code": "^6.1",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/chisel": "^0.1.0",
         "laravel/fortify": "^1.37.2",
@@ -17,6 +18,8 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "meilisearch/meilisearch-php": "^1.16",
+        "setasign/fpdi": "^2.6",
+        "setasign/fpdi-fpdf": "^2.3",
         "spatie/browsershot": "^5.4",
         "spatie/laravel-permission": "^8.3"
     },

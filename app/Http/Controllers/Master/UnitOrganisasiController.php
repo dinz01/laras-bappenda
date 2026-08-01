@@ -70,6 +70,10 @@ class UnitOrganisasiController extends Controller
         return Inertia::render('master/unit-organisasi/index', [
             'units' => $units,
             'stats' => $stats,
+            'parentOptions' => UnitOrganisasi::active()
+                ->where('tipe', 'bidang')
+                ->orderBy('nama')
+                ->get(['id', 'nama']),
             'filters' => [
                 'search' => $search,
             ],
@@ -81,7 +85,7 @@ class UnitOrganisasiController extends Controller
      */
     public function store(StoreUnitOrganisasiRequest $request): RedirectResponse
     {
-        UnitOrganisasi::create($this->validatedData($request));
+        UnitOrganisasi::create($this->storeData($request));
 
         return back()->with('success', 'Unit organisasi berhasil ditambahkan.');
     }
@@ -91,7 +95,7 @@ class UnitOrganisasiController extends Controller
      */
     public function update(StoreUnitOrganisasiRequest $request, UnitOrganisasi $unitOrganisasi): RedirectResponse
     {
-        $unitOrganisasi->update($this->validatedData($request));
+        $unitOrganisasi->update($this->updateData($request));
 
         return back()->with('success', 'Unit organisasi berhasil diperbarui.');
     }
@@ -212,7 +216,7 @@ class UnitOrganisasiController extends Controller
 
     /**
      * @param  array<int, int>  $depthMap
-     * @return array{id: int, kode: string, nama: string, singkatan: string|null, parent_id: int|null, status: string, depth: int, children_count: int, created_at: string|null, updated_at: string|null}
+     * @return array{id: int, kode: string, nama: string, singkatan: string|null, tipe: string, parent_id: int|null, status: string, depth: int, children_count: int, created_at: string|null, updated_at: string|null}
      */
     private function transformUnit(UnitOrganisasi $unit, array $depthMap): array
     {
@@ -221,6 +225,7 @@ class UnitOrganisasiController extends Controller
             'kode' => $unit->kode,
             'nama' => $unit->nama,
             'singkatan' => $unit->singkatan,
+            'tipe' => $unit->tipe,
             'parent_id' => $unit->parent_id,
             'status' => $unit->status,
             'depth' => $depthMap[$unit->id] ?? 0,
@@ -231,9 +236,40 @@ class UnitOrganisasiController extends Controller
     }
 
     /**
-     * @return array{kode: string, nama: string, singkatan: string|null, parent_id: int|null, status: string}
+     * Siapkan data untuk pembuatan unit baru.
+     * Tipe ditentukan otomatis: jika ada parent_id maka 'sub_bidang',
+     * jika tidak maka mengikuti input pengguna (bidang/upt).
+     *
+     * @return array{kode: string, nama: string, singkatan: string|null, tipe: string, parent_id: int|null, status: string}
      */
-    private function validatedData(StoreUnitOrganisasiRequest $request): array
+    private function storeData(StoreUnitOrganisasiRequest $request): array
+    {
+        $validated = $request->validated();
+
+        $parentId = isset($validated['parent_id']) && is_numeric($validated['parent_id'])
+            ? (int) $validated['parent_id']
+            : null;
+
+        $tipe = $parentId !== null ? 'sub_bidang' : (string) $validated['tipe'];
+
+        return [
+            'kode' => (string) $validated['kode'],
+            'nama' => (string) $validated['nama'],
+            'singkatan' => isset($validated['singkatan']) ? (string) $validated['singkatan'] : null,
+            'tipe' => $tipe,
+            'parent_id' => $parentId,
+            'status' => (string) $validated['status'],
+        ];
+    }
+
+    /**
+     * Siapkan data untuk update unit yang sudah ada.
+     * Tipe dan parent_id sengaja TIDAK disentuh — struktur hierarki
+     * hanya dapat ditentukan saat pembuatan unit, bukan lewat edit.
+     *
+     * @return array{kode: string, nama: string, singkatan: string|null, status: string}
+     */
+    private function updateData(StoreUnitOrganisasiRequest $request): array
     {
         $validated = $request->validated();
 
@@ -241,9 +277,6 @@ class UnitOrganisasiController extends Controller
             'kode' => (string) $validated['kode'],
             'nama' => (string) $validated['nama'],
             'singkatan' => isset($validated['singkatan']) ? (string) $validated['singkatan'] : null,
-            'parent_id' => isset($validated['parent_id']) && is_numeric($validated['parent_id'])
-                ? (int) $validated['parent_id']
-                : null,
             'status' => (string) $validated['status'],
         ];
     }

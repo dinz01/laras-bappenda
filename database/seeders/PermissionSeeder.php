@@ -41,6 +41,7 @@ class PermissionSeeder extends Seeder
             'workflow.verify',
             'workflow.approve',
             'workflow.reject',
+            'workflow.tte',
 
             // Master Data
             'master.view',
@@ -77,44 +78,65 @@ class PermissionSeeder extends Seeder
             ]);
         }
 
-        // Assign default permissions to roles
-        $adminRole = Role::whereIn('name', ['Administrator', 'Admin Arsip'])->first();
-        if ($adminRole) {
-            $adminRole->givePermissionTo(Permission::all());
-        }
+        // Assign permissions to roles
+        $superAdminRole = Role::firstOrCreate(['name' => 'Super Administrator', 'guard_name' => 'web']);
+        $superAdminRole->syncPermissions(Permission::all());
 
-        $petugasRole = Role::whereIn('name', ['Arsiparis', 'Petugas Arsip'])->first();
-        if ($petugasRole) {
-            $petugasRole->givePermissionTo([
-                'dashboard.view',
-                'profile.view',
-                'profile.update',
-                'arsip.view',
-                'arsip.create',
-                'arsip.update',
-                'dokumen.view',
-                'dokumen.upload',
-                'dokumen.download',
-                'workflow.view',
-                'master.view',
-            ]);
-        }
+        $arsiparisRole = Role::firstOrCreate(['name' => 'Arsiparis', 'guard_name' => 'web']);
+        $arsiparisRole->syncPermissions([
+            'dashboard.view',
+            'profile.view',
+            'profile.update',
+            'arsip.view',
+            'arsip.create',
+            'arsip.update',
+            'dokumen.view',
+            'dokumen.upload',
+            'dokumen.download',
+            'workflow.view',
+            'workflow.approve',
+            'workflow.reject',
+            'master.view',
+        ]);
 
-        $pimpinanRole = Role::whereIn('name', ['Pimpinan', 'Kepala Bidang', 'Kepala Sub Bidang'])->first();
-        if ($pimpinanRole) {
-            $pimpinanRole->givePermissionTo([
-                'dashboard.view',
-                'profile.view',
-                'profile.update',
-                'arsip.view',
-                'dokumen.view',
-                'dokumen.download',
-                'workflow.view',
-                'workflow.verify',
-                'workflow.approve',
-                'workflow.reject',
-                'auditlog.view',
-            ]);
-        }
+        $pimpinanRole = Role::firstOrCreate(['name' => 'Pimpinan', 'guard_name' => 'web']);
+        $pimpinanRole->syncPermissions([
+            'dashboard.view',
+            'profile.view',
+            'profile.update',
+            'arsip.view',
+            'dokumen.view',
+            'dokumen.download',
+            'workflow.view',
+            'workflow.verify',
+            'workflow.approve',
+            'workflow.reject',
+            'workflow.tte',
+            'auditlog.view',
+        ]);
+
+        $pegawaiRole = Role::firstOrCreate(['name' => 'Pegawai', 'guard_name' => 'web']);
+        $pegawaiRole->syncPermissions([
+            'dashboard.view',
+            'profile.view',
+            'profile.update',
+            'arsip.view',
+            'dokumen.view',
+            'dokumen.download',
+        ]);
+
+        $operatorUnitRole = Role::firstOrCreate(['name' => 'Operator Unit Pengolah', 'guard_name' => 'web']);
+        $operatorUnitRole->syncPermissions([
+            'dashboard.view',
+            'profile.view',
+            'profile.update',
+            'arsip.view',
+            'arsip.create',
+            'arsip.update',
+            'dokumen.view',
+            'dokumen.upload',
+            'dokumen.download',
+            'master.view',
+        ]);
     }
 }

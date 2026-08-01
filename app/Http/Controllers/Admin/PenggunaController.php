@@ -31,7 +31,7 @@ class PenggunaController extends Controller
         $roleFilter = $request->string('role')->trim()->toString();
 
         $users = User::query()
-            ->with(['unitOrganisasi', 'jabatan', 'roles'])
+            ->with(['unitOrganisasi.parent', 'jabatan', 'roles'])  
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($q) use ($search): void {
                     $q->where('name', 'like', "%{$search}%")
@@ -50,7 +50,8 @@ class PenggunaController extends Controller
                 'email' => $user->email,
                 'nip' => $user->nip,
                 'status' => $user->status,
-                'unit_organisasi' => $user->unitOrganisasi?->nama,
+                'unit_organisasi_id' => $user->unit_organisasi_id,
+                'unit_organisasi' => $user->unitOrganisasi?->toDisplayArray(),
                 'jabatan' => $user->jabatan?->nama,
                 'roles' => $user->roles->pluck('name')->all(),
                 'created_at' => AppDateTime::dateTime($user->created_at),
@@ -66,7 +67,10 @@ class PenggunaController extends Controller
         ];
 
         $roles = Role::orderBy('name')->pluck('name')->all();
-        $unitOrganisasis = UnitOrganisasi::active()->orderBy('nama')->get(['id', 'nama'])->toArray();
+        $unitOrganisasis = UnitOrganisasi::active()
+            ->orderBy('nama')
+            ->get(['id', 'nama', 'tipe', 'parent_id'])
+            ->toArray();
         $jabatans = Jabatan::active()->orderBy('nama')->get(['id', 'nama'])->toArray();
 
         return Inertia::render('admin/pengguna/index', [

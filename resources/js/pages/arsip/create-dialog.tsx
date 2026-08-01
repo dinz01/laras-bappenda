@@ -1,6 +1,7 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { FileText, Save, UploadCloud, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { UnitOrganisasiSelect } from '@/components/unit-organisasi-select';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +25,16 @@ export type MasterItem = {
     id: number;
     kode: string;
     nama: string;
+    retensi_arsip?: {
+        id: number;
+        kode: string;
+        nama: string;
+        retensi_aktif: number;
+        retensi_inaktif: number;
+    } | null;
 };
+
+import type { UnitOrganisasiOption } from '@/components/unit-organisasi-select';
 
 export type ArsipCreateDialogProps = {
     open: boolean;
@@ -33,9 +43,12 @@ export type ArsipCreateDialogProps = {
     jenisArsips?: MasterItem[];
     sifatArsips?: MasterItem[];
     tingkatPerkembanganArsips?: MasterItem[];
-    unitOrganisasis?: MasterItem[];
+    unitOrganisasis?: UnitOrganisasiOption[];
     lokasiArsips?: MasterItem[];
     statusArsips?: MasterItem[];
+    mediaArsips?: MasterItem[];
+    kondisiArsips?: MasterItem[];
+    tingkatAksesArsips?: MasterItem[];
 };
 
 export function ArsipCreateDialog({
@@ -48,6 +61,9 @@ export function ArsipCreateDialog({
     unitOrganisasis = [],
     lokasiArsips = [],
     statusArsips = [],
+    mediaArsips = [],
+    kondisiArsips = [],
+    tingkatAksesArsips = [],
 }: ArsipCreateDialogProps) {
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -56,14 +72,31 @@ export function ArsipCreateDialog({
         deskripsi: '',
         tanggal_arsip: '',
         klasifikasi_arsip_id: '',
+        retensi_arsip_id: '',
         jenis_arsip_id: '',
         sifat_arsip_id: '',
         tingkat_perkembangan_arsip_id: '',
         unit_organisasi_id: '',
         lokasi_arsip_id: '',
         status_arsip_id: '',
+        media_arsip_id: '',
+        kondisi_arsip_id: '',
+        tingkat_akses_arsip_id: '',
         file: null as File | null,
     });
+
+    const { auth } = usePage<{
+        auth: { user: { roles?: string[]; unit_organisasi_id?: number | null } | null };
+    }>().props;
+    const isOperatorUnit = auth.user?.roles?.includes('Operator Unit Pengolah') ?? false;
+    const operatorUnitId = auth.user?.unit_organisasi_id ?? null;
+
+    useEffect(() => {
+        if (isOperatorUnit && operatorUnitId && !data.unit_organisasi_id) {
+            setData('unit_organisasi_id', operatorUnitId.toString());
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOperatorUnit, operatorUnitId]);
 
     const [dragActive, setDragActive] = useState(false);
 
@@ -191,9 +224,16 @@ export function ArsipCreateDialog({
                             </Label>
                             <Select
                                 value={data.klasifikasi_arsip_id}
-                                onValueChange={(val) =>
-                                    setData('klasifikasi_arsip_id', val)
-                                }
+                                onValueChange={(val) => {
+                                    setData('klasifikasi_arsip_id', val);
+                                    const selected = klasifikasis.find(
+                                        (k) => k.id.toString() === val,
+                                    );
+                                    setData(
+                                        'retensi_arsip_id',
+                                        selected?.retensi_arsip?.id.toString() || '',
+                                    );
+                                }}
                             >
                                 <SelectTrigger
                                     id="klasifikasi_arsip_id"
@@ -213,6 +253,23 @@ export function ArsipCreateDialog({
                                 </SelectContent>
                             </Select>
                             <InputError message={errors.klasifikasi_arsip_id} />
+                            {(() => {
+                                const selected = klasifikasis.find(
+                                    (k) => k.id.toString() === data.klasifikasi_arsip_id,
+                                );
+                                if (!selected?.retensi_arsip) return null;
+                                return (
+                                    <p className="text-[10px] text-muted-foreground">
+                                        Retensi otomatis:{' '}
+                                        <span className="font-medium text-foreground">
+                                            {selected.retensi_arsip.retensi_aktif} thn aktif
+                                            {' + '}
+                                            {selected.retensi_arsip.retensi_inaktif} thn inaktif
+                                        </span>{' '}
+                                        ({selected.retensi_arsip.nama})
+                                    </p>
+                                );
+                            })()}
                         </div>
 
                         <div className="space-y-1.5">
@@ -243,33 +300,14 @@ export function ArsipCreateDialog({
                             <InputError message={errors.jenis_arsip_id} />
                         </div>
 
-                        <div className="space-y-1.5">
-                            <Label htmlFor="unit_organisasi_id">
-                                Unit Organisasi
-                            </Label>
-                            <Select
+                        <div className="space-y-1.5 sm:col-span-2">
+                            <UnitOrganisasiSelect
+                                units={unitOrganisasis}
                                 value={data.unit_organisasi_id}
-                                onValueChange={(val) =>
-                                    setData('unit_organisasi_id', val)
-                                }
-                            >
-                                <SelectTrigger
-                                    id="unit_organisasi_id"
-                                    className="border-border/60"
-                                >
-                                    <SelectValue placeholder="Pilih unit organisasi..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {unitOrganisasis.map((opt) => (
-                                        <SelectItem
-                                            key={opt.id}
-                                            value={opt.id.toString()}
-                                        >
-                                            {opt.nama}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                onChange={(val) => setData('unit_organisasi_id', val)}
+                                idPrefix="create"
+                                locked={isOperatorUnit}
+                            />
                             <InputError message={errors.unit_organisasi_id} />
                         </div>
 
@@ -304,7 +342,10 @@ export function ArsipCreateDialog({
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="sifat_arsip_id">Sifat Arsip</Label>
+                            <Label htmlFor="sifat_arsip_id">
+                                Sifat Arsip{' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
                             <Select
                                 value={data.sifat_arsip_id}
                                 onValueChange={(val) =>
@@ -329,6 +370,99 @@ export function ArsipCreateDialog({
                                 </SelectContent>
                             </Select>
                             <InputError message={errors.sifat_arsip_id} />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="media_arsip_id">
+                                Media Arsip{' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
+                            <Select
+                                value={data.media_arsip_id}
+                                onValueChange={(val) =>
+                                    setData('media_arsip_id', val)
+                                }
+                            >
+                                <SelectTrigger
+                                    id="media_arsip_id"
+                                    className="border-border/60"
+                                >
+                                    <SelectValue placeholder="Pilih media..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {mediaArsips.map((opt) => (
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id.toString()}
+                                        >
+                                            {opt.nama}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <InputError message={errors.media_arsip_id} />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="kondisi_arsip_id">
+                                Kondisi Arsip{' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
+                            <Select
+                                value={data.kondisi_arsip_id}
+                                onValueChange={(val) =>
+                                    setData('kondisi_arsip_id', val)
+                                }
+                            >
+                                <SelectTrigger
+                                    id="kondisi_arsip_id"
+                                    className="border-border/60"
+                                >
+                                    <SelectValue placeholder="Pilih kondisi..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {kondisiArsips.map((opt) => (
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id.toString()}
+                                        >
+                                            {opt.nama}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <InputError message={errors.kondisi_arsip_id} />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label htmlFor="tingkat_akses_arsip_id">
+                                Tingkat Akses{' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
+                            <Select
+                                value={data.tingkat_akses_arsip_id}
+                                onValueChange={(val) =>
+                                    setData('tingkat_akses_arsip_id', val)
+                                }
+                            >
+                                <SelectTrigger
+                                    id="tingkat_akses_arsip_id"
+                                    className="border-border/60"
+                                >
+                                    <SelectValue placeholder="Pilih tingkat akses..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {tingkatAksesArsips.map((opt) => (
+                                        <SelectItem
+                                            key={opt.id}
+                                            value={opt.id.toString()}
+                                        >
+                                            {opt.nama}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <InputError message={errors.tingkat_akses_arsip_id} />
                         </div>
 
                         <div className="space-y-1.5">

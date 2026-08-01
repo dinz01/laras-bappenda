@@ -42,7 +42,9 @@ class WorkflowService
     {
         return match ([$from->value, $to->value]) {
             [WorkflowStatus::Draft->value, WorkflowStatus::Review->value] => 'submit',
-            [WorkflowStatus::Review->value, WorkflowStatus::Approved->value] => 'approve',
+            [WorkflowStatus::Review->value, WorkflowStatus::Approved->value] => 'verify',
+            [WorkflowStatus::Review->value, WorkflowStatus::Revisi->value] => 'reject',
+            [WorkflowStatus::Revisi->value, WorkflowStatus::Review->value] => 'resubmit',
             [WorkflowStatus::Approved->value, WorkflowStatus::Active->value] => 'activate',
             [WorkflowStatus::Active->value, WorkflowStatus::Retention->value] => 'retention',
             [WorkflowStatus::Retention->value, WorkflowStatus::RecordCenter->value] => 'record_center',
@@ -106,7 +108,7 @@ class WorkflowService
             NotificationType::TahapBerubah,
             'Tahap Arsip Berubah',
             "Arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berpindah dari [{$statusLama->label()}] ke [{$target->label()}].",
-            route('arsip.show', $arsip),
+            route('arsip.index'),
         );
 
         return $history;

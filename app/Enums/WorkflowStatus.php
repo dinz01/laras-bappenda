@@ -8,6 +8,7 @@ enum WorkflowStatus: string
 {
     case Draft = 'draft';
     case Review = 'review';
+    case Revisi = 'revisi';
     case Approved = 'approved';
     case Active = 'active';
     case Retention = 'retention';
@@ -21,7 +22,8 @@ enum WorkflowStatus: string
     {
         return match ($this) {
             self::Draft => 'Draft',
-            self::Review => 'Review',
+            self::Review => 'Menunggu Verifikasi',
+            self::Revisi => 'Perlu Revisi',
             self::Approved => 'Disetujui',
             self::Active => 'Arsip Aktif',
             self::Retention => 'Retensi',
@@ -39,6 +41,7 @@ enum WorkflowStatus: string
         return match ($this) {
             self::Draft => 'secondary',
             self::Review => 'warning',
+            self::Revisi => 'danger',
             self::Approved => 'info',
             self::Active => 'success',
             self::Retention => 'warning',
@@ -56,7 +59,8 @@ enum WorkflowStatus: string
     {
         return match ($this) {
             self::Draft => [self::Review],
-            self::Review => [self::Approved],
+            self::Review => [self::Approved, self::Revisi],
+            self::Revisi => [self::Review],
             self::Approved => [self::Active],
             self::Active => [self::Retention],
             self::Retention => [self::RecordCenter],
