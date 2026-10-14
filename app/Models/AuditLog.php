@@ -37,7 +37,7 @@ class AuditLog extends Model
     protected $table = 'audit_logs';
 
     /**
-     * Atribut yang boleh diisi secara massal.
+     * Atribut yang boleh diisi.
      *
      * @var list<string>
      */

@@ -136,7 +136,7 @@ class AuditLogService
 
         $eventCategory = (string) ($filters['event_category'] ?? '');
 
-        if (in_array($eventCategory, ['arsip', 'dokumen', 'workflow', 'ocr'], true)) {
+        if (in_array($eventCategory, ['arsip', 'dokumen', 'workflow', 'pengguna', 'role', 'master', 'peminjaman'], true)) {
             $query->where('event', 'like', "{$eventCategory}.%");
         }
 
@@ -214,7 +214,10 @@ class AuditLogService
             'arsip' => 'Arsip',
             'dokumen' => 'Dokumen',
             'workflow' => 'Workflow',
-            'ocr' => 'OCR',
+            'pengguna' => 'Pengguna',
+            'role' => 'Role',
+            'master' => 'Master Data',
+            'peminjaman' => 'Peminjaman',
             default => 'Sistem',
         };
     }

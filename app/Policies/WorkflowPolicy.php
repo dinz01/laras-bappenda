@@ -14,7 +14,7 @@ class WorkflowPolicy
      */
     public function view(User $user): bool
     {
-        return $user->can('workflow.view');
+        return $user->can('verifikasi-arsip.view');
     }
 
     /**
@@ -22,7 +22,7 @@ class WorkflowPolicy
      */
     public function verify(User $user, ?Arsip $arsip = null): bool
     {
-        return $user->can('workflow.verify');
+        return $user->can('verifikasi-arsip.verify');
     }
 
     /**
@@ -30,7 +30,7 @@ class WorkflowPolicy
      */
     public function approve(User $user, ?Arsip $arsip = null): bool
     {
-        return $user->can('workflow.approve');
+        return $user->can('verifikasi-arsip.verify');
     }
 
     /**
@@ -38,6 +38,6 @@ class WorkflowPolicy
      */
     public function reject(User $user, ?Arsip $arsip = null): bool
     {
-        return $user->can('workflow.reject');
+        return $user->can('verifikasi-arsip.reject') || $user->can('verifikasi-arsip.verify');
     }
 }

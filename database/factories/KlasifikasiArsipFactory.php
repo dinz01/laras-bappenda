@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\KlasifikasiArsip;
-use App\Models\RetensiArsip;
+use App\Models\NasibAkhir;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -24,10 +24,13 @@ class KlasifikasiArsipFactory extends Factory
     public function definition(): array
     {
         return [
+            'parent_id' => null,
             'kode' => 'KA-'.str_pad((string) self::$sequence++, 5, '0', STR_PAD_LEFT),
             'nama' => fake()->sentence(3),
             'deskripsi' => fake()->paragraph(),
-            'retensi_arsip_id' => RetensiArsip::factory(),
+            'retensi_aktif' => fake()->numberBetween(1, 5),
+            'retensi_inaktif' => fake()->numberBetween(1, 10),
+            'nasib_akhir_id' => NasibAkhir::factory(),
             'status' => 'active',
         ];
     }

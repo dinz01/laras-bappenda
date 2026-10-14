@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import {
     FileText,
     Eye,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
@@ -18,6 +19,7 @@ import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
 import { RouteGuard } from '@/components/RouteGuard';
+import { DataTablePagination } from '@/components/Tables/data-table-pagination';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
@@ -53,7 +55,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { dashboard } from '@/routes';
 import {
     destroy,
     index,
@@ -165,6 +166,11 @@ function TingkatAksesArsipFormDialog({
             form.put(update({ tingkatAksesArsip: tingkatAksesArsip.id }).url, {
                 preserveScroll: true,
                 onSuccess: () => onOpenChange(false),
+                onError: () =>
+                    toast.error('Terjadi kesalahan saat memperbarui data.', {
+                        description:
+                            'Periksa kembali kolom yang ditandai merah.',
+                    }),
             });
 
             return;
@@ -176,6 +182,10 @@ function TingkatAksesArsipFormDialog({
                 form.reset();
                 onOpenChange(false);
             },
+            onError: () =>
+                toast.error('Terjadi kesalahan saat menyimpan data.', {
+                    description: 'Periksa kembali kolom yang ditandai merah.',
+                }),
         });
     };
 
@@ -193,19 +203,23 @@ function TingkatAksesArsipFormDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4">
+                <form onSubmit={submit} noValidate className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="kode">Kode</Label>
-                            <Input
-                                id="kode"
-                                value={form.data.kode}
-                                onChange={(event) =>
-                                    form.setData('kode', event.target.value)
-                                }
-                                placeholder="Contoh: TAA-001"
-                                maxLength={50}
-                            />
+                            <Label htmlFor="kode">Kode Tingkat Akses</Label>
+                            <div>
+                                <Input
+                                    id="kode"
+                                    value="[Otomatis dibuat oleh sistem]"
+                                    disabled
+                                    className="cursor-not-allowed border-border/60 bg-muted/50 text-muted-foreground"
+                                />
+                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                    {mode === 'edit'
+                                        ? 'Kode tingkat akses arsip bersifat tetap dan tidak dapat diubah.'
+                                        : 'Nomor unik akan digenerate otomatis saat disimpan.'}
+                                </p>
+                            </div>
                             <InputError message={form.errors.kode} />
                         </div>
 
@@ -379,7 +393,6 @@ export default function TingkatAksesArsipIndex({
         useState<TingkatAksesArsip | null>(null);
     const [deleteTingkatAksesArsip, setDeleteTingkatAksesArsip] =
         useState<TingkatAksesArsip | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
     const updateFilters = (
@@ -445,18 +458,18 @@ export default function TingkatAksesArsipIndex({
         }
 
         setDeleting(true);
-        setDeleteError(null);
 
         router.delete(
             destroy({ tingkatAksesArsip: deleteTingkatAksesArsip.id }).url,
             {
                 preserveScroll: true,
-                onSuccess: () => setDeleteTingkatAksesArsip(null),
-                onError: (errors) => {
-                    setDeleteError(
-                        errors.tingkat_akses_arsip ||
-                            'Tingkat akses arsip gagal dihapus.',
-                    );
+                onSuccess: () => {
+                    setDeleteTingkatAksesArsip(null);
+                },
+                onError: () => {
+                    toast.error('Gagal menghapus data.', {
+                        description: 'Terjadi kesalahan, silakan coba lagi.',
+                    });
                 },
                 onFinish: () => setDeleting(false),
             },
@@ -466,7 +479,7 @@ export default function TingkatAksesArsipIndex({
     const hasFilters = Boolean(filters.search);
 
     return (
-        <RouteGuard permission="master.view">
+        <RouteGuard permission="master-tingkat-akses-arsip.view">
             <Head title="Tingkat Akses Arsip" />
 
             <PageContainer>
@@ -474,9 +487,8 @@ export default function TingkatAksesArsipIndex({
                     title="Tingkat Akses Arsip"
                     description="Manajemen data level hak akses dokumen arsip."
                     breadcrumb={[
-                        { title: 'Dashboard', href: dashboard.url() },
-                        { title: 'Master Data', href: '#' },
-                        { title: 'Tingkat Akses Arsip', href: index.url() },
+                        { title: 'MASTER DATA' },
+                        { title: 'Tingkat Akses Arsip' },
                     ]}
                     actions={
                         <Can permission="master.create">
@@ -488,7 +500,7 @@ export default function TingkatAksesArsipIndex({
                     }
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <ContentCard title="Total Tingkat Akses">
                         <StatValue value={stats.total_tingkat_akses_arsip} />
                     </ContentCard>
@@ -497,9 +509,6 @@ export default function TingkatAksesArsipIndex({
                     </ContentCard>
                     <ContentCard title="Nonaktif">
                         <StatValue value={stats.nonaktif} />
-                    </ContentCard>
-                    <ContentCard title="Dibuat Bulan Ini">
-                        <StatValue value={stats.dibuat_bulan_ini} />
                     </ContentCard>
                 </div>
 
@@ -535,8 +544,8 @@ export default function TingkatAksesArsipIndex({
                             />
                         ) : (
                             <>
-                                <div className="overflow-hidden rounded-md border border-border/60">
-                                    <Table>
+                                <div className="overflow-x-auto rounded-md border border-border/60">
+                                    <Table className="min-w-[650px]">
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
                                                 <TableHead className="w-[130px] font-semibold">
@@ -647,9 +656,6 @@ export default function TingkatAksesArsipIndex({
                                                                         <DropdownMenuSeparator />
                                                                         <DropdownMenuItem
                                                                             onClick={() => {
-                                                                                setDeleteError(
-                                                                                    null,
-                                                                                );
                                                                                 setDeleteTingkatAksesArsip(
                                                                                     tingkatAksesArsip,
                                                                                 );
@@ -670,62 +676,10 @@ export default function TingkatAksesArsipIndex({
                                     </Table>
                                 </div>
 
-                                <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                                    <span>
-                                        Menampilkan{' '}
-                                        {tingkatAksesArsips.from || 0} hingga{' '}
-                                        {tingkatAksesArsips.to || 0} dari{' '}
-                                        {tingkatAksesArsips.total} akses
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={
-                                                !tingkatAksesArsips.prev_page_url
-                                            }
-                                            asChild={Boolean(
-                                                tingkatAksesArsips.prev_page_url,
-                                            )}
-                                        >
-                                            {tingkatAksesArsips.prev_page_url ? (
-                                                <Link
-                                                    href={
-                                                        tingkatAksesArsips.prev_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Sebelumnya
-                                                </Link>
-                                            ) : (
-                                                <span>Sebelumnya</span>
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={
-                                                !tingkatAksesArsips.next_page_url
-                                            }
-                                            asChild={Boolean(
-                                                tingkatAksesArsips.next_page_url,
-                                            )}
-                                        >
-                                            {tingkatAksesArsips.next_page_url ? (
-                                                <Link
-                                                    href={
-                                                        tingkatAksesArsips.next_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Selanjutnya
-                                                </Link>
-                                            ) : (
-                                                <span>Selanjutnya</span>
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
+                                <DataTablePagination
+                                    data={tingkatAksesArsips}
+                                    itemName="tingkat akses"
+                                />
                             </>
                         )}
                     </div>
@@ -747,15 +701,11 @@ export default function TingkatAksesArsipIndex({
             <ConfirmDialog
                 isOpen={deleteTingkatAksesArsip !== null}
                 onClose={() => {
-                    setDeleteError(null);
                     setDeleteTingkatAksesArsip(null);
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Tingkat Akses Arsip"
-                description={
-                    deleteError ||
-                    `Hapus tingkat akses arsip "${deleteTingkatAksesArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
-                }
+                description={`Hapus tingkat akses arsip "${deleteTingkatAksesArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -774,7 +724,7 @@ function StatValue({ value }: { value: number }) {
 
 TingkatAksesArsipIndex.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'MASTER DATA' },
         { title: 'Tingkat Akses Arsip', href: '/master/tingkat-akses-arsip' },
     ],
 };

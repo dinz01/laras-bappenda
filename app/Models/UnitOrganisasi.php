@@ -46,7 +46,7 @@ class UnitOrganisasi extends Model
     protected $table = 'unit_organisasi';
 
     /**
-     * Atribut yang boleh diisi secara massal.
+     * Atribut yang boleh diisi.
      *
      * @var list<string>
      */
@@ -150,6 +150,90 @@ class UnitOrganisasi extends Model
     public function scopeRoot(Builder $query): Builder
     {
         return $query->whereNull('parent_id');
+    }
+
+    /**
+     * Generate unique sequential kode unit organisasi berdasarkan tipe.
+     * Prefix: BID- (bidang), SUB- (sub_bidang), UPT- (upt).
+     */
+    public static function generateKode(string $tipe): string
+    {
+        $prefix = match ($tipe) {
+            'bidang' => 'BID-',
+            'sub_bidang' => 'SUB-',
+            'upt' => 'UPT-',
+            default => 'UN-',
+        };
+
+        $lastUnit = static::where('kode', 'like', "{$prefix}%")
+            ->orderByDesc('id')
+            ->first();
+
+        $nextNumber = 1;
+        if ($lastUnit && preg_match('/^'.preg_quote($prefix, '/').'(\d+)$/', $lastUnit->kode, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        $kode = $prefix.str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+
+        while (static::where('kode', $kode)->exists()) {
+            $nextNumber++;
+            $kode = $prefix.str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+        }
+
+        return $kode;
+    }
+
+    /**
+     * Dapatkan ID unit organisasi beserta seluruh ID turunannya secara rekursif.
+     *
+     * @return list<int>
+     */
+    public static function getSelfAndDescendantIds(int $id, bool $includeSelf = true): array
+    {
+        $items = static::query()->get(['id', 'parent_id']);
+
+        $childrenMap = [];
+        foreach ($items as $item) {
+            if ($item->parent_id !== null) {
+                $childrenMap[(int) $item->parent_id][] = (int) $item->id;
+            }
+        }
+
+        $visited = [];
+        $result = [];
+
+        if ($includeSelf) {
+            $result[] = $id;
+            $visited[$id] = true;
+        }
+
+        $queue = [$id];
+
+        while (! empty($queue)) {
+            $currentId = array_shift($queue);
+            if (isset($childrenMap[$currentId])) {
+                foreach ($childrenMap[$currentId] as $childId) {
+                    if (! isset($visited[$childId])) {
+                        $visited[$childId] = true;
+                        $result[] = $childId;
+                        $queue[] = $childId;
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Dapatkan semua ID unit organisasi turunan (termasuk diri sendiri jika $includeSelf = true).
+     *
+     * @return list<int>
+     */
+    public function getAllDescendantIds(bool $includeSelf = true): array
+    {
+        return static::getSelfAndDescendantIds($this->id, $includeSelf);
     }
 
     /**

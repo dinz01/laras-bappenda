@@ -1,10 +1,11 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Key, X } from 'lucide-react';
 import { useState } from 'react';
 import { ContentCard } from '@/components/Cards/content-card';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
 import { RouteGuard } from '@/components/RouteGuard';
+import { DataTablePagination } from '@/components/Tables/data-table-pagination';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +18,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { dashboard } from '@/routes';
 import { index } from '@/routes/admin/permission';
 
 type Permission = {
@@ -69,8 +69,39 @@ function StatValue({ value }: { value: number }) {
     );
 }
 
+const moduleLabels: Record<string, string> = {
+    dashboard: 'Dashboard',
+    profile: 'Profil Pengguna',
+    'repositori-arsip': 'Repositori Arsip',
+    'arsip-inaktif': 'Arsip Inaktif',
+    'nasib-akhir-arsip': 'Nasib Akhir Arsip',
+    'kelola-arsip': 'Kelola Arsip',
+    'verifikasi-arsip': 'Verifikasi Arsip',
+    'kelola-tte': 'Kelola TTE',
+    peminjaman: 'Peminjaman Arsip',
+    'master-unit-organisasi': 'Master: Unit Organisasi',
+    'master-jabatan': 'Master: Jabatan',
+    'master-klasifikasi-arsip': 'Master: Klasifikasi Arsip',
+    'master-lokasi-arsip': 'Master: Lokasi Arsip',
+    'master-jenis-arsip': 'Master: Jenis Arsip',
+    'master-kategori-arsip': 'Master: Kategori Arsip',
+    'master-sifat-arsip': 'Master: Sifat Arsip',
+    'master-tingkat-akses-arsip': 'Master: Tingkat Akses Arsip',
+    'master-tingkat-perkembangan-arsip': 'Master: Tingkat Perkembangan Arsip',
+    'master-kondisi-arsip': 'Master: Kondisi Arsip',
+    'master-nasib-akhir': 'Master: Nasib Akhir',
+    'admin-pengguna': 'Administrasi: Pengguna',
+    'admin-role': 'Administrasi: Role',
+    'admin-permission': 'Administrasi: Permission',
+    'admin-audit-log': 'Administrasi: Log Audit',
+    'admin-recycle-bin': 'Administrasi: Riwayat Arsip Dihapus',
+    'dokumen-arsip': 'Akses Dokumen: Unduh Berkas Arsip',
+};
+
 function getGroup(name: string) {
-    return name.split('.')[0] ?? 'other';
+    const raw = name.split('.')[0] ?? 'other';
+
+    return moduleLabels[raw] ?? raw.replace(/-/g, ' ');
 }
 
 export default function PermissionIndex({
@@ -120,7 +151,7 @@ export default function PermissionIndex({
     const hasFilters = Boolean(filters.search);
 
     return (
-        <RouteGuard permission="permission.view">
+        <RouteGuard permission="admin-permission.view">
             <Head title="Permission" />
 
             <PageContainer>
@@ -128,8 +159,7 @@ export default function PermissionIndex({
                     title="Permission"
                     description="Manajemen izin akses terperinci untuk setiap fitur sistem."
                     breadcrumb={[
-                        { title: 'Dashboard', href: dashboard.url() },
-                        { title: 'Administrasi', href: '#' },
+                        { title: 'ADMINISTRASI' },
                         { title: 'Permission', href: index.url() },
                     ]}
                 />
@@ -140,9 +170,6 @@ export default function PermissionIndex({
                     </ContentCard>
                     <ContentCard title="Total Grup">
                         <StatValue value={stats.total_groups} />
-                    </ContentCard>
-                    <ContentCard title="Ditambahkan Bulan Ini">
-                        <StatValue value={stats.bulan_ini} />
                     </ContentCard>
                 </div>
 
@@ -178,8 +205,8 @@ export default function PermissionIndex({
                             />
                         ) : (
                             <>
-                                <div className="overflow-hidden rounded-md border border-border/60">
-                                    <Table>
+                                <div className="overflow-x-auto rounded-md border border-border/60">
+                                    <Table className="min-w-[650px]">
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
                                                 <TableHead className="font-semibold">
@@ -189,10 +216,10 @@ export default function PermissionIndex({
                                                     Grup
                                                 </TableHead>
                                                 <TableHead className="w-[110px] font-semibold">
-                                                    Digunakan Role
+                                                    Role
                                                 </TableHead>
                                                 <TableHead className="w-[110px] font-semibold">
-                                                    Digunakan User
+                                                    Pengguna
                                                 </TableHead>
                                                 <TableHead className="w-[170px] font-semibold">
                                                     Dibuat Pada
@@ -237,61 +264,10 @@ export default function PermissionIndex({
                                     </Table>
                                 </div>
 
-                                <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                                    <span>
-                                        Menampilkan {permissions.from || 0}{' '}
-                                        hingga {permissions.to || 0} dari{' '}
-                                        {permissions.total} permission
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={
-                                                !permissions.prev_page_url
-                                            }
-                                            asChild={Boolean(
-                                                permissions.prev_page_url,
-                                            )}
-                                        >
-                                            {permissions.prev_page_url ? (
-                                                <Link
-                                                    href={
-                                                        permissions.prev_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Sebelumnya
-                                                </Link>
-                                            ) : (
-                                                <span>Sebelumnya</span>
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={
-                                                !permissions.next_page_url
-                                            }
-                                            asChild={Boolean(
-                                                permissions.next_page_url,
-                                            )}
-                                        >
-                                            {permissions.next_page_url ? (
-                                                <Link
-                                                    href={
-                                                        permissions.next_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Selanjutnya
-                                                </Link>
-                                            ) : (
-                                                <span>Selanjutnya</span>
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
+                                <DataTablePagination
+                                    data={permissions}
+                                    itemName="permission"
+                                />
                             </>
                         )}
                     </div>

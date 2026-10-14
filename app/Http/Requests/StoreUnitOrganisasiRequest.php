@@ -32,12 +32,6 @@ class StoreUnitOrganisasiRequest extends FormRequest
         $isEditing = $unitOrganisasi instanceof UnitOrganisasi;
 
         $rules = [
-            'kode' => [
-                'required',
-                'string',
-                'max:30',
-                Rule::unique('unit_organisasi', 'kode')->ignore($unitOrganisasiId),
-            ],
             'nama' => [
                 'required',
                 'string',
@@ -48,7 +42,20 @@ class StoreUnitOrganisasiRequest extends FormRequest
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
 
-        if (! $isEditing) {
+        if ($isEditing) {
+            $rules['kode'] = [
+                'nullable',
+                'string',
+                'max:30',
+                Rule::unique('unit_organisasi', 'kode')->ignore($unitOrganisasiId),
+            ];
+        } else {
+            $rules['kode'] = [
+                'nullable',
+                'string',
+                'max:30',
+                Rule::unique('unit_organisasi', 'kode'),
+            ];
             $rules['parent_id'] = ['nullable', 'integer', 'exists:unit_organisasi,id'];
 
             if ($this->filled('parent_id')) {

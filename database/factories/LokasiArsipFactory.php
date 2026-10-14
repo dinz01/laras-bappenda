@@ -13,7 +13,7 @@ class LokasiArsipFactory extends Factory
     /**
      * Counter untuk kode sekuensial.
      */
-    protected static int $sequence = 1000;
+    protected static int $sequence = 1;
 
     /**
      * Define the model's default state.
@@ -29,7 +29,7 @@ class LokasiArsipFactory extends Factory
         $rakNo = str_pad((string) fake()->numberBetween(1, 20), 2, '0', STR_PAD_LEFT);
 
         return [
-            'kode' => 'LOC-'.str_pad((string) self::$sequence++, 5, '0', STR_PAD_LEFT),
+            'kode' => 'LOC-'.str_pad((string) self::$sequence++, 3, '0', STR_PAD_LEFT),
             'nama' => fake()->words(2, true),
             'gedung' => 'Gedung '.$gedungLetter,
             'lantai' => $lantai,

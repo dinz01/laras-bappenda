@@ -27,21 +27,23 @@ class UpdateArsipRequest extends FormRequest
         $arsipId = $arsip instanceof Arsip ? (string) $arsip->id : (is_string($arsip) ? $arsip : '');
 
         return [
-            'nomor_arsip' => 'required|string|max:100|unique:arsip,nomor_arsip,'.$arsipId,
+            'nomor_arsip' => 'nullable|string|max:100|unique:arsip,nomor_arsip,'.$arsipId,
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'tanggal_arsip' => 'required|date',
-            'file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+            'kategori_arsip_id' => 'nullable|integer|exists:kategori_arsip,id',
+            'no_register' => 'nullable|string|max:100',
+            'nop' => 'nullable|string|max:100',
+            'npwpd' => 'nullable|string|max:100',
+            'nama_wajib_pajak' => 'nullable|string|max:255',
+            'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:102400',
             'klasifikasi_arsip_id' => 'required|integer|exists:klasifikasi_arsip,id',
             'lokasi_arsip_id' => 'required|integer|exists:lokasi_arsip,id',
             'jenis_arsip_id' => 'required|integer|exists:jenis_arsip,id',
             'sifat_arsip_id' => 'required|integer|exists:sifat_arsip,id',
             'tingkat_perkembangan_arsip_id' => 'required|integer|exists:tingkat_perkembangan_arsip,id',
-            'media_arsip_id' => 'required|integer|exists:media_arsip,id',
             'kondisi_arsip_id' => 'required|integer|exists:kondisi_arsip,id',
-            'status_arsip_id' => 'required|integer|exists:status_arsip,id',
             'tingkat_akses_arsip_id' => 'required|integer|exists:tingkat_akses_arsip,id',
-            'retensi_arsip_id' => 'required|integer|exists:retensi_arsip,id',
             'unit_organisasi_id' => 'required|integer|exists:unit_organisasi,id',
         ];
     }

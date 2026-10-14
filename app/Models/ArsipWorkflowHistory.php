@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Casts\WorkflowStatusCast;
 use App\Enums\WorkflowStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,7 +35,7 @@ class ArsipWorkflowHistory extends Model
     protected $table = 'arsip_workflow_histories';
 
     /**
-     * Atribut yang boleh diisi secara massal.
+     * Atribut yang boleh diisi.
      *
      * @var list<string>
      */
@@ -55,8 +56,8 @@ class ArsipWorkflowHistory extends Model
     protected function casts(): array
     {
         return [
-            'status_lama' => WorkflowStatus::class,
-            'status_baru' => WorkflowStatus::class,
+            'status_lama' => WorkflowStatusCast::class,
+            'status_baru' => WorkflowStatusCast::class,
         ];
     }
 

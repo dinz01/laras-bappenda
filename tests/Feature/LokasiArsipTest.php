@@ -23,16 +23,16 @@ it('renders lokasi arsip index with correct props', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('master/lokasi-arsip/index')
-            ->has('lokasiArsips')
+            ->has('lokasis')
+            ->has('parentOptions')
             ->has('stats')
             ->has('filters')
         );
 });
 
-it('stores a new lokasi arsip', function () {
+it('stores a new lokasi arsip with auto-generated kode', function () {
     $this->actingAs($this->user)
         ->post(route('master.lokasi-arsip.store'), [
-            'kode' => 'LOC-001',
             'nama' => 'Ruang Arsip Test',
             'gedung' => 'Gedung A',
             'lantai' => '1',
@@ -51,18 +51,33 @@ it('stores a new lokasi arsip', function () {
     ]);
 });
 
+it('increments sequential auto-generated kode for lokasi arsip', function () {
+    LokasiArsip::factory()->create(['kode' => 'LOC-001']);
+
+    $this->actingAs($this->user)
+        ->post(route('master.lokasi-arsip.store'), [
+            'nama' => 'Gedung Depo B',
+            'status' => 'active',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('lokasi_arsip', [
+        'kode' => 'LOC-002',
+        'nama' => 'Gedung Depo B',
+    ]);
+});
+
 it('validates required fields on store', function () {
     $this->actingAs($this->user)
         ->post(route('master.lokasi-arsip.store'), [])
-        ->assertSessionHasErrors(['kode', 'nama', 'status']);
+        ->assertSessionHasErrors(['nama', 'status']);
 });
 
-it('updates a lokasi arsip', function () {
-    $lokasiArsip = LokasiArsip::factory()->create();
+it('updates a lokasi arsip without changing kode', function () {
+    $lokasiArsip = LokasiArsip::factory()->create(['kode' => 'LOC-001', 'nama' => 'Nama Awal']);
 
     $this->actingAs($this->user)
         ->put(route('master.lokasi-arsip.update', $lokasiArsip), [
-            'kode' => $lokasiArsip->kode,
             'nama' => 'Nama Diperbarui',
             'gedung' => 'Gedung B',
             'lantai' => null,
@@ -76,6 +91,7 @@ it('updates a lokasi arsip', function () {
 
     $this->assertDatabaseHas('lokasi_arsip', [
         'id' => $lokasiArsip->id,
+        'kode' => 'LOC-001',
         'nama' => 'Nama Diperbarui',
         'gedung' => 'Gedung B',
         'status' => 'inactive',
@@ -111,6 +127,6 @@ it('searches lokasi arsip by kode', function () {
         ->get(route('master.lokasi-arsip.index', ['search' => 'LOC-001']))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->has('lokasiArsips.data', 1)
+            ->has('lokasis', 1)
         );
 });

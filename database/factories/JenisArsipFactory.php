@@ -13,7 +13,7 @@ class JenisArsipFactory extends Factory
     /**
      * Counter untuk kode sekuensial.
      */
-    protected static int $sequence = 1000;
+    protected static int $sequence = 1;
 
     /**
      * Define the model's default state.
@@ -36,7 +36,7 @@ class JenisArsipFactory extends Factory
         ];
 
         return [
-            'kode' => 'JA-'.str_pad((string) self::$sequence++, 5, '0', STR_PAD_LEFT),
+            'kode' => 'JNS-'.str_pad((string) self::$sequence++, 3, '0', STR_PAD_LEFT),
             'nama' => fake()->randomElement($names),
             'deskripsi' => fake()->optional()->sentence(),
             'status' => 'active',

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreKondisiArsipRequest;
 use App\Models\KondisiArsip;
+use App\Services\AuditLogService;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,10 @@ use Inertia\Response;
 
 class KondisiArsipController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     /**
      * Display a listing of the kondisi arsip.
      */
@@ -38,7 +43,15 @@ class KondisiArsipController extends Controller
      */
     public function store(StoreKondisiArsipRequest $request): RedirectResponse
     {
-        KondisiArsip::create($this->validatedData($request));
+        $kondisiArsip = KondisiArsip::create($this->storeData($request));
+
+        $this->auditLogService->log(
+            'master.kondisi-arsip.created',
+            $kondisiArsip,
+            null,
+            ['kode' => $kondisiArsip->kode, 'nama' => $kondisiArsip->nama, 'status' => $kondisiArsip->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Kondisi arsip berhasil ditambahkan.');
     }
@@ -48,7 +61,17 @@ class KondisiArsipController extends Controller
      */
     public function update(StoreKondisiArsipRequest $request, KondisiArsip $kondisiArsip): RedirectResponse
     {
-        $kondisiArsip->update($this->validatedData($request));
+        $oldValues = ['kode' => $kondisiArsip->kode, 'nama' => $kondisiArsip->nama, 'status' => $kondisiArsip->status];
+
+        $kondisiArsip->update($this->updateData($request));
+
+        $this->auditLogService->log(
+            'master.kondisi-arsip.updated',
+            $kondisiArsip,
+            $oldValues,
+            ['kode' => $kondisiArsip->kode, 'nama' => $kondisiArsip->nama, 'status' => $kondisiArsip->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Kondisi arsip berhasil diperbarui.');
     }
@@ -66,7 +89,17 @@ class KondisiArsipController extends Controller
             ]);
         }
 
+        $oldValues = ['kode' => $kondisiArsip->kode, 'nama' => $kondisiArsip->nama, 'status' => $kondisiArsip->status];
+
         $kondisiArsip->delete();
+
+        $this->auditLogService->log(
+            'master.kondisi-arsip.deleted',
+            $kondisiArsip,
+            $oldValues,
+            null,
+            auth()->user(),
+        );
 
         return back()->with('success', 'Kondisi arsip berhasil dihapus.');
     }
@@ -119,14 +152,38 @@ class KondisiArsipController extends Controller
     }
 
     /**
+     * Siapkan data untuk pembuatan kondisi baru.
+     * Kode digenerate otomatis jika kosong.
+     *
      * @return array{kode: string, nama: string, deskripsi: string|null, status: string}
      */
-    private function validatedData(StoreKondisiArsipRequest $request): array
+    private function storeData(StoreKondisiArsipRequest $request): array
+    {
+        $validated = $request->validated();
+
+        $kode = isset($validated['kode']) && is_string($validated['kode']) && trim($validated['kode']) !== ''
+            ? trim($validated['kode'])
+            : KondisiArsip::generateKode();
+
+        return [
+            'kode' => $kode,
+            'nama' => (string) $validated['nama'],
+            'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
+            'status' => (string) $validated['status'],
+        ];
+    }
+
+    /**
+     * Siapkan data untuk update kondisi yang sudah ada.
+     * Kode tidak dapat diubah saat edit.
+     *
+     * @return array{nama: string, deskripsi: string|null, status: string}
+     */
+    private function updateData(StoreKondisiArsipRequest $request): array
     {
         $validated = $request->validated();
 
         return [
-            'kode' => (string) $validated['kode'],
             'nama' => (string) $validated['nama'],
             'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
             'status' => (string) $validated['status'],

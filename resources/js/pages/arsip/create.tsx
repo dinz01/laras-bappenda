@@ -1,23 +1,28 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
+import type { KlasifikasiArsipOption } from '@/components/klasifikasi-arsip-select';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
+import type { LokasiArsipOption } from '@/components/lokasi-arsip-select';
 import { RouteGuard } from '@/components/RouteGuard';
 import { Button } from '@/components/ui/button';
-import { index, create } from '@/routes/arsip';
-import type { MasterItem } from './create-dialog';
 import type { UnitOrganisasiOption } from '@/components/unit-organisasi-select';
+import { index } from '@/routes/arsip';
+import type { MasterItem } from './create-dialog';
 import { ArsipCreateDialog } from './create-dialog';
 
 type CreateProps = {
-    klasifikasis?: MasterItem[];
+    klasifikasis?: KlasifikasiArsipOption[];
+    kategoriArsips?: MasterItem[];
     jenisArsips?: MasterItem[];
     jenisDokumens?: MasterItem[];
     sifatArsips?: MasterItem[];
     tingkatPerkembanganArsips?: MasterItem[];
     unitOrganisasis?: UnitOrganisasiOption[];
-    lokasiArsips?: MasterItem[];
+    lokasiArsips?: LokasiArsipOption[];
+    kondisiArsips?: MasterItem[];
+    tingkatAksesArsips?: MasterItem[];
     statusArsips?: MasterItem[];
 };
 
@@ -30,16 +35,16 @@ export default function Create(props: CreateProps) {
     };
 
     return (
-        <RouteGuard permission="arsip.create">
+        <RouteGuard permission="kelola-arsip.create">
             <Head title="Tambah Arsip" />
             <PageContainer>
                 <PageHeader
                     title="Tambah Arsip"
                     description="Registrasi arsip baru ke dalam repositori"
                     breadcrumb={[
-                        { title: 'Dashboard', href: '/dashboard' },
+                        { title: 'UTAMA' },
                         { title: 'Repository Arsip', href: index() },
-                        { title: 'Tambah', href: create() },
+                        { title: 'Input Arsip Baru' },
                     ]}
                     actions={
                         <Button variant="outline" size="sm" asChild>
@@ -63,8 +68,8 @@ export default function Create(props: CreateProps) {
 
 Create.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Repository Arsip', href: '/arsip' },
-        { title: 'Tambah', href: '/arsip/create' },
+        { title: 'UTAMA' },
+        { title: 'Repositori Arsip', href: '/arsip' },
+        { title: 'Tambah Arsip' },
     ],
 };

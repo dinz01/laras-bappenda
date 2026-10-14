@@ -5,15 +5,28 @@ declare(strict_types=1);
 namespace App\Policies;
 
 use App\Models\User;
+use Illuminate\Support\Str;
 
 abstract class MasterDataPolicy
 {
+    /**
+     * Slug module permission (e.g. 'master-jabatan').
+     */
+    protected function getModuleSlug(): string
+    {
+        $baseName = class_basename(static::class);
+        $name = str_replace('Policy', '', $baseName);
+        $slug = Str::kebab($name);
+
+        return 'master-'.$slug;
+    }
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('master.view');
+        return $user->can($this->getModuleSlug().'.view');
     }
 
     /**
@@ -21,7 +34,7 @@ abstract class MasterDataPolicy
      */
     public function view(User $user, mixed $model): bool
     {
-        return $user->can('master.view');
+        return $user->can($this->getModuleSlug().'.view');
     }
 
     /**
@@ -29,7 +42,7 @@ abstract class MasterDataPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('master.create');
+        return $user->can($this->getModuleSlug().'.create');
     }
 
     /**
@@ -37,7 +50,7 @@ abstract class MasterDataPolicy
      */
     public function update(User $user, mixed $model): bool
     {
-        return $user->can('master.update');
+        return $user->can($this->getModuleSlug().'.update');
     }
 
     /**
@@ -45,6 +58,6 @@ abstract class MasterDataPolicy
      */
     public function delete(User $user, mixed $model): bool
     {
-        return $user->can('master.delete');
+        return $user->can($this->getModuleSlug().'.delete');
     }
 }

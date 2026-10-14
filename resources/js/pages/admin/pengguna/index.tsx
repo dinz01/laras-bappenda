@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import {
     Eye,
     MoreHorizontal,
@@ -9,7 +9,8 @@ import {
     X,
 } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
@@ -18,6 +19,7 @@ import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
 import { RouteGuard } from '@/components/RouteGuard';
+import { DataTablePagination } from '@/components/Tables/data-table-pagination';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Badge } from '@/components/ui/badge';
@@ -54,17 +56,20 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { dashboard } from '@/routes';
 import { destroy, index, store, update } from '@/routes/admin/pengguna';
+import { focusFirstInvalidField } from '@/utils/form-validation';
 
 type Pengguna = {
     id: number;
     name: string;
+    username: string | null;
     email: string;
     nip: string | null;
+    nik: string | null;
     status: 'active' | 'inactive';
     unit_organisasi_id: number | null;
     unit_organisasi: UnitOrganisasiDisplay;
+    jabatan_id: number | null;
     jabatan: string | null;
     roles: string[];
     created_at: string | null;
@@ -114,6 +119,7 @@ type IndexProps = {
         search?: string;
         status?: string;
         role?: string;
+        unit?: string;
     };
 };
 
@@ -125,8 +131,11 @@ type UnitOrganisasiDisplay = {
 
 type PenggunaFormData = {
     name: string;
+    username: string;
     email: string;
     password: string;
+    nip: string;
+    nik: string;
     unit_organisasi_id: string;
     jabatan_id: string;
     status: 'active' | 'inactive';
@@ -135,8 +144,11 @@ type PenggunaFormData = {
 
 const emptyForm: PenggunaFormData = {
     name: '',
+    username: '',
     email: '',
     password: '',
+    nip: '',
+    nik: '',
     unit_organisasi_id: '',
     jabatan_id: '',
     status: 'active',
@@ -155,6 +167,7 @@ function renderUnitOrganisasi(unit: UnitOrganisasiDisplay) {
     if (!unit || (!unit.bidang && !unit.sub_bidang && !unit.upt)) {
         return <span className="text-muted-foreground">—</span>;
     }
+
     if (unit.upt) {
         return (
             <span className="block truncate" title={unit.upt}>
@@ -162,18 +175,26 @@ function renderUnitOrganisasi(unit: UnitOrganisasiDisplay) {
             </span>
         );
     }
+
     if (unit.sub_bidang) {
         return (
             <div className="flex flex-col leading-tight">
-                <span className="truncate font-medium text-foreground" title={unit.bidang ?? ''}>
+                <span
+                    className="truncate font-medium text-foreground"
+                    title={unit.bidang ?? ''}
+                >
                     {unit.bidang}
                 </span>
-                <span className="truncate text-xs text-muted-foreground" title={unit.sub_bidang}>
+                <span
+                    className="truncate text-xs text-muted-foreground"
+                    title={unit.sub_bidang}
+                >
                     {unit.sub_bidang}
                 </span>
             </div>
         );
     }
+
     return (
         <span className="block truncate" title={unit.bidang ?? ''}>
             {unit.bidang}
@@ -205,7 +226,8 @@ function PenggunaFormDialog({
     const bidangList = unitOrganisasis.filter((u) => u.tipe === 'bidang');
     const uptList = unitOrganisasis.filter((u) => u.tipe === 'upt');
     const subBidangList = unitOrganisasis.filter(
-        (u) => u.tipe === 'sub_bidang' && String(u.parent_id) === selectedBidangId,
+        (u) =>
+            u.tipe === 'sub_bidang' && String(u.parent_id) === selectedBidangId,
     );
 
     useEffect(() => {
@@ -216,22 +238,31 @@ function PenggunaFormDialog({
         form.setData(
             pengguna
                 ? {
-                    name: pengguna.name,
-                    email: pengguna.email,
-                    password: '',
-                    unit_organisasi_id: pengguna.unit_organisasi_id
-                        ? String(pengguna.unit_organisasi_id)
-                        : '',
-                    jabatan_id: '',
-                    status: pengguna.status,
-                    roles: pengguna.roles,
-                }
+                      name: pengguna.name,
+                      username: pengguna.username ?? '',
+                      email: pengguna.email,
+                      password: '',
+                      nip: pengguna.nip ?? '',
+                      nik: pengguna.nik ?? '',
+                      unit_organisasi_id: pengguna.unit_organisasi_id
+                          ? String(pengguna.unit_organisasi_id)
+                          : '',
+                      jabatan_id: pengguna.jabatan_id
+                          ? String(pengguna.jabatan_id)
+                          : '',
+                      status: pengguna.status,
+                      roles: pengguna.roles,
+                  }
                 : emptyForm,
         );
 
         if (pengguna?.unit_organisasi_id) {
-            const current = unitOrganisasis.find((u) => u.id === pengguna.unit_organisasi_id);
+            const current = unitOrganisasis.find(
+                (u) => u.id === pengguna.unit_organisasi_id,
+            );
+
             if (current?.tipe === 'upt') {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setKategori('upt');
                 setSelectedBidangId('');
             } else if (current?.tipe === 'bidang') {
@@ -248,7 +279,7 @@ function PenggunaFormDialog({
 
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, pengguna]);
+    }, [open]);
 
     const handleKategoriChange = (value: 'bidang' | 'upt') => {
         setKategori(value);
@@ -262,44 +293,92 @@ function PenggunaFormDialog({
     };
 
     const handleSubBidangChange = (value: string) => {
-        form.setData('unit_organisasi_id', value === '__none__' ? selectedBidangId : value);
-    };
-
-    const toggleRole = (role: string) => {
-        const current = form.data.roles;
         form.setData(
-            'roles',
-            current.includes(role)
-                ? current.filter((r) => r !== role)
-                : [...current, role],
+            'unit_organisasi_id',
+            value === '__none__' ? selectedBidangId : value,
         );
     };
+
+    const selectRole = (role: string) => {
+        form.setData('roles', [role]);
+        form.clearErrors('roles');
+    };
+
+    const formRef = useRef<HTMLFormElement>(null);
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
+        if (!form.data.name.trim()) {
+            toast.warning('Harap isi kolom "Nama" yang wajib diisi.');
+            focusFirstInvalidField(formRef.current);
+            document.getElementById('name')?.focus();
+
+            return;
+        }
+
+        if (!form.data.username.trim()) {
+            toast.warning('Harap isi kolom "Nama Pengguna" yang wajib diisi.');
+            document.getElementById('username')?.focus();
+
+            return;
+        }
+
+        if (!form.data.email.trim()) {
+            toast.warning('Harap isi kolom "Email" yang wajib diisi.');
+            document.getElementById('email')?.focus();
+
+            return;
+        }
+
+        if (mode === 'create' && !form.data.password.trim()) {
+            toast.warning('Harap isi kolom "Password" yang wajib diisi.');
+            document.getElementById('password')?.focus();
+
+            return;
+        }
+
+        if (form.data.roles.length === 0 || !form.data.roles[0]) {
+            form.setError('roles', 'Role wajib dipilih.');
+            toast.warning('Harap pilih role untuk pengguna ini.');
+
+            return;
+        }
+
         if (mode === 'edit' && pengguna) {
-            form.put(update({ pengguna: pengguna.id }).url, {
+            form.put(update.url({ pengguna: pengguna.id }), {
                 preserveScroll: true,
                 onSuccess: () => onOpenChange(false),
+                onError: () =>
+                    toast.error(
+                        'Terjadi kesalahan saat memperbarui data pengguna.',
+                        {
+                            description:
+                                'Periksa kembali kolom yang ditandai merah.',
+                        },
+                    ),
             });
 
             return;
         }
 
-        form.post(store().url, {
+        form.post(store.url(), {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
                 onOpenChange(false);
             },
+            onError: () =>
+                toast.error('Terjadi kesalahan saat menyimpan data pengguna.', {
+                    description: 'Periksa kembali kolom yang ditandai merah.',
+                }),
         });
     };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="border-border/60 sm:max-w-lg">
-                <DialogHeader>
+            <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden border-border/60 p-0 sm:max-w-xl">
+                <DialogHeader className="shrink-0 border-b border-border/50 p-6 pb-4">
                     <DialogTitle className="text-base font-semibold">
                         {mode === 'create'
                             ? 'Tambah Pengguna'
@@ -307,17 +386,25 @@ function PenggunaFormDialog({
                     </DialogTitle>
                     <DialogDescription className="text-xs">
                         {mode === 'create'
-                            ? 'Isi data pengguna baru.'
+                            ? 'Isi data pengguna baru. Kolom dengan tanda bintang (*) wajib diisi.'
                             : 'Perbarui data pengguna. Kosongkan password jika tidak ingin mengubah.'}
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4">
+                <form
+                    ref={formRef}
+                    onSubmit={submit}
+                    noValidate
+                    className="flex-1 space-y-4 overflow-y-auto p-6"
+                >
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="name">Nama</Label>
+                            <Label htmlFor="name">
+                                Nama <span className="text-destructive">*</span>
+                            </Label>
                             <Input
                                 id="name"
+                                required
                                 value={form.data.name}
                                 onChange={(e) =>
                                     form.setData('name', e.target.value)
@@ -329,7 +416,49 @@ function PenggunaFormDialog({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="status">Status</Label>
+                            <Label htmlFor="username">
+                                Nama Pengguna{' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="username"
+                                required
+                                value={form.data.username}
+                                onChange={(e) =>
+                                    form.setData('username', e.target.value)
+                                }
+                                placeholder="Username login"
+                                maxLength={255}
+                            />
+                            <InputError message={form.errors.username} />
+                        </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="email">
+                                Email{' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                required
+                                value={form.data.email}
+                                onChange={(e) =>
+                                    form.setData('email', e.target.value)
+                                }
+                                placeholder="email@example.com"
+                                maxLength={255}
+                            />
+                            <InputError message={form.errors.email} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="status">
+                                Status{' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
                             <Select
                                 value={form.data.status}
                                 onValueChange={(
@@ -352,30 +481,62 @@ function PenggunaFormDialog({
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            value={form.data.email}
-                            onChange={(e) =>
-                                form.setData('email', e.target.value)
-                            }
-                            placeholder="email@example.com"
-                            maxLength={255}
-                        />
-                        <InputError message={form.errors.email} />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="nip">NIP</Label>
+                            <Input
+                                id="nip"
+                                value={form.data.nip}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'nip',
+                                        e.target.value.replace(/[^0-9]/g, ''),
+                                    )
+                                }
+                                placeholder="Nomor Induk Pegawai"
+                                maxLength={18}
+                            />
+                            <InputError message={form.errors.nip} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="nik">NIK</Label>
+                            <Input
+                                id="nik"
+                                value={form.data.nik}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'nik',
+                                        e.target.value.replace(/[^0-9]/g, ''),
+                                    )
+                                }
+                                placeholder="Nomor Induk Kependudukan"
+                                maxLength={16}
+                            />
+                            <InputError message={form.errors.nik} />
+                        </div>
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="password">
-                            {mode === 'edit'
-                                ? 'Password Baru (kosongkan jika tidak diubah)'
-                                : 'Password'}
+                            {mode === 'edit' ? (
+                                <>
+                                    Password Baru{' '}
+                                    <span className="text-xs font-normal text-muted-foreground">
+                                        (kosongkan jika tidak diubah)
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    Password{' '}
+                                    <span className="text-destructive">*</span>
+                                </>
+                            )}
                         </Label>
                         <Input
                             id="password"
                             type="password"
+                            required={mode === 'create'}
                             value={form.data.password}
                             onChange={(e) =>
                                 form.setData('password', e.target.value)
@@ -389,13 +550,35 @@ function PenggunaFormDialog({
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2 sm:col-span-2">
                             <Label>Kategori Unit</Label>
-                            <Select value={kategori} onValueChange={handleKategoriChange}>
+                            <Select
+                                value={kategori}
+                                onValueChange={handleKategoriChange}
+                                disabled={unitOrganisasis.length === 0}
+                            >
                                 <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Pilih kategori" />
+                                    <SelectValue
+                                        placeholder={
+                                            unitOrganisasis.length === 0
+                                                ? 'Belum ada data unit organisasi'
+                                                : 'Pilih kategori'
+                                        }
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="bidang">Bidang</SelectItem>
-                                    <SelectItem value="upt">UPT</SelectItem>
+                                    {unitOrganisasis.length === 0 ? (
+                                        <SelectItem disabled value="__empty__">
+                                            Belum ada data unit organisasi
+                                        </SelectItem>
+                                    ) : (
+                                        <>
+                                            <SelectItem value="bidang">
+                                                Bidang
+                                            </SelectItem>
+                                            <SelectItem value="upt">
+                                                UPT
+                                            </SelectItem>
+                                        </>
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -403,16 +586,38 @@ function PenggunaFormDialog({
                         {kategori === 'bidang' && (
                             <div className="space-y-2">
                                 <Label>Bidang</Label>
-                                <Select value={selectedBidangId} onValueChange={handleBidangChange}>
+                                <Select
+                                    value={selectedBidangId}
+                                    onValueChange={handleBidangChange}
+                                    disabled={bidangList.length === 0}
+                                >
                                     <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Pilih bidang" />
+                                        <SelectValue
+                                            placeholder={
+                                                bidangList.length === 0
+                                                    ? 'Belum ada data bidang'
+                                                    : 'Pilih bidang'
+                                            }
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {bidangList.map((b) => (
-                                            <SelectItem key={b.id} value={String(b.id)}>
-                                                {b.nama}
+                                        {bidangList.length === 0 ? (
+                                            <SelectItem
+                                                disabled
+                                                value="__empty__"
+                                            >
+                                                Belum ada data bidang
                                             </SelectItem>
-                                        ))}
+                                        ) : (
+                                            bidangList.map((b) => (
+                                                <SelectItem
+                                                    key={b.id}
+                                                    value={String(b.id)}
+                                                >
+                                                    {b.nama}
+                                                </SelectItem>
+                                            ))
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -423,7 +628,8 @@ function PenggunaFormDialog({
                                 <Label>Sub Bidang</Label>
                                 <Select
                                     value={
-                                        form.data.unit_organisasi_id === selectedBidangId
+                                        form.data.unit_organisasi_id ===
+                                        selectedBidangId
                                             ? '__none__'
                                             : form.data.unit_organisasi_id
                                     }
@@ -433,9 +639,14 @@ function PenggunaFormDialog({
                                         <SelectValue placeholder="Pilih sub bidang" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="__none__">Tidak ada (Kepala Bidang)</SelectItem>
+                                        <SelectItem value="__none__">
+                                            Tidak ada (Kepala Bidang)
+                                        </SelectItem>
                                         {subBidangList.map((s) => (
-                                            <SelectItem key={s.id} value={String(s.id)}>
+                                            <SelectItem
+                                                key={s.id}
+                                                value={String(s.id)}
+                                            >
                                                 {s.nama}
                                             </SelectItem>
                                         ))}
@@ -445,21 +656,42 @@ function PenggunaFormDialog({
                         )}
 
                         {kategori === 'upt' && (
-                            <div className="space-y-2">
+                            <div className="space-y-2 sm:col-span-2">
                                 <Label>UPT</Label>
                                 <Select
                                     value={form.data.unit_organisasi_id}
-                                    onValueChange={(v) => form.setData('unit_organisasi_id', v)}
+                                    onValueChange={(v) =>
+                                        form.setData('unit_organisasi_id', v)
+                                    }
+                                    disabled={uptList.length === 0}
                                 >
                                     <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Pilih UPT" />
+                                        <SelectValue
+                                            placeholder={
+                                                uptList.length === 0
+                                                    ? 'Belum ada data UPT'
+                                                    : 'Pilih UPT'
+                                            }
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {uptList.map((u) => (
-                                            <SelectItem key={u.id} value={String(u.id)}>
-                                                {u.nama}
+                                        {uptList.length === 0 ? (
+                                            <SelectItem
+                                                disabled
+                                                value="__empty__"
+                                            >
+                                                Belum ada data UPT
                                             </SelectItem>
-                                        ))}
+                                        ) : (
+                                            uptList.map((u) => (
+                                                <SelectItem
+                                                    key={u.id}
+                                                    value={String(u.id)}
+                                                >
+                                                    {u.nama}
+                                                </SelectItem>
+                                            ))
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -467,29 +699,42 @@ function PenggunaFormDialog({
 
                         <InputError message={form.errors.unit_organisasi_id} />
 
-                        <div className="space-y-2">
+                        <div className="space-y-2 sm:col-span-2">
                             <Label htmlFor="jabatan_id">Jabatan</Label>
                             <Select
                                 value={form.data.jabatan_id}
                                 onValueChange={(v) =>
                                     form.setData('jabatan_id', v)
                                 }
+                                disabled={jabatans.length === 0}
                             >
                                 <SelectTrigger
                                     id="jabatan_id"
                                     className="w-full"
                                 >
-                                    <SelectValue placeholder="Pilih jabatan" />
+                                    <SelectValue
+                                        placeholder={
+                                            jabatans.length === 0
+                                                ? 'Belum ada data jabatan'
+                                                : 'Pilih jabatan'
+                                        }
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {jabatans.map((j) => (
-                                        <SelectItem
-                                            key={j.id}
-                                            value={String(j.id)}
-                                        >
-                                            {j.nama}
+                                    {jabatans.length === 0 ? (
+                                        <SelectItem disabled value="__empty__">
+                                            Belum ada data jabatan
                                         </SelectItem>
-                                    ))}
+                                    ) : (
+                                        jabatans.map((j) => (
+                                            <SelectItem
+                                                key={j.id}
+                                                value={String(j.id)}
+                                            >
+                                                {j.nama}
+                                            </SelectItem>
+                                        ))
+                                    )}
                                 </SelectContent>
                             </Select>
                             <InputError message={form.errors.jabatan_id} />
@@ -498,17 +743,20 @@ function PenggunaFormDialog({
 
                     {roles.length > 0 && (
                         <div className="space-y-2">
-                            <Label>Role</Label>
+                            <Label>
+                                Role <span className="text-destructive">*</span>
+                            </Label>
                             <div className="flex flex-wrap gap-2">
                                 {roles.map((role) => (
                                     <button
                                         key={role}
                                         type="button"
-                                        onClick={() => toggleRole(role)}
-                                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${form.data.roles.includes(role)
-                                            ? 'border-primary bg-primary text-primary-foreground'
-                                            : 'border-border bg-background text-muted-foreground hover:border-primary/50'
-                                            }`}
+                                        onClick={() => selectRole(role)}
+                                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                                            form.data.roles.includes(role)
+                                                ? 'border-primary bg-primary text-primary-foreground'
+                                                : 'border-border bg-background text-muted-foreground hover:border-primary/50'
+                                        }`}
                                     >
                                         {role}
                                     </button>
@@ -518,7 +766,7 @@ function PenggunaFormDialog({
                         </div>
                     )}
 
-                    <DialogFooter className="pt-2">
+                    <DialogFooter className="border-t border-border/50 pt-4">
                         <Button
                             type="button"
                             variant="outline"
@@ -528,6 +776,9 @@ function PenggunaFormDialog({
                             Batal
                         </Button>
                         <Button type="submit" disabled={form.processing}>
+                            {form.processing && (
+                                <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            )}
                             {mode === 'create' ? 'Simpan' : 'Perbarui'}
                         </Button>
                     </DialogFooter>
@@ -559,19 +810,46 @@ function DetailDialog({
                 {pengguna && (
                     <div className="grid gap-3 text-sm">
                         <DetailRow label="Nama" value={pengguna.name} />
+                        <DetailRow
+                            label="Nama Pengguna"
+                            value={pengguna.username || '-'}
+                        />
                         <DetailRow label="Email" value={pengguna.email} />
+                        <DetailRow
+                            label="Password"
+                            value="•••••••• (Tersimpan aman & terenkripsi)"
+                        />
                         {pengguna.nip && (
                             <DetailRow label="NIP" value={pengguna.nip} mono />
                         )}
+                        <DetailRow
+                            label="NIK"
+                            value={pengguna.nik || '-'}
+                            mono
+                        />
                         {pengguna.unit_organisasi?.upt ? (
-                            <DetailRow label="UPT" value={pengguna.unit_organisasi.upt} />
+                            <DetailRow
+                                label="UPT"
+                                value={pengguna.unit_organisasi.upt}
+                            />
                         ) : pengguna.unit_organisasi?.sub_bidang ? (
                             <>
-                                <DetailRow label="Bidang" value={pengguna.unit_organisasi.bidang || '-'} />
-                                <DetailRow label="Sub Bidang" value={pengguna.unit_organisasi.sub_bidang} />
+                                <DetailRow
+                                    label="Bidang"
+                                    value={
+                                        pengguna.unit_organisasi.bidang || '-'
+                                    }
+                                />
+                                <DetailRow
+                                    label="Sub Bidang"
+                                    value={pengguna.unit_organisasi.sub_bidang}
+                                />
                             </>
                         ) : pengguna.unit_organisasi?.bidang ? (
-                            <DetailRow label="Bidang" value={pengguna.unit_organisasi.bidang} />
+                            <DetailRow
+                                label="Bidang"
+                                value={pengguna.unit_organisasi.bidang}
+                            />
                         ) : (
                             <DetailRow label="Unit Organisasi" value="-" />
                         )}
@@ -667,7 +945,6 @@ export default function PenggunaIndex({
     );
     const [detailPengguna, setDetailPengguna] = useState<Pengguna | null>(null);
     const [deletePengguna, setDeletePengguna] = useState<Pengguna | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
     const updateFilters = (
@@ -723,24 +1000,27 @@ export default function PenggunaIndex({
         }
 
         setDeleting(true);
-        setDeleteError(null);
 
         router.delete(destroy({ pengguna: deletePengguna.id }).url, {
             preserveScroll: true,
-            onError: (errors) => {
-                setDeleteError(errors.pengguna || 'Pengguna gagal dihapus.');
+            onError: () => {
+                toast.error('Pengguna gagal dihapus.', {
+                    description: 'Terjadi kesalahan, silakan coba lagi.',
+                });
             },
-            onSuccess: () => setDeletePengguna(null),
+            onSuccess: () => {
+                setDeletePengguna(null);
+            },
             onFinish: () => setDeleting(false),
         });
     };
 
     const hasFilters = Boolean(
-        filters.search || filters.status || filters.role,
+        filters.search || filters.status || filters.role || filters.unit,
     );
 
     return (
-        <RouteGuard permission="user.view">
+        <RouteGuard permission="admin-pengguna.view">
             <Head title="Pengguna" />
 
             <PageContainer>
@@ -748,8 +1028,7 @@ export default function PenggunaIndex({
                     title="Pengguna"
                     description="Manajemen akun pengguna sistem LARAS."
                     breadcrumb={[
-                        { title: 'Dashboard', href: dashboard.url() },
-                        { title: 'Administrasi', href: '#' },
+                        { title: 'ADMINISTRASI' },
                         { title: 'Pengguna', href: index.url() },
                     ]}
                     actions={
@@ -762,7 +1041,7 @@ export default function PenggunaIndex({
                     }
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <ContentCard title="Total Pengguna">
                         <StatValue value={stats.total} />
                     </ContentCard>
@@ -771,9 +1050,6 @@ export default function PenggunaIndex({
                     </ContentCard>
                     <ContentCard title="Nonaktif">
                         <StatValue value={stats.nonaktif} />
-                    </ContentCard>
-                    <ContentCard title="Ditambahkan Bulan Ini">
-                        <StatValue value={stats.bulan_ini} />
                     </ContentCard>
                 </div>
 
@@ -787,17 +1063,55 @@ export default function PenggunaIndex({
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari nama, email, atau NIP..."
                             filters={
-                                hasFilters && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={clearFilters}
-                                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
-                                    >
-                                        <X className="mr-1 h-4 w-4" />
-                                        Reset Filter
-                                    </Button>
-                                )
+                                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                                    <div className="w-full sm:w-auto">
+                                        <Select
+                                            value={filters.unit || '__all__'}
+                                            onValueChange={(value) =>
+                                                updateFilters({
+                                                    unit:
+                                                        value === '__all__'
+                                                            ? null
+                                                            : value,
+                                                })
+                                            }
+                                        >
+                                            <SelectTrigger className="h-9 w-full border-border/60 sm:w-[200px]">
+                                                <SelectValue placeholder="Semua Unit" />
+                                            </SelectTrigger>
+                                            <SelectContent
+                                                align="start"
+                                                collisionPadding={16}
+                                                className="max-h-[280px] w-[min(320px,calc(100vw-2rem))]"
+                                            >
+                                                <SelectItem value="__all__">
+                                                    Semua Unit
+                                                </SelectItem>
+                                                {unit_organisasis.map((u) => (
+                                                    <SelectItem
+                                                        key={u.id}
+                                                        value={String(u.id)}
+                                                        className="whitespace-normal"
+                                                    >
+                                                        {u.nama}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {hasFilters && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={clearFilters}
+                                            className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                                        >
+                                            <X className="mr-1 h-4 w-4" />
+                                            Reset Filter
+                                        </Button>
+                                    )}
+                                </div>
                             }
                         />
 
@@ -809,26 +1123,132 @@ export default function PenggunaIndex({
                             />
                         ) : (
                             <>
-                                <div className="overflow-hidden rounded-md border border-border/60">
-                                    <Table className="table-fixed">
+                                {/* Mobile card view */}
+                                <div className="flex flex-col gap-3 md:hidden">
+                                    {users.data.map((pengguna) => (
+                                        <div
+                                            key={pengguna.id}
+                                            className="rounded-xl border border-border/70 bg-card p-4 shadow-sm"
+                                        >
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0 flex-1">
+                                                    <p
+                                                        className="truncate text-sm font-semibold text-foreground"
+                                                        title={pengguna.name}
+                                                    >
+                                                        {pengguna.name}
+                                                    </p>
+                                                    <p
+                                                        className="truncate text-xs text-muted-foreground"
+                                                        title={pengguna.email}
+                                                    >
+                                                        {pengguna.email}
+                                                    </p>
+                                                </div>
+                                                <div className="flex shrink-0 flex-col items-end gap-1">
+                                                    <StatusBadge
+                                                        variant={statusVariant(
+                                                            pengguna.status,
+                                                        )}
+                                                    >
+                                                        {statusLabel(
+                                                            pengguna.status,
+                                                        )}
+                                                    </StatusBadge>
+                                                </div>
+                                            </div>
+                                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                                                {pengguna.username && (
+                                                    <span className="font-mono">
+                                                        {pengguna.username}
+                                                    </span>
+                                                )}
+                                                {pengguna.roles.length > 0 && (
+                                                    <span className="font-medium text-foreground">
+                                                        {pengguna.roles.join(
+                                                            ', ',
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="mt-3 flex items-center justify-end gap-1 border-t border-border/60 pt-3">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8"
+                                                    onClick={() =>
+                                                        setDetailPengguna(
+                                                            pengguna,
+                                                        )
+                                                    }
+                                                >
+                                                    <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                                    Detail
+                                                </Button>
+                                                <Can permission="user.update">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8"
+                                                        onClick={() =>
+                                                            openEditDialog(
+                                                                pengguna,
+                                                            )
+                                                        }
+                                                    >
+                                                        <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                                                        Edit
+                                                    </Button>
+                                                </Can>
+                                                <Can permission="user.delete">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-destructive hover:text-destructive"
+                                                        onClick={() => {
+                                                            setDeletePengguna(
+                                                                pengguna,
+                                                            );
+                                                        }}
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                </Can>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Desktop table view */}
+                                <div className="hidden overflow-hidden rounded-md border border-border/60 md:block">
+                                    <Table className="w-full table-fixed">
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[160px] font-semibold">
+                                                <TableHead className="w-[18%] font-semibold">
                                                     Nama
                                                 </TableHead>
-                                                <TableHead className="w-[180px] font-semibold">
+                                                <TableHead className="w-[13%] font-semibold">
+                                                    Nama Pengguna
+                                                </TableHead>
+                                                <TableHead className="w-[17%] font-semibold">
                                                     Email
                                                 </TableHead>
-                                                <TableHead className="w-[140px] font-semibold">
+                                                <TableHead className="w-[11%] font-semibold">
+                                                    NIP
+                                                </TableHead>
+                                                <TableHead className="w-[11%] font-semibold">
+                                                    NIK
+                                                </TableHead>
+                                                <TableHead className="w-[11%] font-semibold">
                                                     Role
                                                 </TableHead>
-                                                <TableHead className="w-[200px] font-semibold">
+                                                <TableHead className="w-[11%] font-semibold">
                                                     Unit
                                                 </TableHead>
-                                                <TableHead className="w-[90px] font-semibold">
+                                                <TableHead className="w-[5%] font-semibold">
                                                     Status
                                                 </TableHead>
-                                                <TableHead className="w-[60px] text-right font-semibold">
+                                                <TableHead className="w-[4%] text-right font-semibold">
                                                     Aksi
                                                 </TableHead>
                                             </TableRow>
@@ -839,33 +1259,78 @@ export default function PenggunaIndex({
                                                     key={pengguna.id}
                                                     className="transition-colors hover:bg-muted/30"
                                                 >
-                                                    <TableCell className="truncate font-medium" title={pengguna.name}>
-                                                        {pengguna.name}
+                                                    <TableCell className="p-3">
+                                                        <span
+                                                            className="block truncate font-medium text-foreground"
+                                                            title={
+                                                                pengguna.name
+                                                            }
+                                                        >
+                                                            {pengguna.name}
+                                                        </span>
                                                     </TableCell>
-                                                    <TableCell className="truncate text-sm text-muted-foreground" title={pengguna.email}>
-                                                        {pengguna.email}
+                                                    <TableCell className="p-3">
+                                                        <span
+                                                            className="block truncate font-mono text-xs text-muted-foreground"
+                                                            title={
+                                                                pengguna.username ??
+                                                                ''
+                                                            }
+                                                        >
+                                                            {pengguna.username ||
+                                                                '—'}
+                                                        </span>
                                                     </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex flex-wrap gap-1">
-                                                            {pengguna.roles.length === 0 ? (
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    —
-                                                                </span>
-                                                            ) : (
-                                                                pengguna.roles.map((r) => (
-                                                                    <Badge
-                                                                        key={r}
-                                                                        variant="outline"
-                                                                        className="text-xs"
-                                                                    >
-                                                                        {r}
-                                                                    </Badge>
-                                                                ))
+                                                    <TableCell className="p-3">
+                                                        <span
+                                                            className="block truncate text-xs text-muted-foreground"
+                                                            title={
+                                                                pengguna.email
+                                                            }
+                                                        >
+                                                            {pengguna.email}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="p-3">
+                                                        <span
+                                                            className="block truncate font-mono text-xs text-muted-foreground"
+                                                            title={
+                                                                pengguna.nip ??
+                                                                ''
+                                                            }
+                                                        >
+                                                            {pengguna.nip ||
+                                                                '—'}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="p-3">
+                                                        <span
+                                                            className="block truncate font-mono text-xs text-muted-foreground"
+                                                            title={
+                                                                pengguna.nik ??
+                                                                ''
+                                                            }
+                                                        >
+                                                            {pengguna.nik ||
+                                                                '—'}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="p-3">
+                                                        <span
+                                                            className="block truncate text-xs"
+                                                            title={pengguna.roles.join(
+                                                                ', ',
                                                             )}
-                                                        </div>
+                                                        >
+                                                            {pengguna.roles.join(
+                                                                ', ',
+                                                            ) || '—'}
+                                                        </span>
                                                     </TableCell>
-                                                    <TableCell className="overflow-hidden text-sm">
-                                                        {renderUnitOrganisasi(pengguna.unit_organisasi)}
+                                                    <TableCell className="overflow-hidden p-3 text-xs">
+                                                        {renderUnitOrganisasi(
+                                                            pengguna.unit_organisasi,
+                                                        )}
                                                     </TableCell>
                                                     <TableCell>
                                                         <StatusBadge
@@ -928,9 +1393,6 @@ export default function PenggunaIndex({
                                                                     <DropdownMenuSeparator />
                                                                     <DropdownMenuItem
                                                                         onClick={() => {
-                                                                            setDeleteError(
-                                                                                null,
-                                                                            );
                                                                             setDeletePengguna(
                                                                                 pengguna,
                                                                             );
@@ -950,53 +1412,10 @@ export default function PenggunaIndex({
                                     </Table>
                                 </div>
 
-                                <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                                    <span>
-                                        Menampilkan {users.from || 0} hingga{' '}
-                                        {users.to || 0} dari {users.total}{' '}
-                                        pengguna
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={!users.prev_page_url}
-                                            asChild={Boolean(
-                                                users.prev_page_url,
-                                            )}
-                                        >
-                                            {users.prev_page_url ? (
-                                                <Link
-                                                    href={users.prev_page_url}
-                                                    preserveState
-                                                >
-                                                    Sebelumnya
-                                                </Link>
-                                            ) : (
-                                                <span>Sebelumnya</span>
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={!users.next_page_url}
-                                            asChild={Boolean(
-                                                users.next_page_url,
-                                            )}
-                                        >
-                                            {users.next_page_url ? (
-                                                <Link
-                                                    href={users.next_page_url}
-                                                    preserveState
-                                                >
-                                                    Selanjutnya
-                                                </Link>
-                                            ) : (
-                                                <span>Selanjutnya</span>
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
+                                <DataTablePagination
+                                    data={users}
+                                    itemName="pengguna"
+                                />
                             </>
                         )}
                     </div>
@@ -1020,14 +1439,10 @@ export default function PenggunaIndex({
                 isOpen={deletePengguna !== null}
                 onClose={() => {
                     setDeletePengguna(null);
-                    setDeleteError(null);
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Pengguna"
-                description={
-                    deleteError ||
-                    `Hapus pengguna "${deletePengguna?.name || ''}"? Tindakan ini tidak dapat dibatalkan.`
-                }
+                description={`Hapus pengguna "${deletePengguna?.name || ''}"? Tindakan ini tidak dapat dibatalkan.`}
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive

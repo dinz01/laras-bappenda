@@ -22,9 +22,9 @@ it('denies access to pengguna index for user without permission', function () {
         ->assertForbidden();
 });
 
-it('allows access to pengguna index for user with user.view permission', function () {
+it('allows access to pengguna index for user with admin-pengguna.view permission', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('user.view');
+    $user->givePermissionTo('admin-pengguna.view');
 
     $this->actingAs($user)
         ->get(route('admin.pengguna.index'))
@@ -52,7 +52,7 @@ it('allows super administrator to bypass all policy checks', function () {
         ->assertOk();
 });
 
-it('denies access to role index for user without role.view permission', function () {
+it('denies access to role index for user without admin-role.view permission', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
@@ -60,16 +60,16 @@ it('denies access to role index for user without role.view permission', function
         ->assertForbidden();
 });
 
-it('allows access to role index for user with role.view permission', function () {
+it('allows access to role index for user with admin-role.view permission', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('role.view');
+    $user->givePermissionTo('admin-role.view');
 
     $this->actingAs($user)
         ->get(route('admin.role.index'))
         ->assertOk();
 });
 
-it('denies access to master jabatan for user without master.view permission', function () {
+it('denies access to master jabatan for user without master-jabatan.view permission', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
@@ -77,16 +77,16 @@ it('denies access to master jabatan for user without master.view permission', fu
         ->assertForbidden();
 });
 
-it('allows access to master jabatan for user with master.view permission', function () {
+it('allows access to master jabatan for user with master-jabatan.view permission', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('master.view');
+    $user->givePermissionTo('master-jabatan.view');
 
     $this->actingAs($user)
         ->get(route('master.jabatan.index'))
         ->assertOk();
 });
 
-it('denies access to audit log for user without auditlog.view permission', function () {
+it('denies access to audit log for user without admin-audit-log.view permission', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
@@ -94,9 +94,9 @@ it('denies access to audit log for user without auditlog.view permission', funct
         ->assertForbidden();
 });
 
-it('allows access to audit log for user with auditlog.view permission', function () {
+it('allows access to audit log for user with admin-audit-log.view permission', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('auditlog.view');
+    $user->givePermissionTo('admin-audit-log.view');
 
     $this->actingAs($user)
         ->get(route('admin.audit-log.index'))

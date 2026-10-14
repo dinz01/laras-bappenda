@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\NotificationType;
 use App\Enums\WorkflowStatus;
 use App\Events\WorkflowTransitioned;
 use App\Models\Arsip;
@@ -38,17 +37,21 @@ class WorkflowService
     /**
      * Tentukan nama aksi bisnis berdasarkan transisi status.
      */
-    public function determineAction(WorkflowStatus $from, WorkflowStatus $to): string
+    public function determineAction(WorkflowStatus $from, WorkflowStatus $target): string
     {
-        return match ([$from->value, $to->value]) {
-            [WorkflowStatus::Draft->value, WorkflowStatus::Review->value] => 'submit',
+        return match ([$from->value, $target->value]) {
             [WorkflowStatus::Review->value, WorkflowStatus::Approved->value] => 'verify',
+            [WorkflowStatus::Review->value, WorkflowStatus::WaitingTte->value] => 'verify',
             [WorkflowStatus::Review->value, WorkflowStatus::Revisi->value] => 'reject',
             [WorkflowStatus::Revisi->value, WorkflowStatus::Review->value] => 'resubmit',
+            [WorkflowStatus::Approved->value, WorkflowStatus::WaitingTte->value] => 'waiting_tte',
             [WorkflowStatus::Approved->value, WorkflowStatus::Active->value] => 'activate',
-            [WorkflowStatus::Active->value, WorkflowStatus::Retention->value] => 'retention',
-            [WorkflowStatus::Retention->value, WorkflowStatus::RecordCenter->value] => 'record_center',
-            [WorkflowStatus::RecordCenter->value, WorkflowStatus::Destruction->value] => 'destruction',
+            [WorkflowStatus::WaitingTte->value, WorkflowStatus::Active->value] => 'tte',
+            [WorkflowStatus::Active->value, WorkflowStatus::Inactive->value] => 'inaktif',
+            [WorkflowStatus::Inactive->value, WorkflowStatus::Musnah->value] => 'musnah',
+            [WorkflowStatus::Inactive->value, WorkflowStatus::Permanen->value] => 'permanen',
+            [WorkflowStatus::Active->value, WorkflowStatus::Musnah->value] => 'musnah',
+            [WorkflowStatus::Active->value, WorkflowStatus::Permanen->value] => 'permanen',
             default => 'transition',
         };
     }
@@ -67,12 +70,49 @@ class WorkflowService
         ?string $action = null,
     ): ArsipWorkflowHistory {
         if (! $this->canTransition($arsip, $target)) {
+            $fromVal = $arsip->workflow_status instanceof WorkflowStatus
+                ? $arsip->workflow_status->value
+                : (string) $arsip->workflow_status;
+
             throw new \InvalidArgumentException(
-                "Transisi dari [{$arsip->workflow_status->value}] ke [{$target->value}] tidak diizinkan."
+                "Transisi dari [{$fromVal}] ke [{$target->value}] tidak diizinkan."
             );
         }
 
         $statusLama = $arsip->workflow_status;
+
+        // Auto-check retention expiry if target is Active
+        if ($target === WorkflowStatus::Active) {
+            $arsip->loadMissing('klasifikasiArsip.nasibAkhir');
+            $klasifikasi = $arsip->klasifikasiArsip;
+
+            if ($klasifikasi && $klasifikasi->retensi_aktif !== null && $arsip->tanggal_arsip) {
+                $tahunAktif = (int) $klasifikasi->retensi_aktif;
+                $endActiveDate = $arsip->tanggal_arsip->copy()->addYears($tahunAktif);
+
+                if (now()->startOfDay()->greaterThanOrEqualTo($endActiveDate->startOfDay())) {
+                    // Masa aktif sudah lewat — cek masa inaktif
+                    if ($klasifikasi->retensi_inaktif !== null) {
+                        $tahunInaktif = (int) $klasifikasi->retensi_inaktif;
+                        $endInactiveDate = $endActiveDate->copy()->addYears($tahunInaktif);
+
+                        if (now()->startOfDay()->greaterThanOrEqualTo($endInactiveDate->startOfDay())) {
+                            // Masa inaktif pun sudah lewat — tentukan berdasarkan nasib akhir
+                            $namaNasibAkhir = $klasifikasi->nasibAkhir?->nama;
+                            $targetSlug = WorkflowStatus::fromNasibAkhir($namaNasibAkhir);
+
+                            $target = WorkflowStatus::tryFrom($targetSlug) ?? WorkflowStatus::Musnah;
+                        } else {
+                            // Masa aktif lewat, masa inaktif belum
+                            $target = WorkflowStatus::Inactive;
+                        }
+                    } else {
+                        // Tidak ada retensi inaktif → langsung Inactive
+                        $target = WorkflowStatus::Inactive;
+                    }
+                }
+            }
+        }
 
         // 1. Update status arsip
         $arsip->update(['workflow_status' => $target]);
@@ -103,12 +143,12 @@ class WorkflowService
         WorkflowTransitioned::dispatch($arsip, $statusLama, $target, $actor);
 
         // 5. Kirim notifikasi
-        $this->notificationService->create(
-            $actor,
-            NotificationType::TahapBerubah,
-            'Tahap Arsip Berubah',
-            "Arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berpindah dari [{$statusLama->label()}] ke [{$target->label()}].",
-            route('arsip.index'),
+        $this->notificationService->notifyWorkflowTransition(
+            arsip: $arsip,
+            statusLama: $statusLama,
+            target: $target,
+            actor: $actor,
+            keterangan: $keterangan,
         );
 
         return $history;
@@ -131,12 +171,12 @@ class WorkflowService
      */
     public function allowedTransitions(Arsip $arsip): array
     {
-        return array_map(
+        return array_values(array_map(
             fn (WorkflowStatus $status) => [
                 'value' => $status->value,
                 'label' => $status->label(),
             ],
             $arsip->workflow_status->allowedTransitions()
-        );
+        ));
     }
 }

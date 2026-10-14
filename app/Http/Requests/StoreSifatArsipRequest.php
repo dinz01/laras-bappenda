@@ -31,7 +31,7 @@ class StoreSifatArsipRequest extends FormRequest
 
         return [
             'kode' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 Rule::unique('sifat_arsip', 'kode')->ignore($sifatArsipId),

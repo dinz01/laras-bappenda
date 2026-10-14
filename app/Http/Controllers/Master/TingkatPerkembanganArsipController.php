@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTingkatPerkembanganArsipRequest;
 use App\Models\TingkatPerkembanganArsip;
+use App\Services\AuditLogService;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,10 @@ use Inertia\Response;
 
 class TingkatPerkembanganArsipController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     /**
      * Display a listing of the tingkat perkembangan arsip.
      */
@@ -38,7 +43,15 @@ class TingkatPerkembanganArsipController extends Controller
      */
     public function store(StoreTingkatPerkembanganArsipRequest $request): RedirectResponse
     {
-        TingkatPerkembanganArsip::create($this->validatedData($request));
+        $tingkatPerkembanganArsip = TingkatPerkembanganArsip::create($this->storeData($request));
+
+        $this->auditLogService->log(
+            'master.tingkat-perkembangan-arsip.created',
+            $tingkatPerkembanganArsip,
+            null,
+            ['kode' => $tingkatPerkembanganArsip->kode, 'nama' => $tingkatPerkembanganArsip->nama, 'status' => $tingkatPerkembanganArsip->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Tingkat perkembangan arsip berhasil ditambahkan.');
     }
@@ -48,7 +61,17 @@ class TingkatPerkembanganArsipController extends Controller
      */
     public function update(StoreTingkatPerkembanganArsipRequest $request, TingkatPerkembanganArsip $tingkatPerkembanganArsip): RedirectResponse
     {
-        $tingkatPerkembanganArsip->update($this->validatedData($request));
+        $oldValues = ['kode' => $tingkatPerkembanganArsip->kode, 'nama' => $tingkatPerkembanganArsip->nama, 'status' => $tingkatPerkembanganArsip->status];
+
+        $tingkatPerkembanganArsip->update($this->updateData($request));
+
+        $this->auditLogService->log(
+            'master.tingkat-perkembangan-arsip.updated',
+            $tingkatPerkembanganArsip,
+            $oldValues,
+            ['kode' => $tingkatPerkembanganArsip->kode, 'nama' => $tingkatPerkembanganArsip->nama, 'status' => $tingkatPerkembanganArsip->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Tingkat perkembangan arsip berhasil diperbarui.');
     }
@@ -66,7 +89,17 @@ class TingkatPerkembanganArsipController extends Controller
             ]);
         }
 
+        $oldValues = ['kode' => $tingkatPerkembanganArsip->kode, 'nama' => $tingkatPerkembanganArsip->nama, 'status' => $tingkatPerkembanganArsip->status];
+
         $tingkatPerkembanganArsip->delete();
+
+        $this->auditLogService->log(
+            'master.tingkat-perkembangan-arsip.deleted',
+            $tingkatPerkembanganArsip,
+            $oldValues,
+            null,
+            auth()->user(),
+        );
 
         return back()->with('success', 'Tingkat perkembangan arsip berhasil dihapus.');
     }
@@ -119,14 +152,38 @@ class TingkatPerkembanganArsipController extends Controller
     }
 
     /**
+     * Siapkan data untuk pembuatan tingkat perkembangan baru.
+     * Kode digenerate otomatis jika kosong.
+     *
      * @return array{kode: string, nama: string, deskripsi: string|null, status: string}
      */
-    private function validatedData(StoreTingkatPerkembanganArsipRequest $request): array
+    private function storeData(StoreTingkatPerkembanganArsipRequest $request): array
+    {
+        $validated = $request->validated();
+
+        $kode = isset($validated['kode']) && is_string($validated['kode']) && trim($validated['kode']) !== ''
+            ? trim($validated['kode'])
+            : TingkatPerkembanganArsip::generateKode();
+
+        return [
+            'kode' => $kode,
+            'nama' => (string) $validated['nama'],
+            'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
+            'status' => (string) $validated['status'],
+        ];
+    }
+
+    /**
+     * Siapkan data untuk update tingkat perkembangan yang sudah ada.
+     * Kode tidak dapat diubah saat edit.
+     *
+     * @return array{nama: string, deskripsi: string|null, status: string}
+     */
+    private function updateData(StoreTingkatPerkembanganArsipRequest $request): array
     {
         $validated = $request->validated();
 
         return [
-            'kode' => (string) $validated['kode'],
             'nama' => (string) $validated['nama'],
             'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
             'status' => (string) $validated['status'],

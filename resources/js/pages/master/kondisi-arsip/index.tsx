@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import {
     FileText,
     Eye,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
@@ -18,6 +19,7 @@ import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
 import { RouteGuard } from '@/components/RouteGuard';
+import { DataTablePagination } from '@/components/Tables/data-table-pagination';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
@@ -53,7 +55,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { dashboard } from '@/routes';
 import { destroy, index, store, update } from '@/routes/master/kondisi-arsip';
 
 type KondisiArsip = {
@@ -160,6 +161,11 @@ function KondisiArsipFormDialog({
             form.put(update({ kondisiArsip: kondisiArsip.id }).url, {
                 preserveScroll: true,
                 onSuccess: () => onOpenChange(false),
+                onError: () =>
+                    toast.error('Terjadi kesalahan saat memperbarui data.', {
+                        description:
+                            'Periksa kembali kolom yang ditandai merah.',
+                    }),
             });
 
             return;
@@ -171,6 +177,10 @@ function KondisiArsipFormDialog({
                 form.reset();
                 onOpenChange(false);
             },
+            onError: () =>
+                toast.error('Terjadi kesalahan saat menyimpan data.', {
+                    description: 'Periksa kembali kolom yang ditandai merah.',
+                }),
         });
     };
 
@@ -188,19 +198,23 @@ function KondisiArsipFormDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4">
+                <form onSubmit={submit} noValidate className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="kode">Kode</Label>
-                            <Input
-                                id="kode"
-                                value={form.data.kode}
-                                onChange={(event) =>
-                                    form.setData('kode', event.target.value)
-                                }
-                                placeholder="Contoh: KA-00001"
-                                maxLength={50}
-                            />
+                            <Label htmlFor="kode">Kode Kondisi Arsip</Label>
+                            <div>
+                                <Input
+                                    id="kode"
+                                    value="[Otomatis dibuat oleh sistem]"
+                                    disabled
+                                    className="cursor-not-allowed border-border/60 bg-muted/50 text-muted-foreground"
+                                />
+                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                    {mode === 'edit'
+                                        ? 'Kode kondisi arsip bersifat tetap dan tidak dapat diubah.'
+                                        : 'Nomor unik akan digenerate otomatis saat disimpan.'}
+                                </p>
+                            </div>
                             <InputError message={form.errors.kode} />
                         </div>
 
@@ -369,7 +383,6 @@ export default function KondisiArsipIndex({
         useState<KondisiArsip | null>(null);
     const [deleteKondisiArsip, setDeleteKondisiArsip] =
         useState<KondisiArsip | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
     const updateFilters = (
@@ -435,15 +448,16 @@ export default function KondisiArsipIndex({
         }
 
         setDeleting(true);
-        setDeleteError(null);
 
         router.delete(destroy({ kondisiArsip: deleteKondisiArsip.id }).url, {
             preserveScroll: true,
-            onSuccess: () => setDeleteKondisiArsip(null),
-            onError: (errors) => {
-                setDeleteError(
-                    errors.kondisi_arsip || 'Kondisi arsip gagal dihapus.',
-                );
+            onSuccess: () => {
+                setDeleteKondisiArsip(null);
+            },
+            onError: () => {
+                toast.error('Gagal menghapus data.', {
+                    description: 'Terjadi kesalahan, silakan coba lagi.',
+                });
             },
             onFinish: () => setDeleting(false),
         });
@@ -452,7 +466,7 @@ export default function KondisiArsipIndex({
     const hasFilters = Boolean(filters.search);
 
     return (
-        <RouteGuard permission="master.view">
+        <RouteGuard permission="master-kondisi-arsip.view">
             <Head title="Kondisi Arsip" />
 
             <PageContainer>
@@ -460,8 +474,7 @@ export default function KondisiArsipIndex({
                     title="Kondisi Arsip"
                     description="Manajemen data kondisi fisik dokumen arsip."
                     breadcrumb={[
-                        { title: 'Dashboard', href: dashboard.url() },
-                        { title: 'Master Data', href: '#' },
+                        { title: 'MASTER DATA' },
                         { title: 'Kondisi Arsip', href: index.url() },
                     ]}
                     actions={
@@ -474,7 +487,7 @@ export default function KondisiArsipIndex({
                     }
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <ContentCard title="Total Kondisi Arsip">
                         <StatValue value={stats.total_kondisi_arsip} />
                     </ContentCard>
@@ -483,9 +496,6 @@ export default function KondisiArsipIndex({
                     </ContentCard>
                     <ContentCard title="Nonaktif">
                         <StatValue value={stats.nonaktif} />
-                    </ContentCard>
-                    <ContentCard title="Dibuat Bulan Ini">
-                        <StatValue value={stats.dibuat_bulan_ini} />
                     </ContentCard>
                 </div>
 
@@ -521,8 +531,8 @@ export default function KondisiArsipIndex({
                             />
                         ) : (
                             <>
-                                <div className="overflow-hidden rounded-md border border-border/60">
-                                    <Table>
+                                <div className="overflow-x-auto rounded-md border border-border/60">
+                                    <Table className="min-w-[650px]">
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
                                                 <TableHead className="w-[130px] font-semibold">
@@ -627,9 +637,6 @@ export default function KondisiArsipIndex({
                                                                         <DropdownMenuSeparator />
                                                                         <DropdownMenuItem
                                                                             onClick={() => {
-                                                                                setDeleteError(
-                                                                                    null,
-                                                                                );
                                                                                 setDeleteKondisiArsip(
                                                                                     kondisiArsip,
                                                                                 );
@@ -650,61 +657,10 @@ export default function KondisiArsipIndex({
                                     </Table>
                                 </div>
 
-                                <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                                    <span>
-                                        Menampilkan {kondisiArsips.from || 0}{' '}
-                                        hingga {kondisiArsips.to || 0} dari{' '}
-                                        {kondisiArsips.total} kondisi
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={
-                                                !kondisiArsips.prev_page_url
-                                            }
-                                            asChild={Boolean(
-                                                kondisiArsips.prev_page_url,
-                                            )}
-                                        >
-                                            {kondisiArsips.prev_page_url ? (
-                                                <Link
-                                                    href={
-                                                        kondisiArsips.prev_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Sebelumnya
-                                                </Link>
-                                            ) : (
-                                                <span>Sebelumnya</span>
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={
-                                                !kondisiArsips.next_page_url
-                                            }
-                                            asChild={Boolean(
-                                                kondisiArsips.next_page_url,
-                                            )}
-                                        >
-                                            {kondisiArsips.next_page_url ? (
-                                                <Link
-                                                    href={
-                                                        kondisiArsips.next_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Selanjutnya
-                                                </Link>
-                                            ) : (
-                                                <span>Selanjutnya</span>
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
+                                <DataTablePagination
+                                    data={kondisiArsips}
+                                    itemName="kondisi"
+                                />
                             </>
                         )}
                     </div>
@@ -724,15 +680,11 @@ export default function KondisiArsipIndex({
             <ConfirmDialog
                 isOpen={deleteKondisiArsip !== null}
                 onClose={() => {
-                    setDeleteError(null);
                     setDeleteKondisiArsip(null);
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Kondisi Arsip"
-                description={
-                    deleteError ||
-                    `Hapus kondisi arsip "${deleteKondisiArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
-                }
+                description={`Hapus kondisi arsip "${deleteKondisiArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -751,7 +703,7 @@ function StatValue({ value }: { value: number }) {
 
 KondisiArsipIndex.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'MASTER DATA' },
         { title: 'Kondisi Arsip', href: '/master/kondisi-arsip' },
     ],
 };

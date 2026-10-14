@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreJenisArsipRequest;
 use App\Http\Requests\UpdateJenisArsipRequest;
 use App\Models\JenisArsip;
+use App\Services\AuditLogService;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,10 @@ use Inertia\Response;
 
 class JenisArsipController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     /**
      * Display a listing of the jenis arsip.
      */
@@ -39,7 +44,15 @@ class JenisArsipController extends Controller
      */
     public function store(StoreJenisArsipRequest $request): RedirectResponse
     {
-        JenisArsip::create($this->validatedData($request));
+        $jenisArsip = JenisArsip::create($this->storeData($request));
+
+        $this->auditLogService->log(
+            'master.jenis-arsip.created',
+            $jenisArsip,
+            null,
+            ['kode' => $jenisArsip->kode, 'nama' => $jenisArsip->nama, 'status' => $jenisArsip->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Jenis arsip berhasil ditambahkan.');
     }
@@ -49,7 +62,17 @@ class JenisArsipController extends Controller
      */
     public function update(UpdateJenisArsipRequest $request, JenisArsip $jenisArsip): RedirectResponse
     {
-        $jenisArsip->update($this->validatedData($request));
+        $oldValues = ['kode' => $jenisArsip->kode, 'nama' => $jenisArsip->nama, 'status' => $jenisArsip->status];
+
+        $jenisArsip->update($this->updateData($request));
+
+        $this->auditLogService->log(
+            'master.jenis-arsip.updated',
+            $jenisArsip,
+            $oldValues,
+            ['kode' => $jenisArsip->kode, 'nama' => $jenisArsip->nama, 'status' => $jenisArsip->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Jenis arsip berhasil diperbarui.');
     }
@@ -67,7 +90,17 @@ class JenisArsipController extends Controller
             ]);
         }
 
+        $oldValues = ['kode' => $jenisArsip->kode, 'nama' => $jenisArsip->nama, 'status' => $jenisArsip->status];
+
         $jenisArsip->delete();
+
+        $this->auditLogService->log(
+            'master.jenis-arsip.deleted',
+            $jenisArsip,
+            $oldValues,
+            null,
+            auth()->user(),
+        );
 
         return back()->with('success', 'Jenis arsip berhasil dihapus.');
     }
@@ -120,14 +153,38 @@ class JenisArsipController extends Controller
     }
 
     /**
+     * Siapkan data untuk pembuatan jenis arsip baru.
+     * Kode digenerate otomatis jika kosong.
+     *
      * @return array{kode: string, nama: string, deskripsi: string|null, status: string}
      */
-    private function validatedData(StoreJenisArsipRequest|UpdateJenisArsipRequest $request): array
+    private function storeData(StoreJenisArsipRequest $request): array
+    {
+        $validated = $request->validated();
+
+        $kode = isset($validated['kode']) && is_string($validated['kode']) && trim($validated['kode']) !== ''
+            ? trim($validated['kode'])
+            : JenisArsip::generateKode();
+
+        return [
+            'kode' => $kode,
+            'nama' => (string) $validated['nama'],
+            'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
+            'status' => (string) $validated['status'],
+        ];
+    }
+
+    /**
+     * Siapkan data untuk update jenis arsip.
+     * Kode tidak dapat diubah saat edit.
+     *
+     * @return array{nama: string, deskripsi: string|null, status: string}
+     */
+    private function updateData(UpdateJenisArsipRequest $request): array
     {
         $validated = $request->validated();
 
         return [
-            'kode' => (string) $validated['kode'],
             'nama' => (string) $validated['nama'],
             'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
             'status' => (string) $validated['status'],

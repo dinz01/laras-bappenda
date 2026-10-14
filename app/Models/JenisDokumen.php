@@ -36,7 +36,7 @@ class JenisDokumen extends Model
     protected $table = 'jenis_dokumen';
 
     /**
-     * Atribut yang boleh diisi secara massal.
+     * Atribut yang boleh diisi.
      *
      * @var list<string>
      */

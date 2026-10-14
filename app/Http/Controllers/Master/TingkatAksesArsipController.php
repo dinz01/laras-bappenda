@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTingkatAksesArsipRequest;
 use App\Models\TingkatAksesArsip;
+use App\Services\AuditLogService;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,10 @@ use Inertia\Response;
 
 class TingkatAksesArsipController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     /**
      * Display a listing of the tingkat akses arsip.
      */
@@ -38,7 +43,15 @@ class TingkatAksesArsipController extends Controller
      */
     public function store(StoreTingkatAksesArsipRequest $request): RedirectResponse
     {
-        TingkatAksesArsip::create($this->validatedData($request));
+        $tingkatAksesArsip = TingkatAksesArsip::create($this->storeData($request));
+
+        $this->auditLogService->log(
+            'master.tingkat-akses-arsip.created',
+            $tingkatAksesArsip,
+            null,
+            ['kode' => $tingkatAksesArsip->kode, 'nama' => $tingkatAksesArsip->nama, 'status' => $tingkatAksesArsip->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Tingkat akses arsip berhasil ditambahkan.');
     }
@@ -48,7 +61,17 @@ class TingkatAksesArsipController extends Controller
      */
     public function update(StoreTingkatAksesArsipRequest $request, TingkatAksesArsip $tingkatAksesArsip): RedirectResponse
     {
-        $tingkatAksesArsip->update($this->validatedData($request));
+        $oldValues = ['kode' => $tingkatAksesArsip->kode, 'nama' => $tingkatAksesArsip->nama, 'status' => $tingkatAksesArsip->status];
+
+        $tingkatAksesArsip->update($this->updateData($request));
+
+        $this->auditLogService->log(
+            'master.tingkat-akses-arsip.updated',
+            $tingkatAksesArsip,
+            $oldValues,
+            ['kode' => $tingkatAksesArsip->kode, 'nama' => $tingkatAksesArsip->nama, 'status' => $tingkatAksesArsip->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Tingkat akses arsip berhasil diperbarui.');
     }
@@ -66,7 +89,17 @@ class TingkatAksesArsipController extends Controller
             ]);
         }
 
+        $oldValues = ['kode' => $tingkatAksesArsip->kode, 'nama' => $tingkatAksesArsip->nama, 'status' => $tingkatAksesArsip->status];
+
         $tingkatAksesArsip->delete();
+
+        $this->auditLogService->log(
+            'master.tingkat-akses-arsip.deleted',
+            $tingkatAksesArsip,
+            $oldValues,
+            null,
+            auth()->user(),
+        );
 
         return back()->with('success', 'Tingkat akses arsip berhasil dihapus.');
     }
@@ -119,14 +152,38 @@ class TingkatAksesArsipController extends Controller
     }
 
     /**
+     * Siapkan data untuk pembuatan tingkat akses baru.
+     * Kode digenerate otomatis jika kosong.
+     *
      * @return array{kode: string, nama: string, deskripsi: string|null, status: string}
      */
-    private function validatedData(StoreTingkatAksesArsipRequest $request): array
+    private function storeData(StoreTingkatAksesArsipRequest $request): array
+    {
+        $validated = $request->validated();
+
+        $kode = isset($validated['kode']) && is_string($validated['kode']) && trim($validated['kode']) !== ''
+            ? trim($validated['kode'])
+            : TingkatAksesArsip::generateKode();
+
+        return [
+            'kode' => $kode,
+            'nama' => (string) $validated['nama'],
+            'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
+            'status' => (string) $validated['status'],
+        ];
+    }
+
+    /**
+     * Siapkan data untuk update tingkat akses yang sudah ada.
+     * Kode tidak dapat diubah saat edit.
+     *
+     * @return array{nama: string, deskripsi: string|null, status: string}
+     */
+    private function updateData(StoreTingkatAksesArsipRequest $request): array
     {
         $validated = $request->validated();
 
         return [
-            'kode' => (string) $validated['kode'],
             'nama' => (string) $validated['nama'],
             'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
             'status' => (string) $validated['status'],

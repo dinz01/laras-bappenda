@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoleRequest;
+use App\Services\AuditLogService;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -16,6 +17,10 @@ use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     /**
      * Display a listing of the roles.
      */
@@ -61,6 +66,7 @@ class RoleController extends Controller
 
         $validated = $request->validated();
 
+        /** @var Role $role */
         $role = Role::create([
             'name' => $validated['name'],
             'guard_name' => 'web',
@@ -69,6 +75,17 @@ class RoleController extends Controller
         if (! empty($validated['permissions'])) {
             $role->syncPermissions($validated['permissions']);
         }
+
+        $this->auditLogService->log(
+            'role.created',
+            $role,
+            null,
+            [
+                'name' => $role->name,
+                'permissions' => $validated['permissions'] ?? [],
+            ],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Role berhasil ditambahkan.');
     }
@@ -82,8 +99,24 @@ class RoleController extends Controller
 
         $validated = $request->validated();
 
+        $oldValues = [
+            'name' => $role->name,
+            'permissions' => $role->permissions->pluck('name')->all(),
+        ];
+
         $role->update(['name' => $validated['name']]);
         $role->syncPermissions($validated['permissions'] ?? []);
+
+        $this->auditLogService->log(
+            'role.updated',
+            $role,
+            $oldValues,
+            [
+                'name' => $role->name,
+                'permissions' => $validated['permissions'] ?? [],
+            ],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Role berhasil diperbarui.');
     }
@@ -102,7 +135,20 @@ class RoleController extends Controller
             ]);
         }
 
+        $oldValues = [
+            'name' => $role->name,
+            'permissions' => $role->permissions->pluck('name')->all(),
+        ];
+
         $role->delete();
+
+        $this->auditLogService->log(
+            'role.deleted',
+            $role,
+            $oldValues,
+            null,
+            auth()->user(),
+        );
 
         return back()->with('success', 'Role berhasil dihapus.');
     }

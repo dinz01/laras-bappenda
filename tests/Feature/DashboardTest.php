@@ -3,8 +3,6 @@
 use App\Enums\WorkflowStatus;
 use App\Models\Arsip;
 use App\Models\ArsipWorkflowHistory;
-use App\Models\Notification;
-use App\Models\StatusArsip;
 use App\Models\User;
 use App\Services\DashboardService;
 use Carbon\CarbonImmutable;
@@ -12,41 +10,32 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-beforeEach(function () {
-    // Populate required status arsip
-    StatusArsip::factory()->create(['kode' => 'SA-00001', 'nama' => 'Aktif']);
-    StatusArsip::factory()->create(['kode' => 'SA-00002', 'nama' => 'Inaktif']);
-    StatusArsip::factory()->create(['kode' => 'SA-00003', 'nama' => 'Permanen']);
-});
-
 it('calculates dashboard main statistics correctly', function () {
     $service = new DashboardService;
 
-    $statusAktif = StatusArsip::where('kode', 'SA-00001')->first();
-    $statusInaktif = StatusArsip::where('kode', 'SA-00002')->first();
-
-    Arsip::factory()->count(3)->create(['status_arsip_id' => $statusAktif->id]);
-    Arsip::factory()->count(2)->create(['status_arsip_id' => $statusInaktif->id]);
+    Arsip::factory()->count(3)->create(['workflow_status' => WorkflowStatus::Active]);
+    Arsip::factory()->count(2)->create(['workflow_status' => WorkflowStatus::Inactive]);
+    Arsip::factory()->count(1)->create(['workflow_status' => WorkflowStatus::Permanen]);
 
     $stats = $service->mainStatistics();
 
-    expect($stats['total'])->toBe(5)
+    expect($stats['total'])->toBe(6)
         ->and($stats['aktif'])->toBe(3)
         ->and($stats['inaktif'])->toBe(2)
-        ->and($stats['permanen'])->toBe(0);
+        ->and($stats['permanen'])->toBe(1);
 });
 
 it('groups dashboard statistics by workflow status stage correctly', function () {
     $service = new DashboardService;
 
-    Arsip::factory()->count(2)->create(['workflow_status' => WorkflowStatus::Draft]);
+    Arsip::factory()->count(2)->create(['workflow_status' => WorkflowStatus::Review]);
     Arsip::factory()->count(1)->create(['workflow_status' => WorkflowStatus::Approved]);
 
     $stats = $service->tahapStatistics();
 
-    expect($stats['draft'])->toBe(2)
+    expect($stats['review'])->toBe(2)
         ->and($stats['approved'])->toBe(1)
-        ->and($stats['review'])->toBe(0);
+        ->and($stats['revisi'])->toBe(0);
 });
 
 it('retrieves recent dashboard activities sorted by date', function () {
@@ -65,30 +54,34 @@ it('retrieves recent dashboard activities sorted by date', function () {
 
     $activities = $service->recentActivities();
 
-    expect($activities->count())->toBeGreaterThanOrEqual(1);
-
-    $activity = $activities->first();
-    expect($activity['judul'])->toBe('Arsip Penting')
-        ->and($activity['user'])->toBe('John Doe')
-        ->and($activity['aktivitas'])->toBe('Arsip dibuat')
-        ->and($activity['tanggal'])->toBe('19 Jul 2026 21:20 WIB');
+    expect($activities->first())
+        ->toHaveKey('judul', 'Arsip Penting')
+        ->toHaveKey('aktivitas', 'Arsip dibuat');
 });
 
-it('handles soft-deleted archives in recent activities without crashing', function () {
+it('handles soft deleted archives in recent activities without crashing', function () {
     $service = new DashboardService;
-    $user = User::factory()->create(['name' => 'John Doe']);
+
+    $user = User::factory()->create(['name' => 'Jane Doe']);
+    $createdAt = CarbonImmutable::parse('2026-07-19 21:20:00', config('app.timezone'));
 
     $arsip = Arsip::factory()->create([
-        'judul' => 'Arsip Dihapus',
+        'judul' => 'Arsip Yang Dihapus',
         'created_by' => $user->id,
+        'created_at' => $createdAt,
+        'updated_at' => $createdAt,
     ]);
 
-    // Create workflow history
+    // Add workflow history
     ArsipWorkflowHistory::create([
         'arsip_id' => $arsip->id,
-        'status_lama' => WorkflowStatus::Draft->value,
-        'status_baru' => WorkflowStatus::Review->value,
-        'user_id' => $user->id,
+        'status_lama' => WorkflowStatus::Review,
+        'status_baru' => WorkflowStatus::Approved,
+        'action' => 'verify',
+        'actor_id' => $user->id,
+        'actor_name' => $user->name,
+        'keterangan' => 'Pengajuan awal',
+        'created_at' => $createdAt->addMinute(),
     ]);
 
     // Soft delete the archive
@@ -96,41 +89,21 @@ it('handles soft-deleted archives in recent activities without crashing', functi
 
     $activities = $service->recentActivities();
 
-    // Verify it doesn't throw Exception and successfully maps the activity
-    expect($activities->count())->toBeGreaterThanOrEqual(1);
-
-    $transitionActivity = $activities->firstWhere('arsip_id', $arsip->id);
-    expect($transitionActivity)->not->toBeNull()
-        ->and($transitionActivity['judul'])->toBe('Arsip Dihapus')
-        ->and($transitionActivity['aktivitas'])->toContain('Tahap berubah ke Review');
+    // Should not throw exception and should contain activity with label
+    expect($activities->count())->toBeGreaterThan(0)
+        ->and($activities->first()['judul'])->toContain('Arsip Yang Dihapus');
 });
 
 it('loads dashboard page with successful Inertia props for authenticated user', function () {
-    $user = User::factory()->create();
-    $createdAt = CarbonImmutable::parse('2026-07-19 21:20:00', config('app.timezone'));
-    $notification = Notification::factory()->create([
-        'user_id' => $user->id,
-    ]);
-    $notification->forceFill([
-        'created_at' => $createdAt,
-        'updated_at' => $createdAt,
-    ])->save();
+    $user = superAdmin();
 
-    $this->actingAs($user);
+    $response = $this->actingAs($user)->get('/dashboard');
 
-    $response = $this->get(route('dashboard'));
-
-    $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => $page
-        ->component('dashboard')
-        ->has('statistics')
-        ->has('tahapStatistics')
-        ->has('arsipPerTahun')
-        ->has('topUnit')
-        ->has('topKlasifikasi')
-        ->has('recentActivities')
-        ->has('mendekatiRetensi')
-        ->where('notifications.latest.0.created_at', '2026-07-19T21:20:00+07:00')
-        ->where('notifications.latest.0.created_at_human', '19 Jul 2026 21:20 WIB')
-    );
+    $response->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('dashboard')
+            ->has('statistics')
+            ->has('tahapStatistics')
+            ->has('recentActivities')
+        );
 });

@@ -28,10 +28,9 @@ it('renders jabatan index with correct props', function () {
         );
 });
 
-it('stores a new jabatan', function () {
+it('stores a new jabatan with auto-generated kode', function () {
     $this->actingAs($this->user)
         ->post(route('master.jabatan.store'), [
-            'kode' => 'JB-001',
             'nama' => 'Kepala Badan Test',
             'singkatan' => 'KABAN',
             'status' => 'active',
@@ -39,24 +38,40 @@ it('stores a new jabatan', function () {
         ->assertRedirect();
 
     $this->assertDatabaseHas('jabatan', [
-        'kode' => 'JB-001',
+        'kode' => 'JAB-001',
         'nama' => 'Kepala Badan Test',
         'singkatan' => 'KABAN',
+    ]);
+});
+
+it('increments sequential auto-generated kode for jabatan', function () {
+    Jabatan::factory()->create(['kode' => 'JAB-001']);
+
+    $this->actingAs($this->user)
+        ->post(route('master.jabatan.store'), [
+            'nama' => 'Sekretaris Badan',
+            'singkatan' => 'SEKBAN',
+            'status' => 'active',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('jabatan', [
+        'kode' => 'JAB-002',
+        'nama' => 'Sekretaris Badan',
     ]);
 });
 
 it('validates required fields on store', function () {
     $this->actingAs($this->user)
         ->post(route('master.jabatan.store'), [])
-        ->assertSessionHasErrors(['kode', 'nama', 'status']);
+        ->assertSessionHasErrors(['nama', 'status']);
 });
 
-it('updates a jabatan', function () {
-    $jabatan = Jabatan::factory()->create();
+it('updates a jabatan without changing kode', function () {
+    $jabatan = Jabatan::factory()->create(['kode' => 'JAB-001', 'nama' => 'Nama Awal']);
 
     $this->actingAs($this->user)
         ->put(route('master.jabatan.update', $jabatan), [
-            'kode' => $jabatan->kode,
             'nama' => 'Nama Diperbarui',
             'singkatan' => 'RENEW',
             'status' => 'inactive',
@@ -65,6 +80,7 @@ it('updates a jabatan', function () {
 
     $this->assertDatabaseHas('jabatan', [
         'id' => $jabatan->id,
+        'kode' => 'JAB-001',
         'nama' => 'Nama Diperbarui',
         'singkatan' => 'RENEW',
         'status' => 'inactive',
@@ -93,11 +109,11 @@ it('prevents deleting jabatan in use by user', function () {
 });
 
 it('searches jabatan by kode', function () {
-    Jabatan::factory()->create(['kode' => 'JB-001', 'nama' => 'Kepala']);
-    Jabatan::factory()->create(['kode' => 'JB-002', 'nama' => 'Sekretaris']);
+    Jabatan::factory()->create(['kode' => 'JAB-001', 'nama' => 'Kepala']);
+    Jabatan::factory()->create(['kode' => 'JAB-002', 'nama' => 'Sekretaris']);
 
     $this->actingAs($this->user)
-        ->get(route('master.jabatan.index', ['search' => 'JB-001']))
+        ->get(route('master.jabatan.index', ['search' => 'JAB-001']))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->has('jabatans.data', 1)

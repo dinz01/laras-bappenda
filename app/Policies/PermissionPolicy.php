@@ -14,7 +14,7 @@ class PermissionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('permission.view');
+        return $user->can('admin-permission.view');
     }
 
     /**
@@ -22,30 +22,6 @@ class PermissionPolicy
      */
     public function view(User $user, Permission $permission): bool
     {
-        return $user->can('permission.view');
-    }
-
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return $user->can('permission.create');
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Permission $permission): bool
-    {
-        return $user->can('permission.update');
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Permission $permission): bool
-    {
-        return $user->can('permission.delete');
+        return $user->can('admin-permission.view');
     }
 }

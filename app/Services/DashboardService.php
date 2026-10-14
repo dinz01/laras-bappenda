@@ -14,45 +14,50 @@ use Illuminate\Support\Facades\DB;
 class DashboardService
 {
     /**
-     * Statistik utama arsip berdasarkan status arsip (Aktif/Inaktif/Permanen).
+     * Statistik utama arsip untuk score card.
      *
      * @return array{
      *   total: int,
      *   aktif: int,
      *   inaktif: int,
+     *   review: int,
+     *   revisi: int,
+     *   waitingTte: int,
+     *   destruction: int,
      *   permanen: int,
      *   bulanIni: int
      * }
      */
-    public function mainStatistics(): array
+    public function mainStatistics(?int $unitId = null): array
     {
-        $total = Arsip::count();
+        $base = Arsip::query();
+        if ($unitId !== null) {
+            $base->where('unit_organisasi_id', $unitId);
+        }
 
-        $perStatus = Arsip::selectRaw('status_arsip_id, count(*) as total')
-            ->groupBy('status_arsip_id')
-            ->pluck('total', 'status_arsip_id')
-            ->toArray();
+        $total = (clone $base)->count();
+        $aktif = (clone $base)->where('workflow_status', WorkflowStatus::Active->value)->count();
+        $inaktif = (clone $base)->where('workflow_status', WorkflowStatus::Inactive->value)->count();
+        $review = (clone $base)->where('workflow_status', WorkflowStatus::Review->value)->count();
+        $revisi = (clone $base)->where('workflow_status', WorkflowStatus::Revisi->value)->count();
+        $waitingTte = (clone $base)->where('workflow_status', WorkflowStatus::WaitingTte->value)->count();
+        $musnah = (clone $base)->where('workflow_status', WorkflowStatus::Musnah->value)->count();
+        $permanen = (clone $base)->where('workflow_status', WorkflowStatus::Permanen->value)->count();
 
-        // SA-00001=Aktif, SA-00002=Inaktif, SA-00003=Permanen
-        // Resolve IDs via names safely
-        $statusIds = DB::table('status_arsip')
-            ->whereIn('kode', ['SA-00001', 'SA-00002', 'SA-00003'])
-            ->pluck('id', 'kode')
-            ->toArray();
-
-        $aktifId = $statusIds['SA-00001'] ?? 0;
-        $inaktifId = $statusIds['SA-00002'] ?? 0;
-        $permanenId = $statusIds['SA-00003'] ?? 0;
-
-        $bulanIni = Arsip::whereYear('created_at', now()->year)
+        $bulanIni = (clone $base)->whereYear('created_at', now()->year)
             ->whereMonth('created_at', now()->month)
             ->count();
 
         return [
             'total' => $total,
-            'aktif' => (int) ($perStatus[$aktifId] ?? 0),
-            'inaktif' => (int) ($perStatus[$inaktifId] ?? 0),
-            'permanen' => (int) ($perStatus[$permanenId] ?? 0),
+            'aktif' => $aktif,
+            'inaktif' => $inaktif,
+            'review' => $review,
+            'revisi' => $revisi,
+            'waitingTte' => $waitingTte,
+            'musnah' => $musnah,
+            'destruction' => $musnah,
+            'permanen' => $permanen,
             'bulanIni' => $bulanIni,
         ];
     }
@@ -62,10 +67,14 @@ class DashboardService
      *
      * @return array<string, int>
      */
-    public function tahapStatistics(): array
+    public function tahapStatistics(?int $unitId = null): array
     {
-        $counts = Arsip::selectRaw('workflow_status, count(*) as total')
-            ->groupBy('workflow_status')
+        $query = Arsip::selectRaw('workflow_status, count(*) as total');
+        if ($unitId !== null) {
+            $query->where('unit_organisasi_id', $unitId);
+        }
+
+        $counts = $query->groupBy('workflow_status')
             ->pluck('total', 'workflow_status')
             ->toArray();
 
@@ -82,20 +91,37 @@ class DashboardService
      *
      * @return Collection<int, array{tahun: int, total: int}>
      */
-    public function arsipPerTahun(): Collection
+    public function arsipPerTahun(?int $unitId = null): Collection
     {
-        $dates = DB::table('arsip')
+        $query = DB::table('arsip')
             ->whereNull('deleted_at')
-            ->whereNotNull('tanggal_arsip')
-            ->pluck('tanggal_arsip');
+            ->whereNotNull('tanggal_arsip');
+
+        if ($unitId !== null) {
+            $query->where('unit_organisasi_id', $unitId);
+        }
+
+        $dates = $query->pluck('tanggal_arsip');
 
         $grouped = [];
         foreach ($dates as $date) {
-            $year = (int) date('Y', is_string($date) ? strtotime($date) : $date);
-            if (! isset($grouped[$year])) {
-                $grouped[$year] = 0;
+            if (! $date) {
+                continue;
             }
-            $grouped[$year]++;
+            // Parse robustly: might be '2024-05-12' or '2024-05-12 00:00:00' or Carbon or string
+            $year = null;
+            if (is_numeric($date) && strlen((string) $date) === 4) {
+                $year = (int) $date;
+            } else {
+                $time = strtotime((string) $date);
+                if ($time !== false) {
+                    $year = (int) date('Y', $time);
+                }
+            }
+
+            if ($year && $year > 1900 && $year < 2100) {
+                $grouped[$year] = ($grouped[$year] ?? 0) + 1;
+            }
         }
 
         ksort($grouped);
@@ -116,11 +142,17 @@ class DashboardService
      *
      * @return Collection<int, array{nama: string, kode: string, total: int}>
      */
-    public function topUnitOrganisasi(): Collection
+    public function topUnitOrganisasi(?int $unitId = null): Collection
     {
-        return DB::table('arsip')
+        $query = DB::table('arsip')
             ->join('unit_organisasi', 'arsip.unit_organisasi_id', '=', 'unit_organisasi.id')
-            ->whereNull('arsip.deleted_at')
+            ->whereNull('arsip.deleted_at');
+
+        if ($unitId !== null) {
+            $query->where('arsip.unit_organisasi_id', $unitId);
+        }
+
+        return $query
             ->selectRaw('unit_organisasi.nama, unit_organisasi.kode, count(*) as total')
             ->groupBy('arsip.unit_organisasi_id', 'unit_organisasi.nama', 'unit_organisasi.kode')
             ->orderByDesc('total')
@@ -138,11 +170,17 @@ class DashboardService
      *
      * @return Collection<int, array{nama: string, kode: string, total: int}>
      */
-    public function topKlasifikasi(): Collection
+    public function topKlasifikasi(?int $unitId = null): Collection
     {
-        return DB::table('arsip')
+        $query = DB::table('arsip')
             ->join('klasifikasi_arsip', 'arsip.klasifikasi_arsip_id', '=', 'klasifikasi_arsip.id')
-            ->whereNull('arsip.deleted_at')
+            ->whereNull('arsip.deleted_at');
+
+        if ($unitId !== null) {
+            $query->where('arsip.unit_organisasi_id', $unitId);
+        }
+
+        return $query
             ->selectRaw('klasifikasi_arsip.nama, klasifikasi_arsip.kode, count(*) as total')
             ->groupBy('arsip.klasifikasi_arsip_id', 'klasifikasi_arsip.nama', 'klasifikasi_arsip.kode')
             ->orderByDesc('total')
@@ -164,21 +202,30 @@ class DashboardService
      *
      * @return Collection<int, array{id: int, arsip_id: int, nomor_arsip: string, judul: string, aktivitas: string, user: string, tanggal: string}>
      */
-    public function recentActivities(): Collection
+    public function recentActivities(?int $unitId = null): Collection
     {
         // Get 10 most recent workflow transitions
-        $transitions = ArsipWorkflowHistory::with([
-            'arsip' => fn ($q) => $q->withTrashed()->select(['id', 'nomor_arsip', 'judul']),
+        $transitionsQuery = ArsipWorkflowHistory::with([
+            'arsip' => fn ($q) => $q->withTrashed()->select(['id', 'nomor_arsip', 'judul', 'unit_organisasi_id']),
             'user:id,name',
-        ])
+        ]);
+
+        if ($unitId !== null) {
+            $transitionsQuery->whereHas('arsip', function ($q) use ($unitId): void {
+                /** @phpstan-ignore-next-line */
+                $q->withTrashed()->where('unit_organisasi_id', $unitId);
+            });
+        }
+
+        $transitions = $transitionsQuery
             ->orderByDesc('created_at')
             ->limit(10)
             ->get()
             ->map(fn (ArsipWorkflowHistory $h) => [
                 'id' => $h->id,
                 'arsip_id' => $h->arsip_id,
-                'nomor_arsip' => $h->arsip->nomor_arsip,
-                'judul' => $h->arsip->judul,
+                'nomor_arsip' => $h->arsip ? $h->arsip->nomor_arsip : '-',
+                'judul' => $h->arsip ? $h->arsip->judul : '-',
                 'aktivitas' => 'Tahap berubah ke '.$h->status_baru->label(),
                 'user' => $h->user ? $h->user->name : 'Sistem',
                 'tanggal' => AppDateTime::dateTime($h->created_at) ?? '',
@@ -186,7 +233,13 @@ class DashboardService
             ]);
 
         // Get 10 most recently created archives
-        $newArsip = Arsip::with('creator:id,name')
+        $newArsipQuery = Arsip::with('creator:id,name');
+
+        if ($unitId !== null) {
+            $newArsipQuery->where('unit_organisasi_id', $unitId);
+        }
+
+        $newArsip = $newArsipQuery
             ->orderByDesc('created_at')
             ->limit(10)
             ->get()
@@ -219,27 +272,56 @@ class DashboardService
     /**
      * Arsip yang mendekati masa akhir retensi aktif dalam 1 tahun ke depan.
      *
-     * @return Collection<int, array{nomor_arsip: string, judul: string, tahun_retensi_aktif: int, tanggal_arsip: string}>
+     * @return Collection<int, array{nomor_arsip: string, judul: string, tahun_retensi_aktif: int, tanggal_arsip: string, tanggal_inaktif: string, tanggal_inaktif_full: string, sisa_waktu: non-falsy-string, is_expired: bool}>
      */
-    public function arsipMendekatiRetensi(): Collection
+    public function arsipMendekatiRetensi(?int $unitId = null): Collection
     {
-        return Arsip::with('retensiArsip:id,nama,retensi_aktif')
-            ->whereNotNull('retensi_arsip_id')
+        $query = Arsip::with('klasifikasiArsip:id,nama,retensi_aktif')
+            ->whereHas('klasifikasiArsip', fn ($q) => $q->whereNotNull('retensi_aktif'))
             ->whereNotNull('tanggal_arsip')
-            ->whereIn('workflow_status', [
-                WorkflowStatus::Active->value,
-                WorkflowStatus::Retention->value,
-            ])
+            ->where('workflow_status', WorkflowStatus::Active->value);
+
+        if ($unitId !== null) {
+            $query->where('unit_organisasi_id', $unitId);
+        }
+
+        return $query
             ->orderBy('tanggal_arsip')
             ->limit(10)
             ->get()
-            ->filter(fn (Arsip $a) => $a->retensiArsip !== null)
-            ->map(fn (Arsip $a) => [
-                'nomor_arsip' => $a->nomor_arsip,
-                'judul' => $a->judul,
-                'tahun_retensi_aktif' => (int) $a->retensiArsip->retensi_aktif,
-                'tanggal_arsip' => $a->tanggal_arsip->toDateString(),
-            ])
+            ->filter(fn (Arsip $a) => $a->klasifikasiArsip !== null)
+            ->map(function (Arsip $a) {
+                $retensiAktifTahun = (int) $a->klasifikasiArsip->retensi_aktif;
+                $tglArsip = $a->tanggal_arsip;
+                $tglInaktif = $tglArsip ? $tglArsip->copy()->addYears($retensiAktifTahun) : null;
+
+                $sisaBulan = $tglInaktif ? (int) now()->diffInMonths($tglInaktif, false) : 0;
+                $sisaHari = $tglInaktif ? (int) now()->diffInDays($tglInaktif, false) : 0;
+
+                $keteranganSisa = '';
+                if ($sisaHari <= 0) {
+                    $keteranganSisa = 'Lewat waktu';
+                } elseif ($sisaBulan < 1) {
+                    $keteranganSisa = "{$sisaHari} hari lagi";
+                } elseif ($sisaBulan < 12) {
+                    $keteranganSisa = "{$sisaBulan} bln lagi";
+                } else {
+                    $tahunSisa = floor($sisaBulan / 12);
+                    $bulanSisa = $sisaBulan % 12;
+                    $keteranganSisa = $bulanSisa > 0 ? "{$tahunSisa} thn {$bulanSisa} bln" : "{$tahunSisa} thn lagi";
+                }
+
+                return [
+                    'nomor_arsip' => $a->nomor_arsip,
+                    'judul' => $a->judul,
+                    'tahun_retensi_aktif' => $retensiAktifTahun,
+                    'tanggal_arsip' => $tglArsip ? $tglArsip->toDateString() : '',
+                    'tanggal_inaktif' => $tglInaktif ? $tglInaktif->translatedFormat('F Y') : '-',
+                    'tanggal_inaktif_full' => $tglInaktif ? $tglInaktif->translatedFormat('d M Y') : '-',
+                    'sisa_waktu' => $keteranganSisa,
+                    'is_expired' => $sisaHari <= 0,
+                ];
+            })
             ->values();
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\NotificationType;
 use App\Models\Arsip;
 use App\Models\User;
 use App\Support\AppDateTime;
@@ -57,13 +56,7 @@ class RecycleBinService
             $request
         );
 
-        $this->notificationService->create(
-            $actor,
-            NotificationType::ArsipDipulihkan,
-            'Arsip Dipulihkan',
-            "Arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) berhasil dipulihkan dari recycle bin.",
-            route('arsip.index'),
-        );
+        $this->notificationService->notifyArsipRestored($arsip, $actor);
     }
 
     /**
@@ -88,12 +81,7 @@ class RecycleBinService
             $request
         );
 
-        $this->notificationService->create(
-            $actor,
-            NotificationType::ArsipDihapusPermanen,
-            'Arsip Dihapus Permanen',
-            "Arsip \"{$arsip->judul}\" ({$arsip->nomor_arsip}) telah dihapus secara permanen.",
-        );
+        $this->notificationService->notifyArsipForceDeleted($arsip, $actor);
 
         // Force delete akan cascade ke relasi melalui DB foreign key ON DELETE CASCADE
         $arsip->forceDelete();

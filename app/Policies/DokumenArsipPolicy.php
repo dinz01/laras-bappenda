@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Enums\PeminjamanStatus;
 use App\Models\DokumenArsip;
 use App\Models\User;
 
@@ -14,7 +15,9 @@ class DokumenArsipPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('dokumen.view');
+        return $user->can('repositori-arsip.view')
+            || $user->can('kelola-arsip.view')
+            || $user->can('arsip-inaktif.view');
     }
 
     /**
@@ -22,7 +25,9 @@ class DokumenArsipPolicy
      */
     public function view(User $user, DokumenArsip $dokumen): bool
     {
-        return $user->can('dokumen.view');
+        return $user->can('repositori-arsip.view')
+            || $user->can('kelola-arsip.view')
+            || $user->can('arsip-inaktif.view');
     }
 
     /**
@@ -30,7 +35,8 @@ class DokumenArsipPolicy
      */
     public function upload(User $user): bool
     {
-        return $user->can('dokumen.upload');
+        return $user->can('kelola-arsip.create')
+            || $user->can('kelola-arsip.update');
     }
 
     /**
@@ -38,7 +44,14 @@ class DokumenArsipPolicy
      */
     public function download(User $user, DokumenArsip $dokumen): bool
     {
-        return $user->can('dokumen.download');
+        $arsip = $dokumen->arsip;
+        if ($arsip && $arsip->peminjamans()->where('pemohon_id', $user->id)->where('status', PeminjamanStatus::Approved)->exists()) {
+            return true;
+        }
+
+        return $user->can('dokumen-arsip.download')
+            || $user->can('repositori-arsip.download')
+            || $user->can('kelola-arsip.view');
     }
 
     /**
@@ -46,6 +59,6 @@ class DokumenArsipPolicy
      */
     public function delete(User $user, DokumenArsip $dokumen): bool
     {
-        return $user->can('dokumen.delete');
+        return $user->can('kelola-arsip.delete');
     }
 }

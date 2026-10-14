@@ -43,7 +43,7 @@ class DokumenArsipVersion extends Model
     protected $table = 'dokumen_arsip_versions';
 
     /**
-     * Atribut yang boleh diisi secara massal.
+     * Atribut yang boleh diisi.
      *
      * @var list<string>
      */

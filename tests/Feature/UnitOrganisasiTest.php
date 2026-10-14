@@ -29,31 +29,30 @@ it('renders unit organisasi index with correct props', function () {
         );
 });
 
-it('stores a new root unit organisasi', function () {
+it('stores a new root unit organisasi with auto-generated kode', function () {
     $this->actingAs($this->user)
         ->post(route('master.unit-organisasi.store'), [
-            'kode' => 'UN-001',
             'nama' => 'Sekretariat Test',
             'singkatan' => 'SEKR',
             'parent_id' => null,
+            'tipe' => 'bidang',
             'status' => 'active',
         ])
         ->assertRedirect();
 
     $this->assertDatabaseHas('unit_organisasi', [
-        'kode' => 'UN-001',
+        'kode' => 'BID-001',
         'nama' => 'Sekretariat Test',
         'singkatan' => 'SEKR',
         'parent_id' => null,
     ]);
 });
 
-it('stores a new child unit organisasi', function () {
-    $parent = UnitOrganisasi::factory()->create();
+it('stores a new child unit organisasi with auto-generated kode', function () {
+    $parent = UnitOrganisasi::factory()->create(['tipe' => 'bidang']);
 
     $this->actingAs($this->user)
         ->post(route('master.unit-organisasi.store'), [
-            'kode' => 'UN-002',
             'nama' => 'Sub Bagian Umum',
             'singkatan' => 'UMUM',
             'parent_id' => $parent->id,
@@ -62,15 +61,51 @@ it('stores a new child unit organisasi', function () {
         ->assertRedirect();
 
     $this->assertDatabaseHas('unit_organisasi', [
-        'kode' => 'UN-002',
+        'kode' => 'SUB-001',
+        'nama' => 'Sub Bagian Umum',
         'parent_id' => $parent->id,
+    ]);
+});
+
+it('stores a new upt unit organisasi with auto-generated kode', function () {
+    $this->actingAs($this->user)
+        ->post(route('master.unit-organisasi.store'), [
+            'nama' => 'UPT Pajak Daerah Cibinong',
+            'singkatan' => 'UPT-CBN',
+            'parent_id' => null,
+            'tipe' => 'upt',
+            'status' => 'active',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('unit_organisasi', [
+        'kode' => 'UPT-001',
+        'nama' => 'UPT Pajak Daerah Cibinong',
+        'tipe' => 'upt',
+    ]);
+});
+
+it('increments sequential auto-generated kode for same tipe', function () {
+    UnitOrganisasi::factory()->create(['kode' => 'BID-001', 'tipe' => 'bidang']);
+
+    $this->actingAs($this->user)
+        ->post(route('master.unit-organisasi.store'), [
+            'nama' => 'Bidang Pajak Daerah',
+            'tipe' => 'bidang',
+            'status' => 'active',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('unit_organisasi', [
+        'kode' => 'BID-002',
+        'nama' => 'Bidang Pajak Daerah',
     ]);
 });
 
 it('validates required fields on store', function () {
     $this->actingAs($this->user)
         ->post(route('master.unit-organisasi.store'), [])
-        ->assertSessionHasErrors(['kode', 'nama', 'status']);
+        ->assertSessionHasErrors(['nama', 'status', 'tipe']);
 });
 
 it('prevents setting self as parent on update', function () {
@@ -82,6 +117,7 @@ it('prevents setting self as parent on update', function () {
             'nama' => $unit->nama,
             'singkatan' => $unit->singkatan,
             'parent_id' => $unit->id,
+            'tipe' => 'bidang',
             'status' => 'active',
         ])
         ->assertSessionHasErrors('parent_id');
@@ -96,6 +132,7 @@ it('updates a unit organisasi', function () {
             'nama' => 'Nama Diperbarui',
             'singkatan' => 'RENEW',
             'parent_id' => null,
+            'tipe' => 'bidang',
             'status' => 'inactive',
         ])
         ->assertRedirect();
@@ -141,11 +178,11 @@ it('prevents deleting unit organisasi in use by arsip', function () {
 });
 
 it('searches unit organisasi by kode', function () {
-    UnitOrganisasi::factory()->create(['kode' => 'UN-001', 'nama' => 'Sekretariat']);
-    UnitOrganisasi::factory()->create(['kode' => 'UN-002', 'nama' => 'Pendataan']);
+    UnitOrganisasi::factory()->create(['kode' => 'BID-001', 'nama' => 'Sekretariat']);
+    UnitOrganisasi::factory()->create(['kode' => 'BID-002', 'nama' => 'Pendataan']);
 
     $this->actingAs($this->user)
-        ->get(route('master.unit-organisasi.index', ['search' => 'UN-001']))
+        ->get(route('master.unit-organisasi.index', ['search' => 'BID-001']))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->has('units', 1)

@@ -1,7 +1,6 @@
 <?php
 
 use App\Console\Commands\DeleteExpiredArchivesCommand;
-use App\Console\Commands\DeleteExpiredNotificationsCommand;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Console\Scheduling\Schedule;
@@ -13,6 +12,7 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -37,10 +37,21 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command(DeleteExpiredArchivesCommand::class)->hourly();
-        $schedule->command(DeleteExpiredNotificationsCommand::class)->daily();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->render(function (TooManyRequestsHttpException $e, Request $request) {
+            if ($request->is('login')) {
+                $retryAfter = $e->getHeaders()['Retry-After'] ?? 60;
+
+                return redirect()->route('login')->withErrors([
+                    'username' => __('Terlalu banyak percobaan login. Silakan tunggu :detik detik sebelum mencoba kembali.', [
+                        'detik' => $retryAfter,
+                    ]),
+                ])->withInput($request->only('username'));
+            }
+        });
     })->create();

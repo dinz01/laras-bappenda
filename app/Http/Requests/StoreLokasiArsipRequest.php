@@ -30,8 +30,41 @@ class StoreLokasiArsipRequest extends FormRequest
             : null;
 
         return [
+            'parent_id' => [
+                'nullable',
+                'integer',
+                'exists:lokasi_arsip,id',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ($value === null) {
+                        return;
+                    }
+
+                    $parent = LokasiArsip::find((int) $value);
+
+                    if ($parent === null) {
+                        return;
+                    }
+
+                    // Compute depth of parent (max depth for Box is 4)
+                    $depth = 0;
+                    $current = $parent;
+
+                    while ($current->parent_id !== null) {
+                        $depth++;
+                        $current = LokasiArsip::find($current->parent_id);
+
+                        if ($current === null || $depth > 10) {
+                            break;
+                        }
+                    }
+
+                    if ($depth >= 4) {
+                        $fail('Box tidak dapat memiliki sub lokasi. Hierarki maksimal: Gedung → Lantai → Ruangan → Rak → Box.');
+                    }
+                },
+            ],
             'kode' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 Rule::unique('lokasi_arsip', 'kode')->ignore($lokasiArsipId),
@@ -60,6 +93,7 @@ class StoreLokasiArsipRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'parent_id' => 'induk lokasi',
             'kode' => 'kode',
             'nama' => 'nama lokasi arsip',
             'gedung' => 'gedung',

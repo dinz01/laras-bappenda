@@ -4,76 +4,122 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
+use Illuminate\Support\Str;
+
 enum WorkflowStatus: string
 {
-    case Draft = 'draft';
     case Review = 'review';
     case Revisi = 'revisi';
     case Approved = 'approved';
+    case WaitingTte = 'waiting_tte';
     case Active = 'active';
-    case Retention = 'retention';
-    case RecordCenter = 'record_center';
-    case Destruction = 'destruction';
+    case Inactive = 'inactive';
+    case Musnah = 'musnah';
+    case Permanen = 'permanen';
+    case DinilaiKembali = 'dinilai_kembali';
 
     /**
-     * Label bahasa Indonesia untuk ditampilkan ke pengguna.
+     * Dapatkan string status dari nama nasib akhir.
+     */
+    public static function fromNasibAkhir(?string $nama): string
+    {
+        if (empty($nama)) {
+            return self::Inactive->value;
+        }
+
+        $slug = Str::slug($nama, '_');
+
+        return self::tryFrom($slug)?->value ?? $slug;
+    }
+
+    /**
+     * Label bahasa Indonesia.
      */
     public function label(): string
     {
         return match ($this) {
-            self::Draft => 'Draft',
-            self::Review => 'Menunggu Verifikasi',
-            self::Revisi => 'Perlu Revisi',
+            self::Review => 'Menunggu Review',
+            self::Revisi => 'Revisi',
             self::Approved => 'Disetujui',
-            self::Active => 'Arsip Aktif',
-            self::Retention => 'Retensi',
-            self::RecordCenter => 'Record Center',
-            self::Destruction => 'Pemusnahan',
+            self::WaitingTte => 'Menunggu TTE',
+            self::Active => 'Aktif',
+            self::Inactive => 'Inaktif',
+            self::Musnah => 'Musnah',
+            self::Permanen => 'Permanen',
+            self::DinilaiKembali => 'Dinilai Kembali',
         };
     }
 
     /**
-     * Warna badge untuk tampilan frontend.
-     * Menggunakan nilai yang kompatibel dengan StatusBadge component.
+     * Warna badge.
      */
     public function color(): string
     {
         return match ($this) {
-            self::Draft => 'secondary',
             self::Review => 'warning',
             self::Revisi => 'danger',
             self::Approved => 'info',
+            self::WaitingTte => 'info',
             self::Active => 'success',
-            self::Retention => 'warning',
-            self::RecordCenter => 'secondary',
-            self::Destruction => 'danger',
+            self::Inactive => 'secondary',
+            self::Musnah => 'danger',
+            self::Permanen => 'success',
+            self::DinilaiKembali => 'info',
         };
     }
 
     /**
-     * Daftar status tujuan yang diizinkan dari status saat ini.
+     * Transisi status.
      *
      * @return list<self>
      */
     public function allowedTransitions(): array
     {
         return match ($this) {
-            self::Draft => [self::Review],
-            self::Review => [self::Approved, self::Revisi],
-            self::Revisi => [self::Review],
-            self::Approved => [self::Active],
-            self::Active => [self::Retention],
-            self::Retention => [self::RecordCenter],
-            self::RecordCenter => [self::Destruction],
-            self::Destruction => [],
+            self::Review => [
+                self::Approved,
+                self::WaitingTte,
+                self::Revisi,
+            ],
+
+            self::Revisi => [
+                self::Review,
+            ],
+
+            self::Approved => [
+                self::WaitingTte,
+                self::Active,
+            ],
+
+            self::WaitingTte => [
+                self::Active,
+                self::Inactive,
+                self::Musnah,
+                self::Permanen,
+                self::DinilaiKembali,
+            ],
+
+            self::Active => [
+                self::Inactive,
+                self::Musnah,
+                self::Permanen,
+                self::DinilaiKembali,
+            ],
+
+            self::Inactive => [
+                self::Musnah,
+                self::Permanen,
+                self::DinilaiKembali,
+            ],
+
+            self::Musnah => [],
+            self::Permanen => [],
+            self::DinilaiKembali => [],
         };
     }
 
-    /**
-     * Apakah status ini dapat bertransisi ke status target.
-     */
     public function canTransitionTo(self $target): bool
     {
-        return in_array($target, $this->allowedTransitions(), strict: true);
+        return in_array($target, $this->allowedTransitions(), true);
     }
 }

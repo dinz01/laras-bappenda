@@ -39,7 +39,7 @@ class MediaArsip extends Model
     protected $table = 'media_arsip';
 
     /**
-     * Atribut yang boleh diisi secara massal.
+     * Atribut yang boleh diisi.
      *
      * @var list<string>
      */

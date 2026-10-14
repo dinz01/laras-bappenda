@@ -39,7 +39,7 @@ class TingkatAksesArsip extends Model
     protected $table = 'tingkat_akses_arsip';
 
     /**
-     * Atribut yang boleh diisi secara massal.
+     * Atribut yang boleh diisi.
      *
      * @var list<string>
      */
@@ -69,6 +69,33 @@ class TingkatAksesArsip extends Model
     public function arsips(): HasMany
     {
         return $this->hasMany(Arsip::class, 'tingkat_akses_arsip_id');
+    }
+
+    /**
+     * Generate unique sequential kode tingkat akses arsip.
+     * Prefix: TAA-
+     */
+    public static function generateKode(): string
+    {
+        $prefix = 'TAA-';
+
+        $last = static::where('kode', 'like', "{$prefix}%")
+            ->orderByDesc('id')
+            ->first();
+
+        $nextNumber = 1;
+        if ($last && preg_match('/^'.preg_quote($prefix, '/').'(\d+)$/', $last->kode, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        $kode = $prefix.str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+
+        while (static::where('kode', $kode)->exists()) {
+            $nextNumber++;
+            $kode = $prefix.str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+        }
+
+        return $kode;
     }
 
     /**

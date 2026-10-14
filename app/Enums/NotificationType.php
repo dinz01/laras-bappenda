@@ -14,8 +14,9 @@ enum NotificationType: string
     case DokumenDiganti = 'dokumen_diganti';
     case VersiDokumenBaru = 'versi_dokumen_baru';
     case TahapBerubah = 'tahap_berubah';
-    case OcrSelesai = 'ocr_selesai';
-    case OcrGagal = 'ocr_gagal';
+    case PeminjamanDiajukan = 'peminjaman_diajukan';
+    case PeminjamanDisetujui = 'peminjaman_disetujui';
+    case PeminjamanDitolak = 'peminjaman_ditolak';
 
     /**
      * Label bahasa Indonesia.
@@ -31,8 +32,9 @@ enum NotificationType: string
             self::DokumenDiganti => 'Dokumen Berhasil Diganti',
             self::VersiDokumenBaru => 'Versi Dokumen Baru Dibuat',
             self::TahapBerubah => 'Tahap Arsip Berubah',
-            self::OcrSelesai => 'OCR Selesai',
-            self::OcrGagal => 'OCR Gagal',
+            self::PeminjamanDiajukan => 'Permohonan Peminjaman',
+            self::PeminjamanDisetujui => 'Peminjaman Disetujui',
+            self::PeminjamanDitolak => 'Peminjaman Ditolak',
         };
     }
 
@@ -50,8 +52,9 @@ enum NotificationType: string
             self::DokumenDiganti => 'warning',
             self::VersiDokumenBaru => 'info',
             self::TahapBerubah => 'info',
-            self::OcrSelesai => 'secondary',
-            self::OcrGagal => 'danger',
+            self::PeminjamanDiajukan => 'info',
+            self::PeminjamanDisetujui => 'success',
+            self::PeminjamanDitolak => 'danger',
         };
     }
 }

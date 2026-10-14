@@ -13,7 +13,7 @@ class UnitOrganisasiFactory extends Factory
     /**
      * Counter untuk kode sekuensial.
      */
-    protected static int $sequence = 1000;
+    protected static int $sequence = 1;
 
     /**
      * Define the model's default state.
@@ -32,10 +32,11 @@ class UnitOrganisasiFactory extends Factory
         ];
 
         return [
-            'kode' => 'UN-'.str_pad((string) self::$sequence++, 5, '0', STR_PAD_LEFT),
+            'kode' => 'BID-'.str_pad((string) self::$sequence++, 3, '0', STR_PAD_LEFT),
             'nama' => fake()->randomElement($units),
             'singkatan' => strtoupper(fake()->lexify('??')),
             'parent_id' => null,
+            'tipe' => 'bidang',
             'status' => 'active',
         ];
     }

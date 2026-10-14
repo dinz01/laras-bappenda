@@ -31,7 +31,7 @@ class StoreKondisiArsipRequest extends FormRequest
 
         return [
             'kode' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 Rule::unique('kondisi_arsip', 'kode')->ignore($kondisiArsipId),

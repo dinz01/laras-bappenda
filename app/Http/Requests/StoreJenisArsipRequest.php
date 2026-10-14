@@ -25,7 +25,7 @@ class StoreJenisArsipRequest extends FormRequest
     {
         return [
             'kode' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 Rule::unique('jenis_arsip', 'kode'),

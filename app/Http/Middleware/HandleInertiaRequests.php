@@ -2,17 +2,11 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\NotificationService;
-use App\Support\AppDateTime;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-    public function __construct(
-        protected NotificationService $notificationService,
-    ) {}
-
     /**
      * The root template that's loaded on the first page visit.
      *
@@ -43,29 +37,6 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
-        $notifications = ['unread_count' => 0, 'latest' => []];
-        if ($user) {
-            try {
-                $notifications = [
-                    'unread_count' => $this->notificationService->unreadCount($user),
-                    'latest' => $this->notificationService->latest($user, 10)->map(fn ($n) => [
-                        'id' => $n->id,
-                        'title' => $n->title,
-                        'message' => $n->message,
-                        'type' => $n->type->value,
-                        'type_label' => $n->type->label(),
-                        'type_color' => $n->type->color(),
-                        'url' => $n->url,
-                        'is_read' => $n->is_read,
-                        'created_at' => AppDateTime::iso($n->created_at),
-                        'created_at_human' => AppDateTime::dateTime($n->created_at),
-                    ])->values()->all(),
-                ];
-            } catch (\Throwable) {
-                // Fallback to empty notifications if database or service fails
-            }
-        }
-
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -74,10 +45,28 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user ? array_merge($user->toArray(), [
                     'roles' => $user->getRoleNames(),
                     'permissions' => $user->getAllPermissions()->pluck('name'),
+                    'unit_organisasi' => $user->unitOrganisasi ? [
+                        'id' => $user->unitOrganisasi->id,
+                        'kode' => $user->unitOrganisasi->kode,
+                        'nama' => $user->unitOrganisasi->nama,
+                        'tipe' => $user->unitOrganisasi->tipe,
+                        'parent_id' => $user->unitOrganisasi->parent_id,
+                        'parent' => $user->unitOrganisasi->parent ? [
+                            'id' => $user->unitOrganisasi->parent->id,
+                            'kode' => $user->unitOrganisasi->parent->kode,
+                            'nama' => $user->unitOrganisasi->parent->nama,
+                        ] : null,
+                    ] : null,
                 ]) : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'notifications' => $notifications,
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'warning' => $request->session()->get('warning'),
+                'info' => $request->session()->get('info'),
+                'status' => $request->session()->get('status'),
+            ],
         ];
     }
 }

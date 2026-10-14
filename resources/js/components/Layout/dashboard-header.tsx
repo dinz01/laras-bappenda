@@ -48,7 +48,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
                     {user.name}
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Selamat datang kembali di Sistem LARAS — Layanan Arsip
+                    Selamat datang kembali di Sistem LARAS - Layanan Arsip
                     Digital.
                 </p>
             </div>

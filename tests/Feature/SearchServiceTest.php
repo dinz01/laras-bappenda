@@ -2,7 +2,7 @@
 
 use App\Models\Arsip;
 use App\Models\KlasifikasiArsip;
-use App\Models\StatusArsip;
+use App\Models\LokasiArsip;
 use App\Models\UnitOrganisasi;
 use App\Services\SearchService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -93,14 +93,12 @@ it('can search archive by year of tanggal_arsip', function () {
 it('can advancedSearch archives by specific filters', function () {
     $klasifikasi = KlasifikasiArsip::factory()->create();
     $unit = UnitOrganisasi::factory()->create();
-    $status = StatusArsip::factory()->create();
 
     $arsip = Arsip::factory()->create([
         'nomor_arsip' => 'ARS-ADV-001',
         'judul' => 'Laporan Target Akhir Tahun',
         'klasifikasi_arsip_id' => $klasifikasi->id,
         'unit_organisasi_id' => $unit->id,
-        'status_arsip_id' => $status->id,
         'tanggal_arsip' => '2026-12-31',
     ]);
 
@@ -116,10 +114,6 @@ it('can advancedSearch archives by specific filters', function () {
 
     // Filter by judul
     $results = $this->searchService->advancedSearch(['judul' => 'Target'])->get();
-    expect($results)->toHaveCount(1)->and($results->first()->id)->toBe($arsip->id);
-
-    // Filter by status_arsip_id
-    $results = $this->searchService->advancedSearch(['status_arsip_id' => $status->id])->get();
     expect($results)->toHaveCount(1)->and($results->first()->id)->toBe($arsip->id);
 
     // Filter by unit_organisasi_id
@@ -140,4 +134,116 @@ it('can advancedSearch archives by specific filters', function () {
         'unit_organisasi_id' => $unit->id,
     ])->get();
     expect($results)->toHaveCount(1)->and($results->first()->id)->toBe($arsip->id);
+});
+
+it('filters archive by lokasi_arsip_id including all descendant locations', function () {
+    // Structure: Gedung -> Lantai -> Ruang -> Box
+    $gedung = LokasiArsip::factory()->create(['nama' => 'Gedung A', 'parent_id' => null]);
+    $lantai = LokasiArsip::factory()->create(['nama' => 'Lantai 1', 'parent_id' => $gedung->id]);
+    $ruang = LokasiArsip::factory()->create(['nama' => 'Ruang Arsip', 'parent_id' => $lantai->id]);
+    $box = LokasiArsip::factory()->create(['nama' => 'Box 01', 'parent_id' => $ruang->id]);
+
+    $gedungLain = LokasiArsip::factory()->create(['nama' => 'Gedung B', 'parent_id' => null]);
+
+    $arsipGedung = Arsip::factory()->create(['lokasi_arsip_id' => $gedung->id]);
+    $arsipLantai = Arsip::factory()->create(['lokasi_arsip_id' => $lantai->id]);
+    $arsipBox = Arsip::factory()->create(['lokasi_arsip_id' => $box->id]);
+    $arsipLain = Arsip::factory()->create(['lokasi_arsip_id' => $gedungLain->id]);
+
+    // Filter by root (Gedung A) should match archives in Gedung, Lantai, and Box
+    $resultsGedung = $this->searchService->advancedSearch(['lokasi_arsip_id' => $gedung->id])->get();
+    expect($resultsGedung->pluck('id'))
+        ->toContain($arsipGedung->id, $arsipLantai->id, $arsipBox->id)
+        ->not->toContain($arsipLain->id);
+
+    // Filter by turunan ke-1 (Lantai 1) should match archives in Lantai and Box
+    $resultsLantai = $this->searchService->advancedSearch(['lokasi_arsip_id' => $lantai->id])->get();
+    expect($resultsLantai->pluck('id'))
+        ->toContain($arsipLantai->id, $arsipBox->id)
+        ->not->toContain($arsipGedung->id, $arsipLain->id);
+
+    // Filter by turunan ke-2 (Ruang) which has no direct archives but has child Box
+    $resultsRuang = $this->searchService->advancedSearch(['lokasi_arsip_id' => $ruang->id])->get();
+    expect($resultsRuang->pluck('id'))
+        ->toContain($arsipBox->id)
+        ->not->toContain($arsipGedung->id, $arsipLantai->id, $arsipLain->id);
+
+    // Filter by leaf/turunan terakhir (Box 01) should match only Box archive
+    $resultsBox = $this->searchService->advancedSearch(['lokasi_arsip_id' => $box->id])->get();
+    expect($resultsBox->pluck('id'))
+        ->toContain($arsipBox->id)
+        ->not->toContain($arsipGedung->id, $arsipLantai->id, $arsipLain->id);
+
+    // Filter by Gedung B should match only Gedung B archive
+    $resultsLain = $this->searchService->advancedSearch(['lokasi_arsip_id' => $gedungLain->id])->get();
+    expect($resultsLain->pluck('id'))
+        ->toContain($arsipLain->id)
+        ->not->toContain($arsipGedung->id, $arsipLantai->id, $arsipBox->id);
+});
+
+it('filters archive by klasifikasi_arsip_id including all descendant classifications', function () {
+    // Structure: Utama -> Sub -> Rincian
+    $utama = KlasifikasiArsip::factory()->create(['kode' => '000', 'nama' => 'Umum', 'parent_id' => null]);
+    $sub = KlasifikasiArsip::factory()->create(['kode' => '010', 'nama' => 'Kepegawaian', 'parent_id' => $utama->id]);
+    $rincian = KlasifikasiArsip::factory()->create(['kode' => '011', 'nama' => 'Mutasi', 'parent_id' => $sub->id]);
+
+    $utamaLain = KlasifikasiArsip::factory()->create(['kode' => '100', 'nama' => 'Keuangan', 'parent_id' => null]);
+
+    $arsipUtama = Arsip::factory()->create(['klasifikasi_arsip_id' => $utama->id]);
+    $arsipSub = Arsip::factory()->create(['klasifikasi_arsip_id' => $sub->id]);
+    $arsipRincian = Arsip::factory()->create(['klasifikasi_arsip_id' => $rincian->id]);
+    $arsipLain = Arsip::factory()->create(['klasifikasi_arsip_id' => $utamaLain->id]);
+
+    // Filter by root (000 Umum) should match archives in Umum, Kepegawaian, and Mutasi
+    $resultsUtama = $this->searchService->advancedSearch(['klasifikasi_arsip_id' => $utama->id])->get();
+    expect($resultsUtama->pluck('id'))
+        ->toContain($arsipUtama->id, $arsipSub->id, $arsipRincian->id)
+        ->not->toContain($arsipLain->id);
+
+    // Filter by sub (010 Kepegawaian) should match archives in Kepegawaian and Mutasi
+    $resultsSub = $this->searchService->advancedSearch(['klasifikasi_arsip_id' => $sub->id])->get();
+    expect($resultsSub->pluck('id'))
+        ->toContain($arsipSub->id, $arsipRincian->id)
+        ->not->toContain($arsipUtama->id, $arsipLain->id);
+
+    // Filter by leaf (011 Mutasi) should match only Mutasi archive
+    $resultsRincian = $this->searchService->advancedSearch(['klasifikasi_arsip_id' => $rincian->id])->get();
+    expect($resultsRincian->pluck('id'))
+        ->toContain($arsipRincian->id)
+        ->not->toContain($arsipUtama->id, $arsipSub->id, $arsipLain->id);
+
+    // Filter by 100 Keuangan should match only Keuangan archive
+    $resultsLain = $this->searchService->advancedSearch(['klasifikasi_arsip_id' => $utamaLain->id])->get();
+    expect($resultsLain->pluck('id'))
+        ->toContain($arsipLain->id)
+        ->not->toContain($arsipUtama->id, $arsipSub->id, $arsipRincian->id);
+});
+
+it('filters archive by unit_organisasi_id including all descendant units', function () {
+    // Structure: Bidang -> Sub Bidang
+    $bidang = UnitOrganisasi::factory()->create(['nama' => 'Bidang Pajak Daerah', 'parent_id' => null, 'tipe' => 'bidang']);
+    $subBidang = UnitOrganisasi::factory()->create(['nama' => 'Sub Bidang PBB', 'parent_id' => $bidang->id, 'tipe' => 'sub_bidang']);
+    $bidangLain = UnitOrganisasi::factory()->create(['nama' => 'Bidang Retribusi', 'parent_id' => null, 'tipe' => 'bidang']);
+
+    $arsipBidang = Arsip::factory()->create(['unit_organisasi_id' => $bidang->id]);
+    $arsipSub = Arsip::factory()->create(['unit_organisasi_id' => $subBidang->id]);
+    $arsipLain = Arsip::factory()->create(['unit_organisasi_id' => $bidangLain->id]);
+
+    // Filter by Bidang should match both Bidang and Sub Bidang archives
+    $resultsBidang = $this->searchService->advancedSearch(['unit_organisasi_id' => $bidang->id])->get();
+    expect($resultsBidang->pluck('id'))
+        ->toContain($arsipBidang->id, $arsipSub->id)
+        ->not->toContain($arsipLain->id);
+
+    // Filter by Sub Bidang should match only Sub Bidang archive
+    $resultsSub = $this->searchService->advancedSearch(['unit_organisasi_id' => $subBidang->id])->get();
+    expect($resultsSub->pluck('id'))
+        ->toContain($arsipSub->id)
+        ->not->toContain($arsipBidang->id, $arsipLain->id);
+
+    // Filter by Bidang Lain should match only its archive
+    $resultsLain = $this->searchService->advancedSearch(['unit_organisasi_id' => $bidangLain->id])->get();
+    expect($resultsLain->pluck('id'))
+        ->toContain($arsipLain->id)
+        ->not->toContain($arsipBidang->id, $arsipSub->id);
 });

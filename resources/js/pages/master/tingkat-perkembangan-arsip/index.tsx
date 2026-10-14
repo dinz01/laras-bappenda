@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import {
     FileText,
     Eye,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
@@ -18,6 +19,7 @@ import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
 import { RouteGuard } from '@/components/RouteGuard';
+import { DataTablePagination } from '@/components/Tables/data-table-pagination';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
@@ -53,7 +55,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { dashboard } from '@/routes';
 import {
     destroy,
     index,
@@ -181,6 +182,10 @@ function TingkatPerkembanganArsipFormDialog({
                 form.reset();
                 onOpenChange(false);
             },
+            onError: () =>
+                toast.error('Terjadi kesalahan saat menyimpan data.', {
+                    description: 'Periksa kembali kolom yang ditandai merah.',
+                }),
         });
     };
 
@@ -198,19 +203,25 @@ function TingkatPerkembanganArsipFormDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4">
+                <form onSubmit={submit} noValidate className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="kode">Kode</Label>
-                            <Input
-                                id="kode"
-                                value={form.data.kode}
-                                onChange={(event) =>
-                                    form.setData('kode', event.target.value)
-                                }
-                                placeholder="Contoh: TPA-00001"
-                                maxLength={50}
-                            />
+                            <Label htmlFor="kode">
+                                Kode Tingkat Perkembangan
+                            </Label>
+                            <div>
+                                <Input
+                                    id="kode"
+                                    value="[Otomatis dibuat oleh sistem]"
+                                    disabled
+                                    className="cursor-not-allowed border-border/60 bg-muted/50 text-muted-foreground"
+                                />
+                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                    {mode === 'edit'
+                                        ? 'Kode tingkat perkembangan arsip bersifat tetap dan tidak dapat diubah.'
+                                        : 'Nomor unik akan digenerate otomatis saat disimpan.'}
+                                </p>
+                            </div>
                             <InputError message={form.errors.kode} />
                         </div>
 
@@ -389,7 +400,6 @@ export default function TingkatPerkembanganArsipIndex({
         useState<TingkatPerkembanganArsip | null>(null);
     const [deleteTingkatPerkembanganArsip, setDeleteTingkatPerkembanganArsip] =
         useState<TingkatPerkembanganArsip | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
     const updateFilters = (
@@ -457,7 +467,6 @@ export default function TingkatPerkembanganArsipIndex({
         }
 
         setDeleting(true);
-        setDeleteError(null);
 
         router.delete(
             destroy({
@@ -465,12 +474,13 @@ export default function TingkatPerkembanganArsipIndex({
             }).url,
             {
                 preserveScroll: true,
-                onSuccess: () => setDeleteTingkatPerkembanganArsip(null),
-                onError: (errors) => {
-                    setDeleteError(
-                        errors.tingkat_perkembangan_arsip ||
-                            'Tingkat perkembangan arsip gagal dihapus.',
-                    );
+                onSuccess: () => {
+                    setDeleteTingkatPerkembanganArsip(null);
+                },
+                onError: () => {
+                    toast.error('Gagal menghapus data.', {
+                        description: 'Terjadi kesalahan, silakan coba lagi.',
+                    });
                 },
                 onFinish: () => setDeleting(false),
             },
@@ -480,7 +490,7 @@ export default function TingkatPerkembanganArsipIndex({
     const hasFilters = Boolean(filters.search);
 
     return (
-        <RouteGuard permission="master.view">
+        <RouteGuard permission="master-tingkat-perkembangan-arsip.view">
             <Head title="Tingkat Perkembangan Arsip" />
 
             <PageContainer>
@@ -488,12 +498,8 @@ export default function TingkatPerkembanganArsipIndex({
                     title="Tingkat Perkembangan Arsip"
                     description="Manajemen data tingkat perkembangan dokumen arsip."
                     breadcrumb={[
-                        { title: 'Dashboard', href: dashboard.url() },
-                        { title: 'Master Data', href: '#' },
-                        {
-                            title: 'Tingkat Perkembangan Arsip',
-                            href: index.url(),
-                        },
+                        { title: 'MASTER DATA' },
+                        { title: 'Tingkat Perkembangan Arsip' },
                     ]}
                     actions={
                         <Can permission="master.create">
@@ -505,7 +511,7 @@ export default function TingkatPerkembanganArsipIndex({
                     }
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <ContentCard title="Total Tingkat Perkembangan">
                         <StatValue
                             value={stats.total_tingkat_perkembangan_arsip}
@@ -516,9 +522,6 @@ export default function TingkatPerkembanganArsipIndex({
                     </ContentCard>
                     <ContentCard title="Nonaktif">
                         <StatValue value={stats.nonaktif} />
-                    </ContentCard>
-                    <ContentCard title="Dibuat Bulan Ini">
-                        <StatValue value={stats.dibuat_bulan_ini} />
                     </ContentCard>
                 </div>
 
@@ -554,8 +557,8 @@ export default function TingkatPerkembanganArsipIndex({
                             />
                         ) : (
                             <>
-                                <div className="overflow-hidden rounded-md border border-border/60">
-                                    <Table>
+                                <div className="overflow-x-auto rounded-md border border-border/60">
+                                    <Table className="min-w-[650px]">
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
                                                 <TableHead className="w-[130px] font-semibold">
@@ -666,9 +669,6 @@ export default function TingkatPerkembanganArsipIndex({
                                                                         <DropdownMenuSeparator />
                                                                         <DropdownMenuItem
                                                                             onClick={() => {
-                                                                                setDeleteError(
-                                                                                    null,
-                                                                                );
                                                                                 setDeleteTingkatPerkembanganArsip(
                                                                                     tingkatPerkembanganArsip,
                                                                                 );
@@ -689,63 +689,10 @@ export default function TingkatPerkembanganArsipIndex({
                                     </Table>
                                 </div>
 
-                                <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                                    <span>
-                                        Menampilkan{' '}
-                                        {tingkatPerkembanganArsips.from || 0}{' '}
-                                        hingga{' '}
-                                        {tingkatPerkembanganArsips.to || 0} dari{' '}
-                                        {tingkatPerkembanganArsips.total} akses
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={
-                                                !tingkatPerkembanganArsips.prev_page_url
-                                            }
-                                            asChild={Boolean(
-                                                tingkatPerkembanganArsips.prev_page_url,
-                                            )}
-                                        >
-                                            {tingkatPerkembanganArsips.prev_page_url ? (
-                                                <Link
-                                                    href={
-                                                        tingkatPerkembanganArsips.prev_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Sebelumnya
-                                                </Link>
-                                            ) : (
-                                                <span>Sebelumnya</span>
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={
-                                                !tingkatPerkembanganArsips.next_page_url
-                                            }
-                                            asChild={Boolean(
-                                                tingkatPerkembanganArsips.next_page_url,
-                                            )}
-                                        >
-                                            {tingkatPerkembanganArsips.next_page_url ? (
-                                                <Link
-                                                    href={
-                                                        tingkatPerkembanganArsips.next_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Selanjutnya
-                                                </Link>
-                                            ) : (
-                                                <span>Selanjutnya</span>
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
+                                <DataTablePagination
+                                    data={tingkatPerkembanganArsips}
+                                    itemName="tingkat perkembangan"
+                                />
                             </>
                         )}
                     </div>
@@ -767,15 +714,11 @@ export default function TingkatPerkembanganArsipIndex({
             <ConfirmDialog
                 isOpen={deleteTingkatPerkembanganArsip !== null}
                 onClose={() => {
-                    setDeleteError(null);
                     setDeleteTingkatPerkembanganArsip(null);
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Tingkat Perkembangan Arsip"
-                description={
-                    deleteError ||
-                    `Hapus tingkat perkembangan arsip "${deleteTingkatPerkembanganArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
-                }
+                description={`Hapus tingkat perkembangan arsip "${deleteTingkatPerkembanganArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -794,7 +737,7 @@ function StatValue({ value }: { value: number }) {
 
 TingkatPerkembanganArsipIndex.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'MASTER DATA' },
         {
             title: 'Tingkat Perkembangan Arsip',
             href: '/master/tingkat-perkembangan-arsip',

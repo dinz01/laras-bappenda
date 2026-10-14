@@ -1,12 +1,19 @@
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 interface PageContainerProps {
     children: ReactNode;
+    className?: string;
 }
 
-export function PageContainer({ children }: PageContainerProps) {
+export function PageContainer({ children, className }: PageContainerProps) {
     return (
-        <div className="animate-fade-in mx-auto w-full max-w-7xl space-y-6 p-4 md:p-6">
+        <div
+            className={cn(
+                'animate-fade-in flex max-w-full flex-1 flex-col gap-6 overflow-hidden p-4 md:p-6',
+                className,
+            )}
+        >
             {children}
         </div>
     );

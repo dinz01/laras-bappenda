@@ -31,7 +31,7 @@ class StoreTingkatPerkembanganArsipRequest extends FormRequest
 
         return [
             'kode' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 Rule::unique('tingkat_perkembangan_arsip', 'kode')->ignore($tingkatPerkembanganArsipId),

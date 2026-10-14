@@ -1,14 +1,7 @@
 import { Head, router } from '@inertiajs/react';
-import {
-    Activity,
-    CalendarDays,
-    ChevronDown,
-    Eye,
-    FileClock,
-    ListFilter,
-    Users,
-    X,
-} from 'lucide-react';
+import { format } from 'date-fns';
+import { id as idLocale } from 'date-fns/locale';
+import { ChevronDown, Eye, FileClock, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
@@ -16,9 +9,11 @@ import type { BadgeStatusVariant } from '@/components/Common/status-badge';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
 import { RouteGuard } from '@/components/RouteGuard';
+import { DataTablePagination } from '@/components/Tables/data-table-pagination';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
     Collapsible,
     CollapsibleContent,
@@ -31,7 +26,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
@@ -47,7 +41,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { dashboard } from '@/routes';
 import { index } from '@/routes/admin/audit-log';
 
 type JsonValue =
@@ -115,19 +108,37 @@ type AuditLogIndexProps = {
     auditLogs: PaginatedAuditLogs;
     statistics: Statistics;
     filters: Filters;
+    masterLookups?: Record<string, Record<string | number, string>>;
 };
 
 const eventCategoryOptions = [
     { value: 'arsip', label: 'Arsip' },
     { value: 'dokumen', label: 'Dokumen' },
     { value: 'workflow', label: 'Workflow' },
-    { value: 'ocr', label: 'OCR' },
+    { value: 'pengguna', label: 'Pengguna' },
+    { value: 'role', label: 'Role' },
+    { value: 'master', label: 'Master Data' },
+    { value: 'peminjaman', label: 'Peminjaman' },
 ];
 
 const userTypeOptions = [
     { value: 'system', label: 'Sistem' },
     { value: 'user', label: 'User' },
 ];
+
+const masterEntityLabels: Record<string, string> = {
+    'unit-organisasi': 'Unit Organisasi',
+    jabatan: 'Jabatan',
+    'klasifikasi-arsip': 'Klasifikasi Arsip',
+    'lokasi-arsip': 'Lokasi Arsip',
+    'jenis-arsip': 'Jenis Arsip',
+    'kategori-arsip': 'Kategori Arsip',
+    'sifat-arsip': 'Sifat Arsip',
+    'tingkat-akses-arsip': 'Tingkat Akses Arsip',
+    'tingkat-perkembangan-arsip': 'Tingkat Perkembangan Arsip',
+    'kondisi-arsip': 'Kondisi Arsip',
+    'nasib-akhir': 'Nasib Akhir',
+};
 
 const eventLabels: Record<string, string> = {
     'arsip.created': 'Arsip dibuat',
@@ -139,27 +150,124 @@ const eventLabels: Record<string, string> = {
     'dokumen.uploaded': 'Dokumen diunggah',
     'dokumen.replaced': 'Dokumen diganti',
     'dokumen.version_created': 'Versi dokumen dibuat',
-    'ocr.completed': 'OCR selesai',
-    'ocr.failed': 'OCR gagal',
+    'pengguna.created': 'Pengguna ditambahkan',
+    'pengguna.updated': 'Pengguna diperbarui',
+    'pengguna.deleted': 'Pengguna dihapus',
+    'role.created': 'Role ditambahkan',
+    'role.updated': 'Role diperbarui',
+    'role.deleted': 'Role dihapus',
+    'peminjaman.requested': 'Permohonan peminjaman diajukan',
+    'peminjaman.approved': 'Permohonan peminjaman disetujui',
+    'peminjaman.rejected': 'Permohonan peminjaman ditolak',
+    'master.unit-organisasi.created': 'Unit Organisasi ditambahkan',
+    'master.unit-organisasi.updated': 'Unit Organisasi diperbarui',
+    'master.unit-organisasi.deleted': 'Unit Organisasi dihapus',
+    'master.jabatan.created': 'Jabatan ditambahkan',
+    'master.jabatan.updated': 'Jabatan diperbarui',
+    'master.jabatan.deleted': 'Jabatan dihapus',
+    'master.klasifikasi-arsip.created': 'Klasifikasi Arsip ditambahkan',
+    'master.klasifikasi-arsip.updated': 'Klasifikasi Arsip diperbarui',
+    'master.klasifikasi-arsip.deleted': 'Klasifikasi Arsip dihapus',
+    'master.lokasi-arsip.created': 'Lokasi Arsip ditambahkan',
+    'master.lokasi-arsip.updated': 'Lokasi Arsip diperbarui',
+    'master.lokasi-arsip.deleted': 'Lokasi Arsip dihapus',
+    'master.jenis-arsip.created': 'Jenis Arsip ditambahkan',
+    'master.jenis-arsip.updated': 'Jenis Arsip diperbarui',
+    'master.jenis-arsip.deleted': 'Jenis Arsip dihapus',
+    'master.kategori-arsip.created': 'Kategori Arsip ditambahkan',
+    'master.kategori-arsip.updated': 'Kategori Arsip diperbarui',
+    'master.kategori-arsip.deleted': 'Kategori Arsip dihapus',
+    'master.sifat-arsip.created': 'Sifat Arsip ditambahkan',
+    'master.sifat-arsip.updated': 'Sifat Arsip diperbarui',
+    'master.sifat-arsip.deleted': 'Sifat Arsip dihapus',
+    'master.tingkat-akses-arsip.created': 'Tingkat Akses Arsip ditambahkan',
+    'master.tingkat-akses-arsip.updated': 'Tingkat Akses Arsip diperbarui',
+    'master.tingkat-akses-arsip.deleted': 'Tingkat Akses Arsip dihapus',
+    'master.tingkat-perkembangan-arsip.created':
+        'Tingkat Perkembangan Arsip ditambahkan',
+    'master.tingkat-perkembangan-arsip.updated':
+        'Tingkat Perkembangan Arsip diperbarui',
+    'master.tingkat-perkembangan-arsip.deleted':
+        'Tingkat Perkembangan Arsip dihapus',
+    'master.kondisi-arsip.created': 'Kondisi Arsip ditambahkan',
+    'master.kondisi-arsip.updated': 'Kondisi Arsip diperbarui',
+    'master.kondisi-arsip.deleted': 'Kondisi Arsip dihapus',
+    'master.nasib-akhir.created': 'Nasib Akhir ditambahkan',
+    'master.nasib-akhir.updated': 'Nasib Akhir diperbarui',
+    'master.nasib-akhir.deleted': 'Nasib Akhir dihapus',
 };
+
+const permissionGroupLabels: Record<string, string> = {
+    dashboard: 'Dashboard',
+    profile: 'Profil',
+    arsip: 'Arsip',
+    dokumen: 'Dokumen',
+    workflow: 'Alur Kerja',
+    master: 'Master Data',
+    user: 'Pengguna',
+    role: 'Role',
+    permission: 'Permission',
+    auditlog: 'Audit Log',
+    peminjaman: 'Peminjaman',
+};
+
+const permissionActionLabels: Record<string, string> = {
+    view: 'Lihat',
+    create: 'Tambah',
+    update: 'Ubah',
+    delete: 'Hapus',
+    restore: 'Pulihkan',
+    upload: 'Unggah',
+    download: 'Unduh',
+    verify: 'Verifikasi',
+    approve: 'Setujui',
+    reject: 'Tolak',
+    tte: 'TTE',
+};
+
+function formatPermissionName(perm: string): string {
+    const [group, action] = perm.split('.');
+
+    if (!action) {
+        return perm;
+    }
+
+    const g = permissionGroupLabels[group] ?? group;
+    const a = permissionActionLabels[action] ?? action;
+
+    return `${g} (${a})`;
+}
 
 const fieldLabels: Record<string, string> = {
     nomor_arsip: 'Nomor Arsip',
-    judul: 'Judul',
-    deskripsi: 'Keterangan',
+    judul: 'Judul Arsip',
+    deskripsi: 'Keterangan / Deskripsi',
     tanggal_arsip: 'Tanggal Arsip',
+    kategori_arsip_id: 'Kategori Arsip',
     klasifikasi_arsip_id: 'Klasifikasi',
     lokasi_arsip_id: 'Lokasi',
-    jenis_dokumen_id: 'Jenis Dokumen',
-    media_arsip_id: 'Media',
+    jenis_arsip_id: 'Jenis Arsip',
+    sifat_arsip_id: 'Sifat Arsip',
+    tingkat_perkembangan_arsip_id: 'Tingkat Perkembangan Arsip',
     kondisi_arsip_id: 'Kondisi',
     status_arsip_id: 'Status Arsip',
     tingkat_akses_arsip_id: 'Tingkat Akses',
     retensi_arsip_id: 'Retensi',
     unit_organisasi_id: 'Unit Organisasi',
+    dokumen_arsip_id: 'Dokumen Arsip',
+    jenis_dokumen_id: 'Jenis Dokumen',
+    media_arsip_id: 'Media Arsip',
     workflow_status: 'Tahap Arsip',
+    catatan_revisi: 'Catatan Revisi',
+    no_register: 'Nomor Register',
+    nop: 'NOP',
+    npwpd: 'NPWPD',
+    nama_wajib_pajak: 'Nama Wajib Pajak',
+    created_by: 'Dibuat Oleh',
+    updated_by: 'Diperbarui Oleh',
+    user_id: 'Pengguna',
     deleted_at: 'Waktu Dihapus',
-    nama_original: 'Nama File',
+    nama_original: 'Nama File Asli',
     ukuran: 'Ukuran File',
     mime_type: 'Tipe File',
     path_penyimpanan: 'Lokasi File',
@@ -169,20 +277,44 @@ const fieldLabels: Record<string, string> = {
     path_file: 'Lokasi File',
     ukuran_file: 'Ukuran File',
     hash_file: 'Hash File',
-    ocr_status: 'Status OCR',
-    ocr_text: 'Teks OCR',
-    ocr_confidence: 'Akurasi OCR',
-    ocr_language: 'Bahasa OCR',
-    ocr_pages: 'Jumlah Halaman',
-    ocr_processed_at: 'Waktu Proses OCR',
+    name: 'Nama',
+    nama: 'Nama',
+    kode: 'Kode',
+    tipe: 'Tipe',
+    status: 'Status',
+    roles: 'Role',
+    permissions: 'Hak Akses (Permissions)',
+    email: 'Email',
+    username: 'Nama Pengguna',
+    nip: 'NIP',
+    nik: 'NIK',
+    jabatan_id: 'Jabatan',
 };
 
 function eventVariant(event: string): BadgeStatusVariant {
-    if (['arsip.created', 'arsip.restored'].includes(event)) {
+    if (
+        [
+            'arsip.created',
+            'arsip.restored',
+            'pengguna.created',
+            'role.created',
+            'peminjaman.approved',
+        ].includes(event) ||
+        event.endsWith('.created')
+    ) {
         return 'success';
     }
 
-    if (['arsip.updated', 'workflow.changed'].includes(event)) {
+    if (
+        [
+            'arsip.updated',
+            'workflow.changed',
+            'pengguna.updated',
+            'role.updated',
+            'peminjaman.requested',
+        ].includes(event) ||
+        event.endsWith('.updated')
+    ) {
         return 'info';
     }
 
@@ -196,7 +328,16 @@ function eventVariant(event: string): BadgeStatusVariant {
         return 'warning';
     }
 
-    if (['arsip.deleted', 'arsip.force_deleted'].includes(event)) {
+    if (
+        [
+            'arsip.deleted',
+            'arsip.force_deleted',
+            'pengguna.deleted',
+            'role.deleted',
+            'peminjaman.rejected',
+        ].includes(event) ||
+        event.endsWith('.deleted')
+    ) {
         return 'danger';
     }
 
@@ -204,7 +345,27 @@ function eventVariant(event: string): BadgeStatusVariant {
 }
 
 function eventLabel(event: string): string {
-    return eventLabels[event] ?? event;
+    if (eventLabels[event]) {
+        return eventLabels[event];
+    }
+
+    if (event.startsWith('master.')) {
+        const parts = event.split('.');
+        const entity =
+            masterEntityLabels[parts[1]] ?? parts[1]?.replaceAll('-', ' ');
+        const action =
+            parts[2] === 'created'
+                ? 'ditambahkan'
+                : parts[2] === 'updated'
+                  ? 'diperbarui'
+                  : parts[2] === 'deleted'
+                    ? 'dihapus'
+                    : parts[2];
+
+        return `${entity} ${action}`;
+    }
+
+    return event;
 }
 
 function prettyJson(value: JsonValue | null): string {
@@ -221,19 +382,73 @@ function isRecord(
     return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function isSimpleValue(value: JsonValue | undefined): boolean {
-    return (
-        value === undefined ||
-        value === null ||
-        ['string', 'number', 'boolean'].includes(typeof value)
-    );
+function isSimpleValue(value: JsonValue | undefined, field?: string): boolean {
+    if (value === undefined || value === null) {
+        return true;
+    }
+
+    if (['string', 'number', 'boolean'].includes(typeof value)) {
+        return true;
+    }
+
+    if (
+        Array.isArray(value) &&
+        (field === 'permissions' ||
+            field === 'roles' ||
+            value.every((v) => typeof v === 'string' || typeof v === 'number'))
+    ) {
+        return true;
+    }
+
+    return false;
 }
 
 function fieldLabel(field: string): string {
     return fieldLabels[field] ?? field.replaceAll('_', ' ');
 }
 
-function formatValue(value: JsonValue | undefined): string {
+function isIsoDateString(val: string): boolean {
+    return /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?Z?)?$/.test(val);
+}
+
+function formatDateValue(val: string): string {
+    const d = new Date(val);
+
+    if (isNaN(d.getTime())) {
+        return val;
+    }
+
+    const isDateOnly =
+        /^\d{4}-\d{2}-\d{2}$/.test(val) ||
+        val.endsWith('T00:00:00.000000Z') ||
+        val.endsWith('T00:00:00Z');
+
+    if (isDateOnly) {
+        return new Intl.DateTimeFormat('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            timeZone: 'Asia/Jakarta',
+        }).format(d);
+    }
+
+    return (
+        new Intl.DateTimeFormat('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Asia/Jakarta',
+        }).format(d) + ' WIB'
+    );
+}
+
+function formatValue(
+    value: JsonValue | undefined,
+    field?: string,
+    masterLookups?: Record<string, Record<string | number, string>>,
+): string {
     if (value === undefined || value === null || value === '') {
         return '-';
     }
@@ -242,7 +457,75 @@ function formatValue(value: JsonValue | undefined): string {
         return value ? 'Ya' : 'Tidak';
     }
 
-    if (typeof value === 'number' || typeof value === 'string') {
+    if (field === 'status' || value === 'active' || value === 'inactive') {
+        if (value === 'active') {
+            return 'Aktif';
+        }
+
+        if (value === 'inactive') {
+            return 'Nonaktif';
+        }
+    }
+
+    if (Array.isArray(value)) {
+        if (value.length === 0) {
+            return '-';
+        }
+
+        if (field === 'permissions') {
+            return value
+                .map((p) =>
+                    typeof p === 'string' ? formatPermissionName(p) : String(p),
+                )
+                .join(', ');
+        }
+
+        if (field === 'roles') {
+            return value.join(', ');
+        }
+
+        return value
+            .map((v) => (typeof v === 'object' ? JSON.stringify(v) : String(v)))
+            .join(', ');
+    }
+
+    if (field && masterLookups && masterLookups[field]) {
+        const lookup = masterLookups[field][value as string | number];
+
+        if (lookup) {
+            return lookup;
+        }
+    }
+
+    if (field === 'workflow_status' && typeof value === 'string') {
+        const statusMap: Record<string, string> = {
+            draft: 'Draft',
+            review: 'Menunggu Review',
+            revisi: 'Perlu Revisi',
+            approved: 'Disetujui',
+            waiting_tte: 'Menunggu TTE',
+            signed: 'Sudah TTE',
+            active: 'Aktif',
+            inactive: 'Inaktif',
+            retention: 'Masa Retensi',
+            record_center: 'Arsip Inaktif',
+            destruction: 'Nasib Akhir Arsip',
+        };
+
+        if (statusMap[value]) {
+            return statusMap[value];
+        }
+    }
+
+    if (typeof value === 'string') {
+        if (isIsoDateString(value)) {
+            return formatDateValue(value);
+        }
+
+        return value;
+    }
+
+    if (typeof value === 'number') {
         return String(value);
     }
 
@@ -263,7 +546,8 @@ function changeItems(oldValues: JsonValue | null, newValues: JsonValue | null) {
     return fields.map((field) => {
         const oldValue = oldRecord[field];
         const newValue = newRecord[field];
-        const isComplex = !isSimpleValue(oldValue) || !isSimpleValue(newValue);
+        const isComplex =
+            !isSimpleValue(oldValue, field) || !isSimpleValue(newValue, field);
 
         return {
             field,
@@ -288,6 +572,7 @@ export default function AuditLogIndex({
     auditLogs,
     statistics,
     filters = {},
+    masterLookups,
 }: AuditLogIndexProps) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
@@ -320,6 +605,97 @@ export default function AuditLogIndex({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search]);
 
+    const getPeriodKey = () => {
+        const from = filters.date_from;
+        const until = filters.date_until;
+
+        if (!from && !until) {
+            return 'all';
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+
+        if (from === today && until === today) {
+            return 'today';
+        }
+
+        const d7 = new Date();
+        d7.setDate(d7.getDate() - 7);
+        const d7Str = d7.toISOString().split('T')[0];
+
+        if (from === d7Str && until === today) {
+            return '7days';
+        }
+
+        const d30 = new Date();
+        d30.setDate(d30.getDate() - 30);
+        const d30Str = d30.toISOString().split('T')[0];
+
+        if (from === d30Str && until === today) {
+            return '30days';
+        }
+
+        const firstOfMonth = new Date(
+            new Date().getFullYear(),
+            new Date().getMonth(),
+            1,
+        )
+            .toISOString()
+            .split('T')[0];
+
+        if (from === firstOfMonth && until === today) {
+            return 'this_month';
+        }
+
+        return 'custom';
+    };
+
+    const [calendarOpen, setCalendarOpen] = useState(false);
+    const [isCustomDate, setIsCustomDate] = useState(
+        () => getPeriodKey() === 'custom',
+    );
+
+    const handlePeriodChange = (val: string) => {
+        const today = new Date().toISOString().split('T')[0];
+
+        if (val === 'all') {
+            setIsCustomDate(false);
+            updateFilters({ date_from: '', date_until: '' });
+        } else if (val === 'today') {
+            setIsCustomDate(false);
+            updateFilters({ date_from: today, date_until: today });
+        } else if (val === '7days') {
+            setIsCustomDate(false);
+            const d7 = new Date();
+            d7.setDate(d7.getDate() - 7);
+            updateFilters({
+                date_from: d7.toISOString().split('T')[0],
+                date_until: today,
+            });
+        } else if (val === '30days') {
+            setIsCustomDate(false);
+            const d30 = new Date();
+            d30.setDate(d30.getDate() - 30);
+            updateFilters({
+                date_from: d30.toISOString().split('T')[0],
+                date_until: today,
+            });
+        } else if (val === 'this_month') {
+            setIsCustomDate(false);
+            const firstOfMonth = new Date(
+                new Date().getFullYear(),
+                new Date().getMonth(),
+                1,
+            )
+                .toISOString()
+                .split('T')[0];
+            updateFilters({ date_from: firstOfMonth, date_until: today });
+        } else if (val === 'custom') {
+            setIsCustomDate(true);
+            setCalendarOpen(true);
+        }
+    };
+
     const hasFilters = Boolean(
         filters.search ||
         filters.event_category ||
@@ -342,7 +718,7 @@ export default function AuditLogIndex({
     };
 
     return (
-        <RouteGuard permission="auditlog.view">
+        <RouteGuard permission="admin-audit-log.view">
             <Head title="Audit Log" />
 
             <PageContainer>
@@ -350,8 +726,7 @@ export default function AuditLogIndex({
                     title="Audit Log"
                     description="Riwayat aktivitas dan jejak audit seluruh pengguna sistem."
                     breadcrumb={[
-                        { title: 'Dashboard', href: dashboard.url() },
-                        { title: 'Administrasi', href: '#' },
+                        { title: 'ADMINISTRASI' },
                         { title: 'Audit Log', href: index.url() },
                     ]}
                 />
@@ -362,7 +737,6 @@ export default function AuditLogIndex({
                             <p className="text-2xl font-semibold tabular-nums">
                                 {statistics.total}
                             </p>
-                            <FileClock className="h-5 w-5 text-muted-foreground" />
                         </div>
                     </ContentCard>
                     <ContentCard title="Audit Hari Ini">
@@ -370,7 +744,6 @@ export default function AuditLogIndex({
                             <p className="text-2xl font-semibold tabular-nums">
                                 {statistics.today}
                             </p>
-                            <CalendarDays className="h-5 w-5 text-muted-foreground" />
                         </div>
                     </ContentCard>
                     <ContentCard title="User Aktif Hari Ini">
@@ -378,7 +751,6 @@ export default function AuditLogIndex({
                             <p className="text-2xl font-semibold tabular-nums">
                                 {statistics.active_users_today}
                             </p>
-                            <Users className="h-5 w-5 text-muted-foreground" />
                         </div>
                     </ContentCard>
                     <ContentCard title="Event Hari Ini">
@@ -386,14 +758,13 @@ export default function AuditLogIndex({
                             <p className="text-2xl font-semibold tabular-nums">
                                 {statistics.events_today}
                             </p>
-                            <Activity className="h-5 w-5 text-muted-foreground" />
                         </div>
                     </ContentCard>
                 </div>
 
                 <ContentCard
                     title="Daftar Audit Log"
-                    description="Lacak perubahan arsip, dokumen, workflow, dan OCR."
+                    description="Lacak riwayat perubahan data arsip, dokumen, dan tahap workflow."
                 >
                     <div className="space-y-4">
                         <DataToolbar
@@ -401,7 +772,7 @@ export default function AuditLogIndex({
                             onSearchChange={setSearch}
                             searchPlaceholder="Cari user, nomor arsip, judul, atau event..."
                             filters={
-                                <div className="flex flex-wrap items-center gap-2">
+                                <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
                                     <Select
                                         value={filters.event_category ?? 'all'}
                                         onValueChange={(value) =>
@@ -413,11 +784,14 @@ export default function AuditLogIndex({
                                             })
                                         }
                                     >
-                                        <SelectTrigger className="h-9 w-[140px] border-border/60">
-                                            <ListFilter className="h-4 w-4 text-muted-foreground" />
+                                        <SelectTrigger className="h-9 w-full border-border/60 sm:w-[165px]">
                                             <SelectValue placeholder="Event" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent
+                                            align="start"
+                                            collisionPadding={16}
+                                            className="max-h-[280px] w-[min(320px,calc(100vw-2rem))]"
+                                        >
                                             <SelectItem value="all">
                                                 Semua Event
                                             </SelectItem>
@@ -426,6 +800,7 @@ export default function AuditLogIndex({
                                                     <SelectItem
                                                         key={option.value}
                                                         value={option.value}
+                                                        className="whitespace-normal"
                                                     >
                                                         {option.label}
                                                     </SelectItem>
@@ -445,10 +820,14 @@ export default function AuditLogIndex({
                                             })
                                         }
                                     >
-                                        <SelectTrigger className="h-9 w-[130px] border-border/60">
+                                        <SelectTrigger className="h-9 w-full border-border/60 sm:w-[145px]">
                                             <SelectValue placeholder="User" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent
+                                            align="start"
+                                            collisionPadding={16}
+                                            className="max-h-[280px] w-[min(320px,calc(100vw-2rem))]"
+                                        >
                                             <SelectItem value="all">
                                                 Semua User
                                             </SelectItem>
@@ -463,29 +842,111 @@ export default function AuditLogIndex({
                                         </SelectContent>
                                     </Select>
 
-                                    <Input
-                                        type="date"
-                                        value={filters.date_from ?? ''}
-                                        onChange={(event) =>
-                                            updateFilters({
-                                                date_from: event.target.value,
-                                            })
+                                    <Select
+                                        value={
+                                            isCustomDate
+                                                ? 'custom'
+                                                : getPeriodKey()
                                         }
-                                        className="h-9 w-[150px] border-border/60"
-                                        aria-label="Tanggal dari"
-                                    />
+                                        onValueChange={handlePeriodChange}
+                                    >
+                                        <SelectTrigger className="h-9 w-full border-border/60 sm:w-[155px]">
+                                            <SelectValue placeholder="Periode" />
+                                        </SelectTrigger>
+                                        <SelectContent
+                                            align="start"
+                                            collisionPadding={16}
+                                            className="max-h-[280px] w-[min(240px,calc(100vw-2rem))]"
+                                        >
+                                            <SelectItem value="all">
+                                                Semua Waktu
+                                            </SelectItem>
+                                            <SelectItem value="today">
+                                                Hari Ini
+                                            </SelectItem>
+                                            <SelectItem value="7days">
+                                                7 Hari Terakhir
+                                            </SelectItem>
+                                            <SelectItem value="30days">
+                                                30 Hari Terakhir
+                                            </SelectItem>
+                                            <SelectItem value="this_month">
+                                                Bulan Ini
+                                            </SelectItem>
+                                            <SelectItem value="custom">
+                                                {isCustomDate &&
+                                                filters.date_from
+                                                    ? format(
+                                                          new Date(
+                                                              filters.date_from +
+                                                                  'T00:00:00',
+                                                          ),
+                                                          'dd MMM yyyy',
+                                                          { locale: idLocale },
+                                                      )
+                                                    : 'Pilih Tanggal...'}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
 
-                                    <Input
-                                        type="date"
-                                        value={filters.date_until ?? ''}
-                                        onChange={(event) =>
-                                            updateFilters({
-                                                date_until: event.target.value,
-                                            })
-                                        }
-                                        className="h-9 w-[150px] border-border/60"
-                                        aria-label="Tanggal sampai"
-                                    />
+                                    <Dialog
+                                        open={calendarOpen}
+                                        onOpenChange={setCalendarOpen}
+                                    >
+                                        <DialogContent className="w-auto p-0">
+                                            <DialogHeader className="sr-only">
+                                                <DialogTitle>
+                                                    Pilih Tanggal
+                                                </DialogTitle>
+                                                <DialogDescription>
+                                                    Pilih tanggal untuk filter
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <Calendar
+                                                mode="single"
+                                                locale={idLocale}
+                                                captionLayout="dropdown"
+                                                defaultMonth={
+                                                    filters.date_from
+                                                        ? new Date(
+                                                              filters.date_from +
+                                                                  'T00:00:00',
+                                                          )
+                                                        : new Date()
+                                                }
+                                                selected={
+                                                    filters.date_from
+                                                        ? new Date(
+                                                              filters.date_from +
+                                                                  'T00:00:00',
+                                                          )
+                                                        : undefined
+                                                }
+                                                onSelect={(
+                                                    date: Date | undefined,
+                                                ) => {
+                                                    if (date) {
+                                                        const dateStr = format(
+                                                            date,
+                                                            'yyyy-MM-dd',
+                                                        );
+                                                        updateFilters({
+                                                            date_from: dateStr,
+                                                            date_until: dateStr,
+                                                        });
+                                                    } else {
+                                                        updateFilters({
+                                                            date_from: '',
+                                                            date_until: '',
+                                                        });
+                                                        setIsCustomDate(false);
+                                                    }
+
+                                                    setCalendarOpen(false);
+                                                }}
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
 
                                     {hasFilters && (
                                         <Button
@@ -511,7 +972,79 @@ export default function AuditLogIndex({
                             />
                         ) : (
                             <>
-                                <div className="overflow-x-auto rounded-md border border-border/60">
+                                {/* Mobile card view */}
+                                <div className="flex flex-col gap-3 md:hidden">
+                                    {auditLogs.data.map((auditLog) => (
+                                        <div
+                                            key={auditLog.id}
+                                            className="rounded-xl border border-border/70 bg-card p-4 shadow-sm"
+                                        >
+                                            <div className="flex items-start justify-between gap-2.5">
+                                                <div className="min-w-0 flex-1">
+                                                    <StatusBadge
+                                                        variant={eventVariant(
+                                                            auditLog.event,
+                                                        )}
+                                                        className="inline-block max-w-full truncate text-[11px] font-semibold whitespace-nowrap"
+                                                    >
+                                                        {eventLabel(
+                                                            auditLog.event,
+                                                        )}
+                                                    </StatusBadge>
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-7 shrink-0 gap-1 px-2.5 text-xs font-medium"
+                                                    onClick={() =>
+                                                        setSelectedLog(auditLog)
+                                                    }
+                                                >
+                                                    <Eye className="h-3.5 w-3.5" />
+                                                    Detail
+                                                </Button>
+                                            </div>
+                                            <div className="mt-2 space-y-0.5">
+                                                <p className="text-xs font-medium text-foreground">
+                                                    {auditLog.user?.name ??
+                                                        'Sistem'}
+                                                </p>
+                                                {auditLog.user?.email && (
+                                                    <p className="text-[11px] text-muted-foreground">
+                                                        {auditLog.user.email}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                                                <span>{auditLog.module}</span>
+                                                <span className="text-border">
+                                                    •
+                                                </span>
+                                                <span>
+                                                    {auditLog.created_at_human ??
+                                                        '-'}
+                                                </span>
+                                            </div>
+                                            {auditLog.archive && (
+                                                <div className="mt-2 rounded-md border border-border/50 bg-muted/30 px-2.5 py-1.5">
+                                                    <p className="font-mono text-[11px] font-medium">
+                                                        {
+                                                            auditLog.archive
+                                                                .nomor_arsip
+                                                        }
+                                                    </p>
+                                                    <p className="truncate text-[11px] text-muted-foreground">
+                                                        {auditLog.archive.judul}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Desktop table view */}
+                                <div className="hidden overflow-x-auto rounded-md border border-border/60 md:block">
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
@@ -628,47 +1161,10 @@ export default function AuditLogIndex({
                                     </Table>
                                 </div>
 
-                                <div className="flex flex-col gap-3 pt-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                                    <span>
-                                        Menampilkan {auditLogs.from ?? 0} hingga{' '}
-                                        {auditLogs.to ?? 0} dari{' '}
-                                        {auditLogs.total} audit
-                                    </span>
-                                    {auditLogs.last_page > 1 && (
-                                        <div className="flex flex-wrap items-center gap-1">
-                                            {auditLogs.links.map(
-                                                (link, linkIndex) => (
-                                                    <Button
-                                                        key={`${link.label}-${linkIndex}`}
-                                                        type="button"
-                                                        variant={
-                                                            link.active
-                                                                ? 'default'
-                                                                : 'outline'
-                                                        }
-                                                        size="sm"
-                                                        disabled={!link.url}
-                                                        onClick={() => {
-                                                            if (link.url) {
-                                                                router.get(
-                                                                    link.url,
-                                                                    {},
-                                                                    {
-                                                                        preserveState: true,
-                                                                        preserveScroll: true,
-                                                                    },
-                                                                );
-                                                            }
-                                                        }}
-                                                        dangerouslySetInnerHTML={{
-                                                            __html: link.label,
-                                                        }}
-                                                    />
-                                                ),
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
+                                <DataTablePagination
+                                    data={auditLogs}
+                                    itemName="audit"
+                                />
                             </>
                         )}
                     </div>
@@ -688,14 +1184,25 @@ export default function AuditLogIndex({
                         </DialogDescription>
                     </DialogHeader>
 
-                    {selectedLog && <AuditLogDetail auditLog={selectedLog} />}
+                    {selectedLog && (
+                        <AuditLogDetail
+                            auditLog={selectedLog}
+                            masterLookups={masterLookups}
+                        />
+                    )}
                 </DialogContent>
             </Dialog>
         </RouteGuard>
     );
 }
 
-function AuditLogDetail({ auditLog }: { auditLog: AuditLog }) {
+function AuditLogDetail({
+    auditLog,
+    masterLookups,
+}: {
+    auditLog: AuditLog;
+    masterLookups?: Record<string, Record<string | number, string>>;
+}) {
     return (
         <div className="max-h-[70vh] space-y-6 overflow-y-auto pr-2">
             <section className="grid gap-3 sm:grid-cols-2">
@@ -725,6 +1232,7 @@ function AuditLogDetail({ auditLog }: { auditLog: AuditLog }) {
             <ChangeSummary
                 oldValues={auditLog.old_values}
                 newValues={auditLog.new_values}
+                masterLookups={masterLookups}
             />
 
             <section className="space-y-3 border-t border-border/60 pt-4">
@@ -769,9 +1277,11 @@ function DetailItem({
 function ChangeSummary({
     oldValues,
     newValues,
+    masterLookups,
 }: {
     oldValues: JsonValue | null;
     newValues: JsonValue | null;
+    masterLookups?: Record<string, Record<string | number, string>>;
 }) {
     const changes = changeItems(oldValues, newValues);
     const visibleChanges = changes.filter((change) => !change.isComplex);
@@ -799,11 +1309,19 @@ function ChangeSummary({
                             <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                 <ValueBlock
                                     label="Sebelum"
-                                    value={formatValue(change.oldValue)}
+                                    value={formatValue(
+                                        change.oldValue,
+                                        change.field,
+                                        masterLookups,
+                                    )}
                                 />
                                 <ValueBlock
                                     label="Sesudah"
-                                    value={formatValue(change.newValue)}
+                                    value={formatValue(
+                                        change.newValue,
+                                        change.field,
+                                        masterLookups,
+                                    )}
                                 />
                             </div>
                         </div>
@@ -880,8 +1398,7 @@ function JsonBlock({
 
 AuditLogIndex.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: dashboard.url() },
-        { title: 'Administrasi', href: '#' },
+        { title: 'ADMINISTRASI' },
         { title: 'Audit Log', href: index.url() },
     ],
 };

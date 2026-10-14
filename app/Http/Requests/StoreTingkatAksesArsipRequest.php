@@ -31,7 +31,7 @@ class StoreTingkatAksesArsipRequest extends FormRequest
 
         return [
             'kode' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 Rule::unique('tingkat_akses_arsip', 'kode')->ignore($tingkatAksesArsipId),

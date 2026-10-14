@@ -31,7 +31,7 @@ class TingkatPerkembanganArsipFactory extends Factory
         ];
 
         return [
-            'kode' => 'TPA-'.str_pad((string) self::$sequence++, 5, '0', STR_PAD_LEFT),
+            'kode' => 'TPA-'.str_pad((string) self::$sequence++, 3, '0', STR_PAD_LEFT),
             'nama' => fake()->randomElement($names),
             'deskripsi' => fake()->optional()->sentence(),
             'status' => 'active',

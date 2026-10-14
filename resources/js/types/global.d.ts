@@ -1,21 +1,11 @@
 import type { Auth } from '@/types/auth';
 
-export type NotificationItem = {
-    id: number;
-    title: string;
-    message: string;
-    type: string;
-    type_label: string;
-    type_color: string;
-    url: string | null;
-    is_read: boolean;
-    created_at: string | null;
-    created_at_human: string | null;
-};
-
-export type SharedNotifications = {
-    unread_count: number;
-    latest: NotificationItem[];
+export type FlashMessages = {
+    success?: string | null;
+    error?: string | null;
+    warning?: string | null;
+    info?: string | null;
+    status?: string | null;
 };
 
 declare module 'react' {
@@ -32,7 +22,7 @@ declare module '@inertiajs/core' {
             appTimezone: string;
             auth: Auth;
             sidebarOpen: boolean;
-            notifications: SharedNotifications;
+            flash?: FlashMessages;
             [key: string]: unknown;
         };
     }

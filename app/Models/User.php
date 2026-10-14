@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Notifications\ResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -25,8 +26,10 @@ use Spatie\Permission\Traits\HasRoles;
  *
  * @property int $id
  * @property string|null $nip
+ * @property string|null $nik
  * @property string|null $nama_lengkap
  * @property string $name
+ * @property string|null $username
  * @property string $email
  * @property Carbon|null $email_verified_at
  * @property string $status
@@ -52,7 +55,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @method static Builder<static> byUnit(int $unitId)
  * @method static Builder<static> byRole(string $role)
  */
-#[Fillable(['nip', 'nama_lengkap', 'name', 'email', 'password', 'status', 'avatar_path', 'last_login_at', 'unit_organisasi_id', 'jabatan_id'])]
+#[Fillable(['nip', 'nik', 'nama_lengkap', 'name', 'username', 'email', 'password', 'status', 'avatar_path', 'last_login_at', 'unit_organisasi_id', 'jabatan_id'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -197,5 +200,13 @@ class User extends Authenticatable implements PasskeyUser
     public function hasPermission(string|Permission $permission): bool
     {
         return $this->hasPermissionTo($permission);
+    }
+
+    /**
+     * Send the password reset notification.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }

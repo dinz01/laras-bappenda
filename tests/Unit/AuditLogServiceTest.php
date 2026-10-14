@@ -114,8 +114,8 @@ test('it logs workflow event correctly', function () {
     $this->service->log(
         event: 'workflow.changed',
         model: $arsip,
-        oldValues: ['workflow_status' => 'draft'],
-        newValues: ['workflow_status' => 'review'],
+        oldValues: ['workflow_status' => 'review'],
+        newValues: ['workflow_status' => 'approved'],
         actor: $this->user
     );
 
@@ -127,6 +127,6 @@ test('it logs workflow event correctly', function () {
     ]);
 
     $log = AuditLog::latest('id')->first();
-    expect($log->old_values['workflow_status'])->toBe('draft')
-        ->and($log->new_values['workflow_status'])->toBe('review');
+    expect($log->old_values['workflow_status'])->toBe('review')
+        ->and($log->new_values['workflow_status'])->toBe('approved');
 });

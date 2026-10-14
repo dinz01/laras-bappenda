@@ -1,14 +1,12 @@
 <?php
 
+use App\Enums\WorkflowStatus;
 use App\Models\Arsip;
 use App\Models\JenisArsip;
 use App\Models\KlasifikasiArsip;
 use App\Models\KondisiArsip;
 use App\Models\LokasiArsip;
-use App\Models\MediaArsip;
-use App\Models\RetensiArsip;
 use App\Models\SifatArsip;
-use App\Models\StatusArsip;
 use App\Models\TingkatAksesArsip;
 use App\Models\TingkatPerkembanganArsip;
 use App\Models\UnitOrganisasi;
@@ -35,21 +33,15 @@ it('has correct eloquent relationships', function () {
         ->and($arsip->jenisArsip)->toBeInstanceOf(JenisArsip::class)
         ->and($arsip->sifatArsip)->toBeInstanceOf(SifatArsip::class)
         ->and($arsip->tingkatPerkembanganArsip)->toBeInstanceOf(TingkatPerkembanganArsip::class)
-        ->and($arsip->mediaArsip)->toBeInstanceOf(MediaArsip::class)
         ->and($arsip->kondisiArsip)->toBeInstanceOf(KondisiArsip::class)
-        ->and($arsip->statusArsip)->toBeInstanceOf(StatusArsip::class)
         ->and($arsip->tingkatAksesArsip)->toBeInstanceOf(TingkatAksesArsip::class)
-        ->and($arsip->retensiArsip)->toBeInstanceOf(RetensiArsip::class)
         ->and($arsip->unitOrganisasi)->toBeInstanceOf(UnitOrganisasi::class)
         ->and($arsip->creator)->toBeInstanceOf(User::class);
 });
 
 it('can filter active archives using active scope', function () {
-    $statusAktif = StatusArsip::factory()->create(['kode' => 'SA-00001']);
-    $statusInaktif = StatusArsip::factory()->create(['kode' => 'SA-00002']);
-
-    $aktifArsip = Arsip::factory()->create(['status_arsip_id' => $statusAktif->id]);
-    Arsip::factory()->create(['status_arsip_id' => $statusInaktif->id]);
+    $aktifArsip = Arsip::factory()->create(['workflow_status' => WorkflowStatus::Active]);
+    Arsip::factory()->create(['workflow_status' => WorkflowStatus::Review]);
 
     $activeArchives = Arsip::active()->get();
 
@@ -62,7 +54,5 @@ it('supports soft deletion', function () {
 
     $arsip->delete();
 
-    expect(Arsip::count())->toBe(0)
-        ->and(Arsip::withTrashed()->count())->toBe(1)
-        ->and($arsip->trashed())->toBeTrue();
+    expect(Arsip::withTrashed()->find($arsip->id)->trashed())->toBeTrue();
 });

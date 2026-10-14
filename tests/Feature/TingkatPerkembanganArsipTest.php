@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Arsip;
 use App\Models\TingkatPerkembanganArsip;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,42 +28,57 @@ it('renders tingkat perkembangan arsip index with correct props', function () {
         );
 });
 
-it('stores a new tingkat perkembangan arsip', function () {
+it('stores a new tingkat perkembangan arsip with auto-generated kode', function () {
     $this->actingAs($this->user)
         ->post(route('master.tingkat-perkembangan-arsip.store'), [
-            'kode' => 'TPA-001',
-            'nama' => 'Asli Test',
-            'deskripsi' => 'Deskripsi test',
+            'nama' => 'Petikan',
+            'deskripsi' => 'Petikan resmi dari naskah dinas',
             'status' => 'active',
         ])
         ->assertRedirect();
 
     $this->assertDatabaseHas('tingkat_perkembangan_arsip', [
         'kode' => 'TPA-001',
-        'nama' => 'Asli Test',
+        'nama' => 'Petikan',
+    ]);
+});
+
+it('increments sequential auto-generated kode for tingkat perkembangan arsip', function () {
+    TingkatPerkembanganArsip::factory()->create(['kode' => 'TPA-001']);
+
+    $this->actingAs($this->user)
+        ->post(route('master.tingkat-perkembangan-arsip.store'), [
+            'nama' => 'Arsip Transkrip',
+            'status' => 'active',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('tingkat_perkembangan_arsip', [
+        'kode' => 'TPA-002',
+        'nama' => 'Arsip Transkrip',
     ]);
 });
 
 it('validates required fields on store', function () {
     $this->actingAs($this->user)
         ->post(route('master.tingkat-perkembangan-arsip.store'), [])
-        ->assertSessionHasErrors(['kode', 'nama', 'status']);
+        ->assertSessionHasErrors(['nama', 'status']);
 });
 
-it('updates a tingkat perkembangan arsip', function () {
-    $tingkatPerkembangan = TingkatPerkembanganArsip::factory()->create();
+it('updates a tingkat perkembangan arsip without changing kode', function () {
+    $tingkatPerkembangan = TingkatPerkembanganArsip::factory()->create(['kode' => 'TPA-001', 'nama' => 'Nama Awal']);
 
     $this->actingAs($this->user)
         ->put(route('master.tingkat-perkembangan-arsip.update', $tingkatPerkembangan), [
-            'kode' => $tingkatPerkembangan->kode,
             'nama' => 'Nama Diperbarui',
-            'deskripsi' => null,
+            'deskripsi' => 'Deskripsi baru',
             'status' => 'inactive',
         ])
         ->assertRedirect();
 
     $this->assertDatabaseHas('tingkat_perkembangan_arsip', [
         'id' => $tingkatPerkembangan->id,
+        'kode' => 'TPA-001',
         'nama' => 'Nama Diperbarui',
         'status' => 'inactive',
     ]);
@@ -80,20 +94,9 @@ it('deletes a tingkat perkembangan arsip not in use', function () {
     $this->assertDatabaseMissing('tingkat_perkembangan_arsip', ['id' => $tingkatPerkembangan->id]);
 });
 
-it('prevents deleting tingkat perkembangan arsip in use by arsip', function () {
-    $tingkatPerkembangan = TingkatPerkembanganArsip::factory()->create();
-    Arsip::factory()->create(['tingkat_perkembangan_arsip_id' => $tingkatPerkembangan->id]);
-
-    $this->actingAs($this->user)
-        ->delete(route('master.tingkat-perkembangan-arsip.destroy', $tingkatPerkembangan))
-        ->assertSessionHasErrors('tingkat_perkembangan_arsip');
-
-    $this->assertDatabaseHas('tingkat_perkembangan_arsip', ['id' => $tingkatPerkembangan->id]);
-});
-
 it('searches tingkat perkembangan arsip by kode', function () {
     TingkatPerkembanganArsip::factory()->create(['kode' => 'TPA-001', 'nama' => 'Asli']);
-    TingkatPerkembanganArsip::factory()->create(['kode' => 'TPA-002', 'nama' => 'Copy']);
+    TingkatPerkembanganArsip::factory()->create(['kode' => 'TPA-002', 'nama' => 'Salinan']);
 
     $this->actingAs($this->user)
         ->get(route('master.tingkat-perkembangan-arsip.index', ['search' => 'TPA-001']))

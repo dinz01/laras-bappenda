@@ -22,28 +22,28 @@ it('advances workflow status via http request and logs activity', function () {
     Event::fake();
 
     $user = User::factory()->create();
-    $user->givePermissionTo('arsip.update');
+    $user->givePermissionTo('kelola-arsip.update');
     $this->actingAs($user);
 
-    $arsip = Arsip::factory()->create(['workflow_status' => WorkflowStatus::Draft]);
+    $arsip = Arsip::factory()->create(['workflow_status' => WorkflowStatus::Review]);
 
     $response = $this->post(route('arsip.workflow.advance', $arsip), [
-        'target_status' => WorkflowStatus::Review->value,
-        'keterangan' => 'Mengajukan review pertama',
+        'target_status' => WorkflowStatus::Approved->value,
+        'keterangan' => 'Menyetujui arsip',
     ]);
 
-    $response->assertRedirect(route('arsip.show', $arsip));
+    $response->assertRedirect();
     $response->assertSessionHas('success');
 
     $arsip->refresh();
-    expect($arsip->workflow_status)->toBe(WorkflowStatus::Review);
+    expect($arsip->workflow_status)->toBe(WorkflowStatus::Approved);
 
     // Verify history stored
     $history = ArsipWorkflowHistory::where('arsip_id', $arsip->id)->first();
     expect($history)->not->toBeNull()
-        ->and($history->status_lama)->toBe(WorkflowStatus::Draft)
-        ->and($history->status_baru)->toBe(WorkflowStatus::Review)
-        ->and($history->keterangan)->toBe('Mengajukan review pertama')
+        ->and($history->status_lama)->toBe(WorkflowStatus::Review)
+        ->and($history->status_baru)->toBe(WorkflowStatus::Approved)
+        ->and($history->keterangan)->toBe('Menyetujui arsip')
         ->and($history->user_id)->toBe($user->id);
 
     // Verify audit log recorded
@@ -53,27 +53,27 @@ it('advances workflow status via http request and logs activity', function () {
 
     expect($auditLog)->not->toBeNull()
         ->and($auditLog->event)->toBe('workflow.changed')
-        ->and($auditLog->old_values['workflow_status'])->toBe('draft')
-        ->and($auditLog->new_values['workflow_status'])->toBe('review')
+        ->and($auditLog->old_values['workflow_status'])->toBe('review')
+        ->and($auditLog->new_values['workflow_status'])->toBe('approved')
         ->and($auditLog->user_id)->toBe($user->id);
 
     // Verify event dispatched
     Event::assertDispatched(WorkflowTransitioned::class, function ($event) use ($arsip, $user) {
         return $event->arsip->id === $arsip->id
-            && $event->from === WorkflowStatus::Draft
-            && $event->to === WorkflowStatus::Review
+            && $event->from === WorkflowStatus::Review
+            && $event->to === WorkflowStatus::Approved
             && $event->actor->id === $user->id;
     });
 });
 
 it('rejects invalid workflow status transitions via http request', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('arsip.update');
+    $user->givePermissionTo('kelola-arsip.update');
     $this->actingAs($user);
 
-    $arsip = Arsip::factory()->create(['workflow_status' => WorkflowStatus::Draft]);
+    $arsip = Arsip::factory()->create(['workflow_status' => WorkflowStatus::Review]);
 
-    // Attempt Draft -> Active directly (invalid)
+    // Attempt Review -> Active directly (invalid)
     $response = $this->post(route('arsip.workflow.advance', $arsip), [
         'target_status' => WorkflowStatus::Active->value,
         'keterangan' => 'Mencoba lompat status',
@@ -82,5 +82,5 @@ it('rejects invalid workflow status transitions via http request', function () {
     $response->assertSessionHasErrors(['workflow']);
 
     $arsip->refresh();
-    expect($arsip->workflow_status)->toBe(WorkflowStatus::Draft);
+    expect($arsip->workflow_status)->toBe(WorkflowStatus::Review);
 });

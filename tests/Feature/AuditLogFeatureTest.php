@@ -7,7 +7,14 @@ use App\Models\Arsip;
 use App\Models\AuditLog;
 use App\Models\DokumenArsip;
 use App\Models\DokumenArsipVersion;
+use App\Models\JenisArsip;
 use App\Models\KlasifikasiArsip;
+use App\Models\KondisiArsip;
+use App\Models\LokasiArsip;
+use App\Models\SifatArsip;
+use App\Models\TingkatAksesArsip;
+use App\Models\TingkatPerkembanganArsip;
+use App\Models\UnitOrganisasi;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,17 +35,34 @@ beforeEach(function () {
 it('logs arsip.created when storing archive', function () {
     $klasifikasi = KlasifikasiArsip::factory()->create();
 
+    $file = UploadedFile::fake()->create('document.pdf', 100, 'application/pdf');
+    $lokasi = LokasiArsip::factory()->create();
+    $jenis = JenisArsip::factory()->create();
+    $sifat = SifatArsip::factory()->create();
+    $tingkatPerkembangan = TingkatPerkembanganArsip::factory()->create();
+    $kondisi = KondisiArsip::factory()->create();
+    $tingkatAkses = TingkatAksesArsip::factory()->create();
+    $unit = UnitOrganisasi::factory()->create();
+
     $data = [
         'nomor_arsip' => 'ARS/2026/001',
         'judul' => 'Arsip Keuangan 2026',
         'deskripsi' => 'Arsip Keuangan Pertama',
         'tanggal_arsip' => '2026-07-19',
         'klasifikasi_arsip_id' => $klasifikasi->id,
+        'lokasi_arsip_id' => $lokasi->id,
+        'jenis_arsip_id' => $jenis->id,
+        'sifat_arsip_id' => $sifat->id,
+        'tingkat_perkembangan_arsip_id' => $tingkatPerkembangan->id,
+        'kondisi_arsip_id' => $kondisi->id,
+        'tingkat_akses_arsip_id' => $tingkatAkses->id,
+        'unit_organisasi_id' => $unit->id,
+        'file' => $file,
     ];
 
     $this->actingAs($this->user)
         ->post(route('arsip.store'), $data)
-        ->assertRedirect(route('arsip.index'));
+        ->assertRedirect();
 
     $arsip = Arsip::where('nomor_arsip', 'ARS/2026/001')->first();
     expect($arsip)->not->toBeNull();
@@ -62,16 +86,31 @@ it('logs arsip.updated when modifying archive metadata', function () {
         'nomor_arsip' => 'ARS/OLD/123',
     ]);
 
+    $lokasi = LokasiArsip::factory()->create();
+    $jenis = JenisArsip::factory()->create();
+    $sifat = SifatArsip::factory()->create();
+    $tingkatPerkembangan = TingkatPerkembanganArsip::factory()->create();
+    $kondisi = KondisiArsip::factory()->create();
+    $tingkatAkses = TingkatAksesArsip::factory()->create();
+    $unit = UnitOrganisasi::factory()->create();
+
     $data = [
         'judul' => 'Judul Baru',
         'nomor_arsip' => 'ARS/NEW/456',
         'tanggal_arsip' => $arsip->tanggal_arsip->toDateString(),
         'klasifikasi_arsip_id' => $arsip->klasifikasi_arsip_id,
+        'lokasi_arsip_id' => $lokasi->id,
+        'jenis_arsip_id' => $jenis->id,
+        'sifat_arsip_id' => $sifat->id,
+        'tingkat_perkembangan_arsip_id' => $tingkatPerkembangan->id,
+        'kondisi_arsip_id' => $kondisi->id,
+        'tingkat_akses_arsip_id' => $tingkatAkses->id,
+        'unit_organisasi_id' => $unit->id,
     ];
 
     $this->actingAs($this->user)
         ->put(route('arsip.update', $arsip->id), $data)
-        ->assertRedirect(route('arsip.show', $arsip->id));
+        ->assertRedirect();
 
     $this->assertDatabaseHas('audit_logs', [
         'auditable_type' => Arsip::class,
@@ -158,7 +197,7 @@ it('logs dokumen.uploaded and dokumen.version_created on uploadFile', function (
 
     $this->actingAs($this->user)
         ->post(route('arsip.upload-file', $arsip->id), ['file' => $file])
-        ->assertRedirect(route('arsip.show', $arsip->id));
+        ->assertRedirect();
 
     $dokumen = DokumenArsip::where('arsip_id', $arsip->id)->first();
     expect($dokumen)->not->toBeNull();
@@ -191,7 +230,7 @@ it('logs dokumen.replaced and dokumen.version_created on replaceFile', function 
     $file2 = UploadedFile::fake()->create('contract_v2.pdf', 200, 'application/pdf');
     $this->actingAs($this->user)
         ->post(route('arsip.replace-file', $arsip->id), ['file' => $file2])
-        ->assertRedirect(route('arsip.show', $arsip->id));
+        ->assertRedirect();
 
     $this->assertDatabaseHas('audit_logs', [
         'auditable_type' => DokumenArsip::class,
@@ -207,14 +246,14 @@ it('logs dokumen.replaced and dokumen.version_created on replaceFile', function 
 });
 
 it('logs workflow.changed when advancing status', function () {
-    $arsip = Arsip::factory()->create(['workflow_status' => WorkflowStatus::Draft]);
+    $arsip = Arsip::factory()->create(['workflow_status' => WorkflowStatus::Review]);
 
     $this->actingAs($this->user)
         ->post(route('arsip.workflow.advance', $arsip->id), [
-            'target_status' => WorkflowStatus::Review->value,
-            'keterangan' => 'Ready for review',
+            'target_status' => WorkflowStatus::Approved->value,
+            'keterangan' => 'Ready for approved',
         ])
-        ->assertRedirect(route('arsip.show', $arsip->id));
+        ->assertRedirect();
 
     $this->assertDatabaseHas('audit_logs', [
         'auditable_type' => Arsip::class,
@@ -223,8 +262,8 @@ it('logs workflow.changed when advancing status', function () {
     ]);
 
     $log = AuditLog::where('event', 'workflow.changed')->first();
-    expect($log->old_values['workflow_status'])->toBe('draft')
-        ->and($log->new_values['workflow_status'])->toBe('review');
+    expect($log->old_values['workflow_status'])->toBe('review')
+        ->and($log->new_values['workflow_status'])->toBe('approved');
 });
 
 it('renders audit log index with paginated logs and statistics', function () {

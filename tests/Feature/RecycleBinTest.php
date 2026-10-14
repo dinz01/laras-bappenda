@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Models\Arsip;
 use App\Models\DokumenArsip;
 use App\Models\DokumenArsipVersion;
-use App\Models\StatusArsip;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Seeders\PermissionSeeder;
@@ -21,17 +20,12 @@ beforeEach(function () {
     $this->seed(RoleSeeder::class);
     $this->seed(PermissionSeeder::class);
 
-    // Populate required status arsip
-    StatusArsip::factory()->create(['kode' => 'SA-00001', 'nama' => 'Aktif']);
-    StatusArsip::factory()->create(['kode' => 'SA-00002', 'nama' => 'Inaktif']);
-    StatusArsip::factory()->create(['kode' => 'SA-00003', 'nama' => 'Permanen']);
-
     Storage::fake('local');
 });
 
 it('restricts recycle bin actions to Super Administrator role', function () {
     $regularUser = User::factory()->create();
-    $regularUser->assignRole('Pegawai');
+    $regularUser->assignRole('Operator Unit');
 
     $superAdmin = User::factory()->create();
     $superAdmin->assignRole('Super Administrator');
@@ -71,7 +65,7 @@ it('restricts recycle bin actions to Super Administrator role', function () {
 
 it('performs soft delete and records audit log', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('arsip.delete');
+    $user->givePermissionTo('kelola-arsip.delete');
     $arsip = Arsip::factory()->create(['created_by' => $user->id]);
 
     $this->actingAs($user)

@@ -18,14 +18,16 @@ export function DataToolbar({
 }: DataToolbarProps) {
     return (
         <div className="flex flex-col gap-3 border-b border-border/40 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex flex-1 flex-wrap items-center gap-2">
                 <SearchBox
                     value={searchValue}
                     placeholder={searchPlaceholder}
                     onChange={onSearchChange}
                 />
                 {filters && (
-                    <div className="flex items-center gap-2">{filters}</div>
+                    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                        {filters}
+                    </div>
                 )}
             </div>
             {actions && (

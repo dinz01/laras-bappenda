@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreJabatanRequest;
 use App\Models\Jabatan;
+use App\Services\AuditLogService;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,10 @@ use Inertia\Response;
 
 class JabatanController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     /**
      * Display a listing of the jabatan.
      */
@@ -72,7 +77,15 @@ class JabatanController extends Controller
     {
         Gate::authorize('create', Jabatan::class);
 
-        Jabatan::create($this->validatedData($request));
+        $jabatan = Jabatan::create($this->storeData($request));
+
+        $this->auditLogService->log(
+            'master.jabatan.created',
+            $jabatan,
+            null,
+            ['kode' => $jabatan->kode, 'nama' => $jabatan->nama, 'status' => $jabatan->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Jabatan berhasil ditambahkan.');
     }
@@ -84,7 +97,17 @@ class JabatanController extends Controller
     {
         Gate::authorize('update', $jabatan);
 
-        $jabatan->update($this->validatedData($request));
+        $oldValues = ['kode' => $jabatan->kode, 'nama' => $jabatan->nama, 'status' => $jabatan->status];
+
+        $jabatan->update($this->updateData($request));
+
+        $this->auditLogService->log(
+            'master.jabatan.updated',
+            $jabatan,
+            $oldValues,
+            ['kode' => $jabatan->kode, 'nama' => $jabatan->nama, 'status' => $jabatan->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Jabatan berhasil diperbarui.');
     }
@@ -103,22 +126,56 @@ class JabatanController extends Controller
             ]);
         }
 
+        $oldValues = ['kode' => $jabatan->kode, 'nama' => $jabatan->nama, 'status' => $jabatan->status];
+
         $jabatan->delete();
+
+        $this->auditLogService->log(
+            'master.jabatan.deleted',
+            $jabatan,
+            $oldValues,
+            null,
+            auth()->user(),
+        );
 
         return back()->with('success', 'Jabatan berhasil dihapus.');
     }
 
     /**
+     * Siapkan data untuk pembuatan jabatan baru.
+     * Kode digenerate otomatis jika tidak disediakan.
+     *
      * @return array{kode: string, nama: string, singkatan: string|null, status: string}
      */
-    private function validatedData(StoreJabatanRequest $request): array
+    private function storeData(StoreJabatanRequest $request): array
+    {
+        $validated = $request->validated();
+
+        $kode = isset($validated['kode']) && is_string($validated['kode']) && trim($validated['kode']) !== ''
+            ? trim($validated['kode'])
+            : Jabatan::generateKode();
+
+        return [
+            'kode' => $kode,
+            'nama' => (string) $validated['nama'],
+            'singkatan' => isset($validated['singkatan']) ? (string) $validated['singkatan'] : null,
+            'status' => (string) $validated['status'],
+        ];
+    }
+
+    /**
+     * Siapkan data untuk update jabatan yang sudah ada.
+     * Kode bersifat tetap dan tidak diubah saat edit.
+     *
+     * @return array{nama: string, singkatan: string|null, status: string}
+     */
+    private function updateData(StoreJabatanRequest $request): array
     {
         $validated = $request->validated();
 
         return [
-            'kode' => (string) $validated['kode'],
             'nama' => (string) $validated['nama'],
-            'singkatan' => $validated['singkatan'],
+            'singkatan' => isset($validated['singkatan']) ? (string) $validated['singkatan'] : null,
             'status' => (string) $validated['status'],
         ];
     }

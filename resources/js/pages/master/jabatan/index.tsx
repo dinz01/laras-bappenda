@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import {
     BriefcaseBusiness,
     Eye,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
@@ -18,6 +19,7 @@ import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
 import { RouteGuard } from '@/components/RouteGuard';
+import { DataTablePagination } from '@/components/Tables/data-table-pagination';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
@@ -53,7 +55,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { dashboard } from '@/routes';
 import { destroy, index, store, update } from '@/routes/master/jabatan';
 
 type Jabatan = {
@@ -160,6 +161,11 @@ function JabatanFormDialog({
             form.put(update({ jabatan: jabatan.id }).url, {
                 preserveScroll: true,
                 onSuccess: () => onOpenChange(false),
+                onError: () =>
+                    toast.error('Terjadi kesalahan saat memperbarui jabatan.', {
+                        description:
+                            'Periksa kembali kolom yang ditandai merah.',
+                    }),
             });
 
             return;
@@ -171,6 +177,10 @@ function JabatanFormDialog({
                 form.reset();
                 onOpenChange(false);
             },
+            onError: () =>
+                toast.error('Terjadi kesalahan saat menyimpan jabatan.', {
+                    description: 'Periksa kembali kolom yang ditandai merah.',
+                }),
         });
     };
 
@@ -186,19 +196,23 @@ function JabatanFormDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4">
+                <form onSubmit={submit} noValidate className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="kode">Kode</Label>
-                            <Input
-                                id="kode"
-                                value={form.data.kode}
-                                onChange={(event) =>
-                                    form.setData('kode', event.target.value)
-                                }
-                                placeholder="Contoh: JB-001"
-                                maxLength={50}
-                            />
+                            <Label htmlFor="kode">Kode Jabatan</Label>
+                            <div>
+                                <Input
+                                    id="kode"
+                                    value="[Otomatis dibuat oleh sistem]"
+                                    disabled
+                                    className="cursor-not-allowed border-border/60 bg-muted/50 text-muted-foreground"
+                                />
+                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                    {mode === 'edit'
+                                        ? 'Kode jabatan bersifat tetap dan tidak dapat diubah.'
+                                        : 'Nomor unik akan digenerate otomatis saat disimpan.'}
+                                </p>
+                            </div>
                             <InputError message={form.errors.kode} />
                         </div>
 
@@ -363,7 +377,6 @@ export default function JabatanIndex({
     );
     const [detailJabatan, setDetailJabatan] = useState<Jabatan | null>(null);
     const [deleteJabatan, setDeleteJabatan] = useState<Jabatan | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
 
     const updateFilters = (
@@ -429,14 +442,17 @@ export default function JabatanIndex({
         }
 
         setDeleting(true);
-        setDeleteError(null);
 
         router.delete(destroy({ jabatan: deleteJabatan.id }).url, {
             preserveScroll: true,
-            onError: (errors) => {
-                setDeleteError(errors.jabatan || 'Jabatan gagal dihapus.');
+            onError: () => {
+                toast.error('Jabatan gagal dihapus.', {
+                    description: 'Terjadi kesalahan, silakan coba lagi.',
+                });
             },
-            onSuccess: () => setDeleteJabatan(null),
+            onSuccess: () => {
+                setDeleteJabatan(null);
+            },
             onFinish: () => setDeleting(false),
         });
     };
@@ -444,7 +460,7 @@ export default function JabatanIndex({
     const hasFilters = Boolean(filters.search);
 
     return (
-        <RouteGuard permission="master.view">
+        <RouteGuard permission="master-jabatan.view">
             <Head title="Jabatan" />
 
             <PageContainer>
@@ -452,9 +468,8 @@ export default function JabatanIndex({
                     title="Jabatan"
                     description="Manajemen data jabatan dalam struktur organisasi."
                     breadcrumb={[
-                        { title: 'Dashboard', href: dashboard.url() },
-                        { title: 'Master Data', href: '#' },
-                        { title: 'Jabatan', href: index.url() },
+                        { title: 'MASTER DATA' },
+                        { title: 'Jabatan' },
                     ]}
                     actions={
                         <Can permission="master.create">
@@ -466,7 +481,7 @@ export default function JabatanIndex({
                     }
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <ContentCard title="Total Jabatan">
                         <StatValue value={stats.total_jabatan} />
                     </ContentCard>
@@ -476,10 +491,6 @@ export default function JabatanIndex({
 
                     <ContentCard title="Jabatan Nonaktif">
                         <StatValue value={stats.nonaktif} />
-                    </ContentCard>
-
-                    <ContentCard title="Dibuat Bulan Ini">
-                        <StatValue value={stats.bulan_ini} />
                     </ContentCard>
                 </div>
 
@@ -515,8 +526,8 @@ export default function JabatanIndex({
                             />
                         ) : (
                             <>
-                                <div className="overflow-hidden rounded-md border border-border/60">
-                                    <Table>
+                                <div className="overflow-x-auto rounded-md border border-border/60">
+                                    <Table className="min-w-[650px]">
                                         <TableHeader>
                                             <TableRow className="bg-muted/40">
                                                 <TableHead className="w-[130px] font-semibold">
@@ -620,9 +631,6 @@ export default function JabatanIndex({
                                                                     <DropdownMenuSeparator />
                                                                     <DropdownMenuItem
                                                                         onClick={() => {
-                                                                            setDeleteError(
-                                                                                null,
-                                                                            );
                                                                             setDeleteJabatan(
                                                                                 jabatan,
                                                                             );
@@ -642,57 +650,10 @@ export default function JabatanIndex({
                                     </Table>
                                 </div>
 
-                                <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                                    <span>
-                                        Menampilkan {jabatans.from || 0} hingga{' '}
-                                        {jabatans.to || 0} dari {jabatans.total}{' '}
-                                        jabatan
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={!jabatans.prev_page_url}
-                                            asChild={Boolean(
-                                                jabatans.prev_page_url,
-                                            )}
-                                        >
-                                            {jabatans.prev_page_url ? (
-                                                <Link
-                                                    href={
-                                                        jabatans.prev_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Sebelumnya
-                                                </Link>
-                                            ) : (
-                                                <span>Sebelumnya</span>
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={!jabatans.next_page_url}
-                                            asChild={Boolean(
-                                                jabatans.next_page_url,
-                                            )}
-                                        >
-                                            {jabatans.next_page_url ? (
-                                                <Link
-                                                    href={
-                                                        jabatans.next_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Selanjutnya
-                                                </Link>
-                                            ) : (
-                                                <span>Selanjutnya</span>
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
+                                <DataTablePagination
+                                    data={jabatans}
+                                    itemName="jabatan"
+                                />
                             </>
                         )}
                     </div>
@@ -711,16 +672,10 @@ export default function JabatanIndex({
             />
             <ConfirmDialog
                 isOpen={deleteJabatan !== null}
-                onClose={() => {
-                    setDeleteJabatan(null);
-                    setDeleteError(null);
-                }}
+                onClose={() => setDeleteJabatan(null)}
                 onConfirm={confirmDelete}
                 title="Hapus Jabatan"
-                description={
-                    deleteError ||
-                    `Hapus jabatan "${deleteJabatan?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
-                }
+                description={`Hapus jabatan "${deleteJabatan?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`}
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -739,7 +694,7 @@ function StatValue({ value }: { value: number }) {
 
 JabatanIndex.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'MASTER DATA' },
         { title: 'Jabatan', href: '/master/jabatan' },
     ],
 };

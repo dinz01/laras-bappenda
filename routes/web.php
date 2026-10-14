@@ -6,65 +6,74 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RecycleBinController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\ArsipController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ForgotUsernameController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KelolaArsipController;
-use App\Http\Controllers\TteController;
-use App\Http\Controllers\VerifikasiArsipController;
 use App\Http\Controllers\Master\JabatanController;
 use App\Http\Controllers\Master\JenisArsipController;
+use App\Http\Controllers\Master\KategoriArsipController;
 use App\Http\Controllers\Master\KlasifikasiArsipController;
 use App\Http\Controllers\Master\KondisiArsipController;
 use App\Http\Controllers\Master\LokasiArsipController;
-use App\Http\Controllers\Master\MediaArsipController;
-use App\Http\Controllers\Master\MetodePenyusutanArsipController;
-use App\Http\Controllers\Master\RetensiArsipController;
+use App\Http\Controllers\Master\NasibAkhirController;
 use App\Http\Controllers\Master\SifatArsipController;
-use App\Http\Controllers\Master\StatusArsipController;
 use App\Http\Controllers\Master\TingkatAksesArsipController;
 use App\Http\Controllers\Master\TingkatPerkembanganArsipController;
 use App\Http\Controllers\Master\UnitOrganisasiController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\Pengelolaan\PemusnahanController;
-use App\Http\Controllers\Pengelolaan\PermohonanController;
-use App\Http\Controllers\Pengelolaan\RecordCenterController;
+use App\Http\Controllers\Pengelolaan\ArsipInaktifController;
+use App\Http\Controllers\Pengelolaan\NasibAkhirArsipController;
+use App\Http\Controllers\Pengelolaan\PeminjamanController;
+use App\Http\Controllers\TteController;
+use App\Http\Controllers\VerifikasiArsipController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'welcome')->name('home');
+Route::redirect('/', '/login')->name('home');
+
+Route::middleware('guest')->group(function (): void {
+    Route::get('forgot-username', [ForgotUsernameController::class, 'create'])->name('forgot-username.request');
+    Route::post('forgot-username', [ForgotUsernameController::class, 'store'])->name('forgot-username.email');
+    Route::post('forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
-    // ── Notifications ─────────────────────────────────────────────────────
-    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
-    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
-    Route::get('notifications/{notification}/redirect', [NotificationController::class, 'redirect'])->name('notifications.redirect');
-
-   // ── Kelola Arsip & Verifikasi ────────────────────────────────────────
+    // ── Kelola Arsip & Verifikasi ────────────────────────────────────────
     Route::get('kelola-arsip', [KelolaArsipController::class, 'index'])->name('kelola-arsip.index');
     Route::get('verifikasi-arsip', [VerifikasiArsipController::class, 'index'])->name('verifikasi-arsip.index');
     Route::get('kelola-tte', [TteController::class, 'index'])->name('kelola-tte.index');
+    Route::post('arsip/bulk-ajukan-tte', [TteController::class, 'bulkAjukan'])->name('arsip.bulk-ajukan-tte');
     Route::post('arsip/{arsip}/ajukan-tte', [TteController::class, 'ajukan'])->name('arsip.ajukan-tte');
 
     // ── Repositori Arsip ──────────────────────────────────────────────────
+    Route::post('arsip/bulk-verify', [ArsipController::class, 'bulkVerify'])->name('arsip.bulk-verify');
+    Route::post('arsip/bulk-reject', [ArsipController::class, 'bulkReject'])->name('arsip.bulk-reject');
+    Route::post('arsip/bulk-delete', [ArsipController::class, 'bulkDelete'])->name('arsip.bulk-delete');
     Route::get('arsip/{arsip}/detail-json', [ArsipController::class, 'detailJson'])->name('arsip.detail-json');
     Route::get('arsip/{arsip}/download', [ArsipController::class, 'download'])->name('arsip.download');
     Route::post('arsip/{arsip}/upload', [ArsipController::class, 'uploadFile'])->name('arsip.upload-file');
     Route::post('arsip/{arsip}/replace', [ArsipController::class, 'replaceFile'])->name('arsip.replace-file');
     Route::delete('arsip/{arsip}/file', [ArsipController::class, 'deleteFile'])->name('arsip.delete-file');
     Route::get('arsip/version/{version}/download', [ArsipController::class, 'downloadVersion'])->name('arsip.download-version');
-    Route::post('arsip/{arsip}/ocr-reprocess', [ArsipController::class, 'reprocessOcr'])->name('arsip.ocr-reprocess');
-    Route::post('arsip/{arsip}/workflow/advance', [ArsipController::class, 'advanceWorkflow'])->name('arsip.workflow.advance');
     Route::post('arsip/{arsip}/verify', [ArsipController::class, 'verify'])->name('arsip.verify');
     Route::post('arsip/{arsip}/reject', [ArsipController::class, 'reject'])->name('arsip.reject');
     Route::post('arsip/{arsip}/resubmit', [ArsipController::class, 'resubmit'])->name('arsip.resubmit');
 
     Route::resource('arsip', ArsipController::class)->except(['show']);
+    Route::post('arsip/{arsip}/workflow/advance', [ArsipController::class, 'advanceWorkflow'])->name('arsip.workflow.advance');
 
     // ── Pengelolaan ───────────────────────────────────────────────────────
-    Route::get('record-center', [RecordCenterController::class, 'index'])->name('record-center.index');
-    Route::get('pemusnahan', [PemusnahanController::class, 'index'])->name('pemusnahan.index');
-    Route::get('permohonan', [PermohonanController::class, 'index'])->name('permohonan.index');
+    Route::get('arsip-inaktif', [ArsipInaktifController::class, 'index'])->name('arsip-inaktif.index');
+    Route::get('nasib-akhir-arsip', [NasibAkhirArsipController::class, 'index'])->name('nasib-akhir-arsip.index');
+    Route::redirect('record-center', '/arsip-inaktif');
+    Route::redirect('pemusnahan', '/nasib-akhir-arsip');
+    Route::get('peminjaman', [PeminjamanController::class, 'index'])->name('peminjaman.index');
+    Route::post('peminjaman/{arsip}/ajukan', [PeminjamanController::class, 'store'])->name('peminjaman.store');
+    Route::post('peminjaman/{peminjaman}/approve', [PeminjamanController::class, 'approve'])->name('peminjaman.approve');
+    Route::post('peminjaman/{peminjaman}/reject', [PeminjamanController::class, 'reject'])->name('peminjaman.reject');
+    Route::post('peminjaman/bulk-approve', [PeminjamanController::class, 'bulkApprove'])->name('peminjaman.bulk-approve');
+    Route::post('peminjaman/bulk-reject', [PeminjamanController::class, 'bulkReject'])->name('peminjaman.bulk-reject');
 
     // ── Master Data ───────────────────────────────────────────────────────
     Route::prefix('master')->name('master.')->group(function () {
@@ -82,18 +91,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('jenis-arsip', JenisArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['jenis-arsip' => 'jenisArsip']);
-        Route::resource('media-arsip', MediaArsipController::class)
+        Route::resource('kategori-arsip', KategoriArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
-            ->parameters(['media-arsip' => 'mediaArsip']);
-        Route::resource('retensi-arsip', RetensiArsipController::class)
-            ->only(['index', 'store', 'update', 'destroy'])
-            ->parameters(['retensi-arsip' => 'retensiArsip']);
+            ->parameters(['kategori-arsip' => 'kategoriArsip']);
         Route::resource('sifat-arsip', SifatArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['sifat-arsip' => 'sifatArsip']);
-        Route::resource('status-arsip', StatusArsipController::class)
-            ->only(['index', 'store', 'update', 'destroy'])
-            ->parameters(['status-arsip' => 'statusArsip']);
         Route::resource('tingkat-akses-arsip', TingkatAksesArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['tingkat-akses-arsip' => 'tingkatAksesArsip']);
@@ -103,9 +106,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('kondisi-arsip', KondisiArsipController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['kondisi-arsip' => 'kondisiArsip']);
-        Route::resource('metode-penyusutan-arsip', MetodePenyusutanArsipController::class)
+        Route::resource('nasib-akhir', NasibAkhirController::class)
             ->only(['index', 'store', 'update', 'destroy'])
-            ->parameters(['metode-penyusutan-arsip' => 'metodePenyusutanArsip']);
+            ->parameters(['nasib-akhir' => 'nasibAkhir']);
     });
 
     // ── Administrasi ──────────────────────────────────────────────────────

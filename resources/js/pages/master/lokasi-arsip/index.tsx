@@ -1,15 +1,19 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+﻿import { Head, router, useForm } from '@inertiajs/react';
 import {
+    ChevronDown,
+    ChevronRight,
     Eye,
     MapPin,
     MoreHorizontal,
     Pencil,
     Plus,
+    PlusCircle,
     Trash2,
     X,
 } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
@@ -20,6 +24,7 @@ import { PageHeader } from '@/components/Layout/page-header';
 import { RouteGuard } from '@/components/RouteGuard';
 import { DataToolbar } from '@/components/Tables/data-toolbar';
 import { EmptyTable } from '@/components/Tables/empty-table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -45,19 +50,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { dashboard } from '@/routes';
 import { destroy, index, store, update } from '@/routes/master/lokasi-arsip';
 
-type LokasiArsip = {
+type LokasiArsipItem = {
     id: number;
+    parent_id: number | null;
     kode: string;
     nama: string;
     gedung: string | null;
@@ -67,26 +64,22 @@ type LokasiArsip = {
     box: string | null;
     keterangan: string | null;
     status: 'active' | 'inactive';
+    depth: number;
+    has_children: boolean;
     created_at: string | null;
     updated_at: string | null;
 };
 
-type PaginationLink = {
-    url: string | null;
-    label: string;
-    active: boolean;
-};
-
-type PaginatedLokasiArsips = {
-    data: LokasiArsip[];
-    current_page: number;
-    last_page: number;
-    total: number;
-    from: number | null;
-    to: number | null;
-    prev_page_url: string | null;
-    next_page_url: string | null;
-    links: PaginationLink[];
+type ParentOption = {
+    id: number;
+    kode: string;
+    nama: string;
+    parent_id: number | null;
+    gedung?: string | null;
+    lantai?: string | null;
+    ruangan?: string | null;
+    rak?: string | null;
+    box?: string | null;
 };
 
 type Stats = {
@@ -97,7 +90,8 @@ type Stats = {
 };
 
 type IndexProps = {
-    lokasiArsips: PaginatedLokasiArsips;
+    lokasis: LokasiArsipItem[];
+    parentOptions: ParentOption[];
     stats: Stats;
     filters: {
         search?: string;
@@ -105,6 +99,7 @@ type IndexProps = {
 };
 
 type LokasiArsipFormData = {
+    parent_id: string;
     kode: string;
     nama: string;
     gedung: string;
@@ -117,6 +112,7 @@ type LokasiArsipFormData = {
 };
 
 const emptyForm: LokasiArsipFormData = {
+    parent_id: '',
     kode: '',
     nama: '',
     gedung: '',
@@ -128,111 +124,275 @@ const emptyForm: LokasiArsipFormData = {
     status: 'active',
 };
 
-function statusVariant(status: LokasiArsip['status']) {
+const INDENT_PX = 24;
+
+function getLevelInfo(depth: number): {
+    typeName: string;
+    subTypeName: string | null;
+    placeholder: string;
+    badgeVariant: 'default' | 'secondary' | 'outline';
+} {
+    switch (depth) {
+        case 0:
+            return {
+                typeName: 'Gedung',
+                subTypeName: 'Lantai',
+                placeholder: 'Contoh: GEDUNG UTAMA BAPPENDA',
+                badgeVariant: 'default',
+            };
+        case 1:
+            return {
+                typeName: 'Lantai',
+                subTypeName: 'Ruangan',
+                placeholder: 'Contoh: LANTAI 1',
+                badgeVariant: 'secondary',
+            };
+        case 2:
+            return {
+                typeName: 'Ruangan',
+                subTypeName: 'Rak',
+                placeholder: 'Contoh: RUANG ARSIP INAKTIF 101',
+                badgeVariant: 'outline',
+            };
+        case 3:
+            return {
+                typeName: 'Rak',
+                subTypeName: 'Box',
+                placeholder: 'Contoh: RAK A-01',
+                badgeVariant: 'outline',
+            };
+        case 4:
+        default:
+            return {
+                typeName: 'Box',
+                subTypeName: null,
+                placeholder: 'Contoh: BOX 001',
+                badgeVariant: 'outline',
+            };
+    }
+}
+
+function statusVariant(status: LokasiArsipItem['status']) {
     return status === 'active' ? 'success' : 'secondary';
 }
 
-function statusLabel(status: LokasiArsip['status']) {
+function statusLabel(status: LokasiArsipItem['status']) {
     return status === 'active' ? 'Aktif' : 'Nonaktif';
+}
+
+function StatValue({ value }: { value: number }) {
+    return (
+        <span className="text-2xl font-bold tracking-tight text-foreground">
+            {value}
+        </span>
+    );
 }
 
 function LokasiArsipFormDialog({
     open,
     mode,
     lokasiArsip,
+    defaultParentId,
+    allLokasis,
     onOpenChange,
 }: {
     open: boolean;
     mode: 'create' | 'edit';
-    lokasiArsip: LokasiArsip | null;
+    lokasiArsip: LokasiArsipItem | null;
+    defaultParentId: number | null;
+    allLokasis: LokasiArsipItem[];
     onOpenChange: (open: boolean) => void;
 }) {
     const form = useForm<LokasiArsipFormData>(emptyForm);
+
+    const parentNode = useMemo(() => {
+        const pId = mode === 'edit' ? lokasiArsip?.parent_id : defaultParentId;
+
+        return pId ? allLokasis.find((l) => l.id === pId) : null;
+    }, [mode, lokasiArsip, defaultParentId, allLokasis]);
+
+    const targetDepth = useMemo(() => {
+        if (mode === 'edit' && lokasiArsip) {
+            return lokasiArsip.depth;
+        }
+
+        return parentNode ? parentNode.depth + 1 : 0;
+    }, [mode, lokasiArsip, parentNode]);
+
+    const levelInfo = getLevelInfo(targetDepth);
 
     useEffect(() => {
         if (!open) {
             return;
         }
 
-        form.setData(
-            lokasiArsip
-                ? {
-                      kode: lokasiArsip.kode,
-                      nama: lokasiArsip.nama,
-                      gedung: lokasiArsip.gedung ?? '',
-                      lantai: lokasiArsip.lantai ?? '',
-                      ruangan: lokasiArsip.ruangan ?? '',
-                      rak: lokasiArsip.rak ?? '',
-                      box: lokasiArsip.box ?? '',
-                      keterangan: lokasiArsip.keterangan ?? '',
-                      status: lokasiArsip.status,
-                  }
-                : emptyForm,
-        );
+        if (mode === 'edit' && lokasiArsip) {
+            form.setData({
+                parent_id: lokasiArsip.parent_id
+                    ? lokasiArsip.parent_id.toString()
+                    : '',
+                kode: lokasiArsip.kode,
+                nama: lokasiArsip.nama,
+                gedung: lokasiArsip.gedung ?? '',
+                lantai: lokasiArsip.lantai ?? '',
+                ruangan: lokasiArsip.ruangan ?? '',
+                rak: lokasiArsip.rak ?? '',
+                box: lokasiArsip.box ?? '',
+                keterangan: lokasiArsip.keterangan ?? '',
+                status: lokasiArsip.status,
+            });
+        } else {
+            form.setData({
+                ...emptyForm,
+                parent_id: defaultParentId ? defaultParentId.toString() : '',
+            });
+        }
+
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, lokasiArsip]);
+    }, [open, lokasiArsip, mode, defaultParentId]);
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
+        let gedungVal = form.data.gedung;
+        let lantaiVal = form.data.lantai;
+        let ruanganVal = form.data.ruangan;
+        let rakVal = form.data.rak;
+        let boxVal = form.data.box;
+
+        if (targetDepth === 0) {
+            gedungVal = form.data.nama;
+        } else if (targetDepth === 1) {
+            lantaiVal = form.data.nama;
+
+            if (parentNode) {
+                gedungVal = parentNode.gedung || parentNode.nama;
+            }
+        } else if (targetDepth === 2) {
+            ruanganVal = form.data.nama;
+
+            if (parentNode) {
+                lantaiVal = parentNode.lantai || parentNode.nama;
+                gedungVal = parentNode.gedung || '';
+            }
+        } else if (targetDepth === 3) {
+            rakVal = form.data.nama;
+
+            if (parentNode) {
+                ruanganVal = parentNode.ruangan || parentNode.nama;
+                lantaiVal = parentNode.lantai || '';
+                gedungVal = parentNode.gedung || '';
+            }
+        } else if (targetDepth >= 4) {
+            boxVal = form.data.nama;
+
+            if (parentNode) {
+                rakVal = parentNode.rak || parentNode.nama;
+                ruanganVal = parentNode.ruangan || '';
+                lantaiVal = parentNode.lantai || '';
+                gedungVal = parentNode.gedung || '';
+            }
+        }
+
+        const payload = {
+            ...form.data,
+            gedung: gedungVal,
+            lantai: lantaiVal,
+            ruangan: ruanganVal,
+            rak: rakVal,
+            box: boxVal,
+        };
+
         if (mode === 'edit' && lokasiArsip) {
-            form.put(update({ lokasiArsip: lokasiArsip.id }).url, {
+            router.put(update({ lokasiArsip: lokasiArsip.id }).url, payload, {
                 preserveScroll: true,
                 onSuccess: () => onOpenChange(false),
+                onError: () =>
+                    toast.error('Terjadi kesalahan saat memperbarui data.', {
+                        description:
+                            'Periksa kembali kolom yang ditandai merah.',
+                    }),
             });
 
             return;
         }
 
-        form.post(store().url, {
+        router.post(store().url, payload, {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
                 onOpenChange(false);
             },
+            onError: () =>
+                toast.error('Terjadi kesalahan saat menyimpan data.', {
+                    description: 'Periksa kembali kolom yang ditandai merah.',
+                }),
         });
     };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="border-border/60 sm:max-w-2xl">
+            <DialogContent className="border-border/60 sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="text-base font-semibold">
                         {mode === 'create'
-                            ? 'Tambah Lokasi Arsip'
-                            : 'Edit Lokasi Arsip'}
+                            ? `Tambah ${levelInfo.typeName}`
+                            : `Edit ${levelInfo.typeName}`}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
-                        Lengkapi data lokasi penyimpanan fisik arsip.
+                        Lengkapi data lokasi penyimpanan fisik (
+                        {levelInfo.typeName}).
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4">
+                {parentNode && (
+                    <div className="rounded-md border border-border/60 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground">
+                            Lokasi Utama:
+                        </span>{' '}
+                        <span className="font-mono text-muted-foreground">
+                            {parentNode.kode}
+                        </span>{' '}
+                        — {parentNode.nama}
+                    </div>
+                )}
+
+                <form onSubmit={submit} noValidate className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="kode">Kode</Label>
-                            <Input
-                                id="kode"
-                                value={form.data.kode}
-                                onChange={(event) =>
-                                    form.setData('kode', event.target.value)
-                                }
-                                placeholder="Contoh: LOC-001"
-                                maxLength={50}
-                            />
+                            <Label htmlFor="kode">Kode Lokasi</Label>
+                            <div>
+                                <Input
+                                    id="kode"
+                                    value="[Otomatis dibuat oleh sistem]"
+                                    disabled
+                                    className="cursor-not-allowed border-border/60 bg-muted/50 text-muted-foreground"
+                                />
+                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                    {mode === 'edit'
+                                        ? 'Kode lokasi bersifat tetap dan tidak dapat diubah.'
+                                        : 'Nomor unik akan digenerate otomatis saat disimpan.'}
+                                </p>
+                            </div>
                             <InputError message={form.errors.kode} />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="status">Status</Label>
+                            <Label htmlFor="status">
+                                Status{' '}
+                                <span className="text-destructive">*</span>
+                            </Label>
                             <Select
                                 value={form.data.status}
                                 onValueChange={(
                                     value: LokasiArsipFormData['status'],
                                 ) => form.setData('status', value)}
                             >
-                                <SelectTrigger id="status" className="w-full">
+                                <SelectTrigger
+                                    id="status"
+                                    className="w-full border-border/60"
+                                >
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -249,91 +409,20 @@ function LokasiArsipFormDialog({
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="nama">Nama</Label>
+                        <Label htmlFor="nama">
+                            Nama {levelInfo.typeName}{' '}
+                            <span className="text-destructive">*</span>
+                        </Label>
                         <Input
                             id="nama"
                             value={form.data.nama}
                             onChange={(event) =>
                                 form.setData('nama', event.target.value)
                             }
-                            placeholder="Nama lokasi arsip"
+                            placeholder={levelInfo.placeholder}
                             maxLength={255}
                         />
                         <InputError message={form.errors.nama} />
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-3">
-                        <div className="space-y-2">
-                            <Label htmlFor="gedung">Gedung</Label>
-                            <Input
-                                id="gedung"
-                                value={form.data.gedung}
-                                onChange={(event) =>
-                                    form.setData('gedung', event.target.value)
-                                }
-                                placeholder="Contoh: Gedung A"
-                                maxLength={100}
-                            />
-                            <InputError message={form.errors.gedung} />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="lantai">Lantai</Label>
-                            <Input
-                                id="lantai"
-                                value={form.data.lantai}
-                                onChange={(event) =>
-                                    form.setData('lantai', event.target.value)
-                                }
-                                placeholder="Contoh: 1"
-                                maxLength={50}
-                            />
-                            <InputError message={form.errors.lantai} />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="ruangan">Ruangan</Label>
-                            <Input
-                                id="ruangan"
-                                value={form.data.ruangan}
-                                onChange={(event) =>
-                                    form.setData('ruangan', event.target.value)
-                                }
-                                placeholder="Contoh: Ruang 101"
-                                maxLength={100}
-                            />
-                            <InputError message={form.errors.ruangan} />
-                        </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="rak">Rak</Label>
-                            <Input
-                                id="rak"
-                                value={form.data.rak}
-                                onChange={(event) =>
-                                    form.setData('rak', event.target.value)
-                                }
-                                placeholder="Contoh: Rak A-01"
-                                maxLength={50}
-                            />
-                            <InputError message={form.errors.rak} />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="box">Box</Label>
-                            <Input
-                                id="box"
-                                value={form.data.box}
-                                onChange={(event) =>
-                                    form.setData('box', event.target.value)
-                                }
-                                placeholder="Contoh: BOX-001"
-                                maxLength={50}
-                            />
-                            <InputError message={form.errors.box} />
-                        </div>
                     </div>
 
                     <div className="space-y-2">
@@ -344,7 +433,7 @@ function LokasiArsipFormDialog({
                             onChange={(event) =>
                                 form.setData('keterangan', event.target.value)
                             }
-                            placeholder="Keterangan lokasi arsip"
+                            placeholder="Keterangan tambahan lokasi (opsional)"
                         />
                         <InputError message={form.errors.keterangan} />
                     </div>
@@ -372,9 +461,11 @@ function DetailDialog({
     lokasiArsip,
     onOpenChange,
 }: {
-    lokasiArsip: LokasiArsip | null;
+    lokasiArsip: LokasiArsipItem | null;
     onOpenChange: (open: boolean) => void;
 }) {
+    const levelInfo = lokasiArsip ? getLevelInfo(lokasiArsip.depth) : null;
+
     return (
         <Dialog open={lokasiArsip !== null} onOpenChange={onOpenChange}>
             <DialogContent className="border-border/60 sm:max-w-lg">
@@ -383,14 +474,21 @@ function DetailDialog({
                         Detail Lokasi Arsip
                     </DialogTitle>
                     <DialogDescription className="text-xs">
-                        Informasi lengkap lokasi arsip.
+                        Informasi lengkap lokasi penyimpanan arsip.
                     </DialogDescription>
                 </DialogHeader>
 
-                {lokasiArsip && (
+                {lokasiArsip && levelInfo && (
                     <div className="grid gap-3 text-sm">
+                        <DetailRow
+                            label="Tipe Lokasi"
+                            value={levelInfo.typeName}
+                        />
                         <DetailRow label="Kode" value={lokasiArsip.kode} mono />
-                        <DetailRow label="Nama" value={lokasiArsip.nama} />
+                        <DetailRow
+                            label="Nama Lokasi"
+                            value={lokasiArsip.nama}
+                        />
                         <DetailRow
                             label="Gedung"
                             value={lokasiArsip.gedung || '-'}
@@ -460,7 +558,7 @@ function DetailRow({
 }
 
 export default function LokasiArsipIndex({
-    lokasiArsips,
+    lokasis,
     stats,
     filters = {},
 }: IndexProps) {
@@ -468,13 +566,72 @@ export default function LokasiArsipIndex({
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
     const [selectedLokasiArsip, setSelectedLokasiArsip] =
-        useState<LokasiArsip | null>(null);
+        useState<LokasiArsipItem | null>(null);
+    const [defaultParentId, setDefaultParentId] = useState<number | null>(null);
     const [detailLokasiArsip, setDetailLokasiArsip] =
-        useState<LokasiArsip | null>(null);
+        useState<LokasiArsipItem | null>(null);
     const [deleteLokasiArsip, setDeleteLokasiArsip] =
-        useState<LokasiArsip | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
+        useState<LokasiArsipItem | null>(null);
     const [deleting, setDeleting] = useState(false);
+
+    // Tree hierarchy collapse/expand map
+    const [collapsedIds, setCollapsedIds] = useState<Set<number>>(new Set());
+
+    // Map children for tree expansion
+    const childrenMap = useMemo(() => {
+        const map = new Map<number | null, LokasiArsipItem[]>();
+
+        for (const item of lokasis) {
+            const pId = item.parent_id;
+
+            if (!map.has(pId)) {
+                map.set(pId, []);
+            }
+
+            map.get(pId)!.push(item);
+        }
+
+        return map;
+    }, [lokasis]);
+
+    const toggleExpand = (id: number) => {
+        setCollapsedIds((prev) => {
+            const next = new Set(prev);
+
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+
+            return next;
+        });
+    };
+
+    // Calculate ordered visible tree list (matching KlasifikasiArsip)
+    const visibleLokasis = useMemo(() => {
+        if (search.trim() !== '') {
+            return lokasis;
+        }
+
+        const result: LokasiArsipItem[] = [];
+
+        const walk = (parentId: number | null) => {
+            const children = childrenMap.get(parentId) ?? [];
+
+            for (const item of children) {
+                result.push(item);
+
+                if (!collapsedIds.has(item.id)) {
+                    walk(item.id);
+                }
+            }
+        };
+
+        walk(null);
+
+        return result;
+    }, [lokasis, childrenMap, collapsedIds, search]);
 
     const updateFilters = (
         newParams: Record<string, string | null | undefined>,
@@ -509,14 +666,16 @@ export default function LokasiArsipIndex({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search]);
 
-    const openCreateDialog = () => {
+    const openCreateDialog = (parentId: number | null = null) => {
         setSelectedLokasiArsip(null);
+        setDefaultParentId(parentId);
         setFormMode('create');
         setFormOpen(true);
     };
 
-    const openEditDialog = (lokasiArsip: LokasiArsip) => {
+    const openEditDialog = (lokasiArsip: LokasiArsipItem) => {
         setSelectedLokasiArsip(lokasiArsip);
+        setDefaultParentId(null);
         setFormMode('edit');
         setFormOpen(true);
     };
@@ -539,15 +698,16 @@ export default function LokasiArsipIndex({
         }
 
         setDeleting(true);
-        setDeleteError(null);
 
         router.delete(destroy({ lokasiArsip: deleteLokasiArsip.id }).url, {
             preserveScroll: true,
-            onSuccess: () => setDeleteLokasiArsip(null),
-            onError: (errors) => {
-                setDeleteError(
-                    errors.lokasi_arsip || 'Lokasi arsip gagal dihapus.',
-                );
+            onSuccess: () => {
+                setDeleteLokasiArsip(null);
+            },
+            onError: () => {
+                toast.error('Gagal menghapus data.', {
+                    description: 'Terjadi kesalahan, silakan coba lagi.',
+                });
             },
             onFinish: () => setDeleting(false),
         });
@@ -556,29 +716,31 @@ export default function LokasiArsipIndex({
     const hasFilters = Boolean(filters.search);
 
     return (
-        <RouteGuard permission="master.view">
+        <RouteGuard permission="master-lokasi-arsip.view">
             <Head title="Lokasi Arsip" />
 
             <PageContainer>
                 <PageHeader
                     title="Lokasi Arsip"
-                    description="Manajemen data lokasi penyimpanan fisik dokumen arsip."
+                    description="Manajemen struktur hierarki lokasi penyimpanan fisik dokumen arsip."
                     breadcrumb={[
-                        { title: 'Dashboard', href: dashboard.url() },
-                        { title: 'Master Data', href: '#' },
-                        { title: 'Lokasi Arsip', href: index.url() },
+                        { title: 'MASTER DATA' },
+                        { title: 'Lokasi Arsip' },
                     ]}
                     actions={
                         <Can permission="master.create">
-                            <Button size="sm" onClick={openCreateDialog}>
+                            <Button
+                                size="sm"
+                                onClick={() => openCreateDialog(null)}
+                            >
                                 <Plus className="mr-2 h-4 w-4" />
-                                Tambah Lokasi
+                                Tambah Gedung
                             </Button>
                         </Can>
                     }
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <ContentCard title="Total Lokasi Arsip">
                         <StatValue value={stats.total_lokasi_arsip} />
                     </ContentCard>
@@ -588,20 +750,17 @@ export default function LokasiArsipIndex({
                     <ContentCard title="Nonaktif">
                         <StatValue value={stats.nonaktif} />
                     </ContentCard>
-                    <ContentCard title="Dibuat Bulan Ini">
-                        <StatValue value={stats.dibuat_bulan_ini} />
-                    </ContentCard>
                 </div>
 
                 <ContentCard
-                    title="Daftar Lokasi Arsip"
-                    description="Data lokasi penyimpanan arsip yang tersedia"
+                    title="Struktur Lokasi Arsip"
+                    description="Hirarki fisik: Gedung → Lantai → Ruangan → Rak → Box"
                 >
                     <div className="space-y-4">
                         <DataToolbar
                             searchValue={search}
                             onSearchChange={setSearch}
-                            searchPlaceholder="Cari kode, nama, gedung, ruangan, rak, box..."
+                            searchPlaceholder="Cari kode atau nama lokasi..."
                             filters={
                                 hasFilters && (
                                     <Button
@@ -617,266 +776,253 @@ export default function LokasiArsipIndex({
                             }
                         />
 
-                        {lokasiArsips.data.length === 0 ? (
+                        {lokasis.length === 0 ? (
                             <EmptyTable
                                 title="Tidak ada lokasi arsip ditemukan"
                                 description="Tidak ada data lokasi arsip yang cocok dengan pencarian Anda."
                                 icon={MapPin}
                             />
                         ) : (
-                            <>
-                                <div className="overflow-x-auto rounded-md border border-border/60">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow className="bg-muted/40">
-                                                <TableHead className="w-[120px] font-semibold">
-                                                    Kode
-                                                </TableHead>
-                                                <TableHead className="font-semibold">
-                                                    Nama
-                                                </TableHead>
-                                                <TableHead className="w-[120px] font-semibold">
-                                                    Gedung
-                                                </TableHead>
-                                                <TableHead className="w-[80px] font-semibold">
-                                                    Lantai
-                                                </TableHead>
-                                                <TableHead className="w-[130px] font-semibold">
-                                                    Ruangan
-                                                </TableHead>
-                                                <TableHead className="w-[120px] font-semibold">
-                                                    Rak
-                                                </TableHead>
-                                                <TableHead className="w-[100px] font-semibold">
-                                                    Box
-                                                </TableHead>
-                                                <TableHead className="w-[100px] font-semibold">
-                                                    Status
-                                                </TableHead>
-                                                <TableHead className="w-[80px] text-right font-semibold">
-                                                    Aksi
-                                                </TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {lokasiArsips.data.map(
-                                                (lokasiArsip) => (
-                                                    <TableRow
-                                                        key={lokasiArsip.id}
-                                                        className="transition-colors hover:bg-muted/30"
+                            <div className="overflow-x-auto rounded-md border border-border/60">
+                                <div className="min-w-[800px] divide-y divide-border/50">
+                                    <div className="flex items-center gap-2 bg-muted/40 py-2.5 pr-4 pl-2 text-xs font-semibold">
+                                        <span className="w-4 shrink-0" />
+                                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                                            <span className="w-[110px] shrink-0 text-sm font-semibold">
+                                                Kode
+                                            </span>
+                                            <span className="text-sm font-semibold">
+                                                Nama Lokasi
+                                            </span>
+                                        </div>
+                                        <span className="w-[100px] shrink-0 text-sm font-semibold">
+                                            Tipe
+                                        </span>
+                                        <span className="w-[180px] shrink-0 text-sm font-semibold">
+                                            Keterangan
+                                        </span>
+                                        <span className="w-[90px] shrink-0 text-sm font-semibold">
+                                            Status
+                                        </span>
+                                        <span className="w-7 shrink-0 text-right text-sm font-semibold">
+                                            Aksi
+                                        </span>
+                                    </div>
+                                    {visibleLokasis.map((item) => {
+                                        const children =
+                                            childrenMap.get(item.id) ?? [];
+                                        const hasChildren = children.length > 0;
+                                        const isExpanded = !collapsedIds.has(
+                                            item.id,
+                                        );
+                                        const levelInfo = getLevelInfo(
+                                            item.depth,
+                                        );
+
+                                        return (
+                                            <div
+                                                key={item.id}
+                                                className="flex items-center gap-2 py-2.5 pr-4 transition-colors hover:bg-muted/30"
+                                                style={{
+                                                    paddingLeft: `${8 + item.depth * INDENT_PX}px`,
+                                                }}
+                                            >
+                                                <div className="flex w-4 shrink-0 items-center justify-center">
+                                                    {hasChildren ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                toggleExpand(
+                                                                    item.id,
+                                                                )
+                                                            }
+                                                            className="flex cursor-pointer items-center justify-center rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                            aria-label={
+                                                                isExpanded
+                                                                    ? 'Ciutkan'
+                                                                    : 'Perluas'
+                                                            }
+                                                        >
+                                                            {isExpanded ? (
+                                                                <ChevronDown className="h-4 w-4" />
+                                                            ) : (
+                                                                <ChevronRight className="h-4 w-4" />
+                                                            )}
+                                                        </button>
+                                                    ) : (
+                                                        <span className="inline-block w-4" />
+                                                    )}
+                                                </div>
+
+                                                <div className="flex min-w-0 flex-1 items-center gap-3">
+                                                    <span className="w-[110px] shrink-0 font-mono text-xs text-muted-foreground">
+                                                        {item.kode}
+                                                    </span>
+                                                    <span className="truncate text-sm font-medium">
+                                                        {item.nama}
+                                                    </span>
+                                                </div>
+
+                                                <div className="w-[100px] shrink-0">
+                                                    <Badge
+                                                        variant={
+                                                            levelInfo.badgeVariant
+                                                        }
+                                                        className="text-xs font-medium"
                                                     >
-                                                        <TableCell className="font-mono text-xs whitespace-nowrap text-muted-foreground">
-                                                            {lokasiArsip.kode}
-                                                        </TableCell>
-                                                        <TableCell className="font-medium whitespace-nowrap">
-                                                            {lokasiArsip.nama}
-                                                        </TableCell>
-                                                        <TableCell className="text-sm whitespace-nowrap">
-                                                            {lokasiArsip.gedung ||
-                                                                '-'}
-                                                        </TableCell>
-                                                        <TableCell className="text-sm whitespace-nowrap">
-                                                            {lokasiArsip.lantai ||
-                                                                '-'}
-                                                        </TableCell>
-                                                        <TableCell className="text-sm whitespace-nowrap">
-                                                            {lokasiArsip.ruangan ||
-                                                                '-'}
-                                                        </TableCell>
-                                                        <TableCell className="text-sm whitespace-nowrap">
-                                                            {lokasiArsip.rak ||
-                                                                '-'}
-                                                        </TableCell>
-                                                        <TableCell className="font-mono text-xs whitespace-nowrap text-muted-foreground">
-                                                            {lokasiArsip.box ||
-                                                                '-'}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <StatusBadge
-                                                                variant={statusVariant(
-                                                                    lokasiArsip.status,
-                                                                )}
-                                                                className="w-fit"
+                                                        {levelInfo.typeName}
+                                                    </Badge>
+                                                </div>
+
+                                                <div
+                                                    className="w-[180px] shrink-0 truncate text-sm text-muted-foreground"
+                                                    title={
+                                                        item.keterangan || ''
+                                                    }
+                                                >
+                                                    {item.keterangan || '-'}
+                                                </div>
+
+                                                <div className="w-[90px] shrink-0">
+                                                    <StatusBadge
+                                                        variant={statusVariant(
+                                                            item.status,
+                                                        )}
+                                                        className="w-fit"
+                                                    >
+                                                        {statusLabel(
+                                                            item.status,
+                                                        )}
+                                                    </StatusBadge>
+                                                </div>
+
+                                                <div className="w-7 shrink-0 text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger
+                                                            asChild
+                                                        >
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8"
                                                             >
-                                                                {statusLabel(
-                                                                    lokasiArsip.status,
-                                                                )}
-                                                            </StatusBadge>
-                                                        </TableCell>
-                                                        <TableCell className="text-right">
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger
-                                                                    asChild
-                                                                >
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-8 w-8"
-                                                                    >
-                                                                        <span className="sr-only">
-                                                                            Menu
-                                                                            aksi
-                                                                        </span>
-                                                                        <MoreHorizontal className="h-4 w-4" />
-                                                                    </Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent
-                                                                    align="end"
-                                                                    className="w-40"
-                                                                >
+                                                                <span className="sr-only">
+                                                                    Menu aksi
+                                                                </span>
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent
+                                                            align="end"
+                                                            className="w-48"
+                                                        >
+                                                            <DropdownMenuItem
+                                                                onClick={() =>
+                                                                    setDetailLokasiArsip(
+                                                                        item,
+                                                                    )
+                                                                }
+                                                                className="flex cursor-pointer items-center gap-2"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                                Detail
+                                                            </DropdownMenuItem>
+
+                                                            {levelInfo.subTypeName !==
+                                                                null && (
+                                                                <Can permission="master.create">
                                                                     <DropdownMenuItem
                                                                         onClick={() =>
-                                                                            setDetailLokasiArsip(
-                                                                                lokasiArsip,
+                                                                            openCreateDialog(
+                                                                                item.id,
                                                                             )
                                                                         }
                                                                         className="flex cursor-pointer items-center gap-2"
                                                                     >
-                                                                        <Eye className="h-4 w-4" />
-                                                                        Detail
+                                                                        <PlusCircle className="h-4 w-4" />
+                                                                        Tambah{' '}
+                                                                        {
+                                                                            levelInfo.subTypeName
+                                                                        }
                                                                     </DropdownMenuItem>
-                                                                    <Can permission="master.update">
-                                                                        <DropdownMenuItem
-                                                                            onClick={() =>
-                                                                                openEditDialog(
-                                                                                    lokasiArsip,
-                                                                                )
-                                                                            }
-                                                                            className="flex cursor-pointer items-center gap-2"
-                                                                        >
-                                                                            <Pencil className="h-4 w-4" />
-                                                                            Edit
-                                                                        </DropdownMenuItem>
-                                                                    </Can>
-                                                                    <Can permission="master.delete">
-                                                                        <DropdownMenuSeparator />
-                                                                        <DropdownMenuItem
-                                                                            onClick={() => {
-                                                                                setDeleteError(
-                                                                                    null,
-                                                                                );
-                                                                                setDeleteLokasiArsip(
-                                                                                    lokasiArsip,
-                                                                                );
-                                                                            }}
-                                                                            className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
-                                                                        >
-                                                                            <Trash2 className="h-4 w-4" />
-                                                                            Hapus
-                                                                        </DropdownMenuItem>
-                                                                    </Can>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ),
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </div>
+                                                                </Can>
+                                                            )}
 
-                                <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                                    <span>
-                                        Menampilkan {lokasiArsips.from || 0}{' '}
-                                        hingga {lokasiArsips.to || 0} dari{' '}
-                                        {lokasiArsips.total} lokasi
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={
-                                                !lokasiArsips.prev_page_url
-                                            }
-                                            asChild={Boolean(
-                                                lokasiArsips.prev_page_url,
-                                            )}
-                                        >
-                                            {lokasiArsips.prev_page_url ? (
-                                                <Link
-                                                    href={
-                                                        lokasiArsips.prev_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Sebelumnya
-                                                </Link>
-                                            ) : (
-                                                <span>Sebelumnya</span>
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={
-                                                !lokasiArsips.next_page_url
-                                            }
-                                            asChild={Boolean(
-                                                lokasiArsips.next_page_url,
-                                            )}
-                                        >
-                                            {lokasiArsips.next_page_url ? (
-                                                <Link
-                                                    href={
-                                                        lokasiArsips.next_page_url
-                                                    }
-                                                    preserveState
-                                                >
-                                                    Selanjutnya
-                                                </Link>
-                                            ) : (
-                                                <span>Selanjutnya</span>
-                                            )}
-                                        </Button>
-                                    </div>
+                                                            <Can permission="master.update">
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        openEditDialog(
+                                                                            item,
+                                                                        )
+                                                                    }
+                                                                    className="flex cursor-pointer items-center gap-2"
+                                                                >
+                                                                    <Pencil className="h-4 w-4" />
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                            </Can>
+
+                                                            <Can permission="master.delete">
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem
+                                                                    onClick={() => {
+                                                                        setDeleteLokasiArsip(
+                                                                            item,
+                                                                        );
+                                                                    }}
+                                                                    className="flex cursor-pointer items-center gap-2 text-destructive focus:text-destructive"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                    Hapus
+                                                                </DropdownMenuItem>
+                                                            </Can>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                            </>
+                            </div>
                         )}
                     </div>
                 </ContentCard>
-            </PageContainer>
 
-            <LokasiArsipFormDialog
-                open={formOpen}
-                mode={formMode}
-                lokasiArsip={selectedLokasiArsip}
-                onOpenChange={setFormOpen}
-            />
-            <DetailDialog
-                lokasiArsip={detailLokasiArsip}
-                onOpenChange={(open) => !open && setDetailLokasiArsip(null)}
-            />
-            <ConfirmDialog
-                isOpen={deleteLokasiArsip !== null}
-                onClose={() => {
-                    setDeleteError(null);
-                    setDeleteLokasiArsip(null);
-                }}
-                onConfirm={confirmDelete}
-                title="Hapus Lokasi Arsip"
-                description={
-                    deleteError ||
-                    `Hapus lokasi arsip "${deleteLokasiArsip?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.`
-                }
-                confirmLabel="Hapus"
-                loading={deleting}
-                destructive
-            />
+                <LokasiArsipFormDialog
+                    open={formOpen}
+                    mode={formMode}
+                    lokasiArsip={selectedLokasiArsip}
+                    defaultParentId={defaultParentId}
+                    allLokasis={lokasis}
+                    onOpenChange={setFormOpen}
+                />
+
+                <DetailDialog
+                    lokasiArsip={detailLokasiArsip}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setDetailLokasiArsip(null);
+                        }
+                    }}
+                />
+
+                <ConfirmDialog
+                    isOpen={deleteLokasiArsip !== null}
+                    onClose={() => {
+                        setDeleteLokasiArsip(null);
+                    }}
+                    title="Hapus Lokasi Arsip"
+                    description={
+                        deleteLokasiArsip
+                            ? `Apakah Anda yakin ingin menghapus lokasi "${deleteLokasiArsip.nama}"?`
+                            : ''
+                    }
+                    confirmLabel="Hapus"
+                    destructive
+                    loading={deleting}
+                    onConfirm={confirmDelete}
+                />
+            </PageContainer>
         </RouteGuard>
     );
 }
-
-function StatValue({ value }: { value: number }) {
-    return (
-        <div className="text-2xl font-semibold tracking-normal text-foreground">
-            {value.toLocaleString('id-ID')}
-        </div>
-    );
-}
-
-LokasiArsipIndex.layout = {
-    breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Lokasi Arsip', href: '/master/lokasi-arsip' },
-    ],
-};

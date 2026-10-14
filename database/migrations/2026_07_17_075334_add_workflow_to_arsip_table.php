@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('arsip', function (Blueprint $table) {
-            $table->string('workflow_status', 30)->default('draft')->after('created_by')->index();
+            $table->string('workflow_status', 30)->default('review')->after('created_by')->index();
         });
     }
 

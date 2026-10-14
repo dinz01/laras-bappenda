@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSifatArsipRequest;
 use App\Models\SifatArsip;
+use App\Services\AuditLogService;
 use App\Support\AppDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,10 @@ use Inertia\Response;
 
 class SifatArsipController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     /**
      * Display a listing of the sifat arsip.
      */
@@ -38,7 +43,15 @@ class SifatArsipController extends Controller
      */
     public function store(StoreSifatArsipRequest $request): RedirectResponse
     {
-        SifatArsip::create($this->validatedData($request));
+        $sifatArsip = SifatArsip::create($this->storeData($request));
+
+        $this->auditLogService->log(
+            'master.sifat-arsip.created',
+            $sifatArsip,
+            null,
+            ['kode' => $sifatArsip->kode, 'nama' => $sifatArsip->nama, 'status' => $sifatArsip->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Sifat arsip berhasil ditambahkan.');
     }
@@ -48,7 +61,17 @@ class SifatArsipController extends Controller
      */
     public function update(StoreSifatArsipRequest $request, SifatArsip $sifatArsip): RedirectResponse
     {
-        $sifatArsip->update($this->validatedData($request));
+        $oldValues = ['kode' => $sifatArsip->kode, 'nama' => $sifatArsip->nama, 'status' => $sifatArsip->status];
+
+        $sifatArsip->update($this->updateData($request));
+
+        $this->auditLogService->log(
+            'master.sifat-arsip.updated',
+            $sifatArsip,
+            $oldValues,
+            ['kode' => $sifatArsip->kode, 'nama' => $sifatArsip->nama, 'status' => $sifatArsip->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Sifat arsip berhasil diperbarui.');
     }
@@ -66,7 +89,17 @@ class SifatArsipController extends Controller
             ]);
         }
 
+        $oldValues = ['kode' => $sifatArsip->kode, 'nama' => $sifatArsip->nama, 'status' => $sifatArsip->status];
+
         $sifatArsip->delete();
+
+        $this->auditLogService->log(
+            'master.sifat-arsip.deleted',
+            $sifatArsip,
+            $oldValues,
+            null,
+            auth()->user(),
+        );
 
         return back()->with('success', 'Sifat arsip berhasil dihapus.');
     }
@@ -119,14 +152,38 @@ class SifatArsipController extends Controller
     }
 
     /**
+     * Siapkan data untuk pembuatan sifat baru.
+     * Kode digenerate otomatis jika kosong.
+     *
      * @return array{kode: string, nama: string, deskripsi: string|null, status: string}
      */
-    private function validatedData(StoreSifatArsipRequest $request): array
+    private function storeData(StoreSifatArsipRequest $request): array
+    {
+        $validated = $request->validated();
+
+        $kode = isset($validated['kode']) && is_string($validated['kode']) && trim($validated['kode']) !== ''
+            ? trim($validated['kode'])
+            : SifatArsip::generateKode();
+
+        return [
+            'kode' => $kode,
+            'nama' => (string) $validated['nama'],
+            'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
+            'status' => (string) $validated['status'],
+        ];
+    }
+
+    /**
+     * Siapkan data untuk update sifat yang sudah ada.
+     * Kode tidak dapat diubah saat edit.
+     *
+     * @return array{nama: string, deskripsi: string|null, status: string}
+     */
+    private function updateData(StoreSifatArsipRequest $request): array
     {
         $validated = $request->validated();
 
         return [
-            'kode' => (string) $validated['kode'],
             'nama' => (string) $validated['nama'],
             'deskripsi' => isset($validated['deskripsi']) ? (string) $validated['deskripsi'] : null,
             'status' => (string) $validated['status'],

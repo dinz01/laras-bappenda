@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Can } from '@/components/Can';
 import { ContentCard } from '@/components/Cards/content-card';
 import { StatusBadge } from '@/components/Common/status-badge';
@@ -48,7 +49,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { dashboard } from '@/routes';
 import { destroy, index, store, update } from '@/routes/master/unit-organisasi';
 
 type Unit = {
@@ -118,7 +118,6 @@ function UnitFormDialog({
     open,
     mode,
     unit,
-    parentOptions = [],
     prefilledParentId,
     onOpenChange,
 }: {
@@ -166,6 +165,11 @@ function UnitFormDialog({
             form.put(update({ unitOrganisasi: unit.id }).url, {
                 preserveScroll: true,
                 onSuccess: () => onOpenChange(false),
+                onError: () =>
+                    toast.error('Terjadi kesalahan saat memperbarui data.', {
+                        description:
+                            'Periksa kembali kolom yang ditandai merah.',
+                    }),
             });
 
             return;
@@ -177,6 +181,10 @@ function UnitFormDialog({
                 form.reset();
                 onOpenChange(false);
             },
+            onError: () =>
+                toast.error('Terjadi kesalahan saat menyimpan data.', {
+                    description: 'Periksa kembali kolom yang ditandai merah.',
+                }),
         });
     };
 
@@ -190,8 +198,8 @@ function UnitFormDialog({
                                 ? 'Tambah Sub Bidang'
                                 : 'Tambah Unit Organisasi'
                             : unit?.tipe === 'sub_bidang'
-                                ? 'Edit Sub Bidang'
-                                : 'Edit Unit Organisasi'}
+                              ? 'Edit Sub Bidang'
+                              : 'Edit Unit Organisasi'}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
                         {mode === 'create' && prefilledParentId
@@ -200,19 +208,23 @@ function UnitFormDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4">
+                <form onSubmit={submit} noValidate className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="kode">Kode</Label>
-                            <Input
-                                id="kode"
-                                value={form.data.kode}
-                                onChange={(event) =>
-                                    form.setData('kode', event.target.value)
-                                }
-                                placeholder="Contoh: UO-001"
-                                maxLength={30}
-                            />
+                            <Label htmlFor="kode">Kode Unit</Label>
+                            <div>
+                                <Input
+                                    id="kode"
+                                    value="[Otomatis dibuat oleh sistem]"
+                                    disabled
+                                    className="cursor-not-allowed border-border/60 bg-muted/50 text-muted-foreground"
+                                />
+                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                    {mode === 'edit'
+                                        ? 'Kode unit bersifat tetap dan tidak dapat diubah.'
+                                        : 'Nomor unik akan digenerate otomatis saat disimpan.'}
+                                </p>
+                            </div>
                             <InputError message={form.errors.kode} />
                         </div>
 
@@ -325,7 +337,7 @@ function DetailDialog({
     const parentName =
         unit && unit.parent_id !== null
             ? (parentOptions.find((o) => o.id === unit.parent_id)?.nama ??
-                `Unit #${unit.parent_id}`)
+              `Unit #${unit.parent_id}`)
             : '-';
 
     return (
@@ -351,7 +363,7 @@ function DetailDialog({
                             label="Singkatan"
                             value={unit.singkatan || '-'}
                         />
-                        <DetailRow label="Parent Unit" value={parentName} />
+                        <DetailRow label="Unit Induk" value={parentName} />
                         <DetailRow
                             label="Jumlah Turunan"
                             value={`${unit.children_count} unit`}
@@ -443,7 +455,6 @@ export default function UnitOrganisasiIndex({
     const [prefilledParentId, setPrefilledParentId] = useState<string>('');
     const [detailUnit, setDetailUnit] = useState<Unit | null>(null);
     const [deleteUnit, setDeleteUnit] = useState<Unit | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [expandedIds, setExpandedIds] = useState<Set<string>>(
         () => new Set<string>(),
@@ -538,16 +549,17 @@ export default function UnitOrganisasiIndex({
         }
 
         setDeleting(true);
-        setDeleteError(null);
 
         router.delete(destroy({ unitOrganisasi: deleteUnit.id }).url, {
             preserveScroll: true,
-            onError: (errors) => {
-                setDeleteError(
-                    errors.unit_organisasi || 'Unit organisasi gagal dihapus.',
-                );
+            onError: () => {
+                toast.error('Gagal menghapus data.', {
+                    description: 'Terjadi kesalahan, silakan coba lagi.',
+                });
             },
-            onSuccess: () => setDeleteUnit(null),
+            onSuccess: () => {
+                setDeleteUnit(null);
+            },
             onFinish: () => setDeleting(false),
         });
     };
@@ -602,7 +614,7 @@ export default function UnitOrganisasiIndex({
     }
 
     return (
-        <RouteGuard permission="master.view">
+        <RouteGuard permission="master-unit-organisasi.view">
             <Head title="Unit Organisasi" />
 
             <PageContainer>
@@ -610,9 +622,8 @@ export default function UnitOrganisasiIndex({
                     title="Unit Organisasi"
                     description="Manajemen struktur hierarki unit organisasi instansi."
                     breadcrumb={[
-                        { title: 'Dashboard', href: dashboard.url() },
-                        { title: 'Master Data', href: '#' },
-                        { title: 'Unit Organisasi', href: index.url() },
+                        { title: 'MASTER DATA' },
+                        { title: 'Unit Organisasi' },
                     ]}
                     actions={
                         <Can permission="master.create">
@@ -624,7 +635,7 @@ export default function UnitOrganisasiIndex({
                     }
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <ContentCard title="Total Unit Organisasi">
                         <StatValue value={stats.total_unit_organisasi} />
                     </ContentCard>
@@ -633,9 +644,6 @@ export default function UnitOrganisasiIndex({
                     </ContentCard>
                     <ContentCard title="Nonaktif">
                         <StatValue value={stats.nonaktif} />
-                    </ContentCard>
-                    <ContentCard title="Dibuat Bulan Ini">
-                        <StatValue value={stats.dibuat_bulan_ini} />
                     </ContentCard>
                 </div>
 
@@ -670,8 +678,8 @@ export default function UnitOrganisasiIndex({
                                 icon={Building2}
                             />
                         ) : (
-                            <div className="overflow-hidden rounded-md border border-border/60">
-                                <div className="divide-y divide-border/50">
+                            <div className="overflow-x-auto rounded-md border border-border/60">
+                                <div className="min-w-[650px] divide-y divide-border/50">
                                     <div className="flex items-center gap-2 bg-muted/40 py-2.5 pr-4 pl-2">
                                         <span className="w-4 shrink-0" />
                                         <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -693,7 +701,7 @@ export default function UnitOrganisasiIndex({
                                         const key = getNodeKey(unit);
                                         const hasChildren =
                                             childrenMap.get(key) !==
-                                            undefined &&
+                                                undefined &&
                                             childrenMap.get(key)!.length > 0;
                                         const isExpanded = expandedIds.has(key);
 
@@ -802,8 +810,9 @@ export default function UnitOrganisasiIndex({
                                                                 Edit
                                                             </DropdownMenuItem>
                                                         </Can>
-                                                        {unit.tipe === 'bidang' && (
-                                                            <>
+                                                        {unit.tipe ===
+                                                            'bidang' && (
+                                                            <Can permission="master.create">
                                                                 <DropdownMenuItem
                                                                     onClick={() =>
                                                                         openCreateSubUnitDialog(
@@ -817,14 +826,11 @@ export default function UnitOrganisasiIndex({
                                                                     Bidang
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
-                                                            </>
+                                                            </Can>
                                                         )}
                                                         <Can permission="master.delete">
                                                             <DropdownMenuItem
                                                                 onClick={() => {
-                                                                    setDeleteError(
-                                                                        null,
-                                                                    );
                                                                     setDeleteUnit(
                                                                         unit,
                                                                     );
@@ -864,14 +870,10 @@ export default function UnitOrganisasiIndex({
                 isOpen={deleteUnit !== null}
                 onClose={() => {
                     setDeleteUnit(null);
-                    setDeleteError(null);
                 }}
                 onConfirm={confirmDelete}
                 title="Hapus Unit Organisasi"
-                description={
-                    deleteError ||
-                    `Hapus unit organisasi "${deleteUnit?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.${deleteUnit && childrenMap.get(getNodeKey(deleteUnit))?.length ? ' Unit ini memiliki turunan yang juga akan ikut terhapus.' : ''}`
-                }
+                description={`Hapus unit organisasi "${deleteUnit?.nama || ''}"? Data yang sudah dihapus tidak dapat dipulihkan.${deleteUnit && childrenMap.get(getNodeKey(deleteUnit))?.length ? ' Unit ini memiliki turunan yang juga akan ikut terhapus.' : ''}`}
                 confirmLabel="Hapus"
                 loading={deleting}
                 destructive
@@ -890,7 +892,7 @@ function StatValue({ value }: { value: number }) {
 
 UnitOrganisasiIndex.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'MASTER DATA' },
         { title: 'Unit Organisasi', href: '/master/unit-organisasi' },
     ],
 };

@@ -1,10 +1,15 @@
 import { Head, router } from '@inertiajs/react';
-import { Trash2, RotateCcw, AlertTriangle, Info } from 'lucide-react';
+import { Info, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Can } from '@/components/Can';
+import { ContentCard } from '@/components/Cards/content-card';
+import { StatusBadge } from '@/components/Common/status-badge';
+import { ConfirmDialog } from '@/components/Dialogs/confirm-dialog';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
 import { RouteGuard } from '@/components/RouteGuard';
+import { DataTablePagination } from '@/components/Tables/data-table-pagination';
 import { EmptyTable } from '@/components/Tables/empty-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,14 +33,25 @@ type DeletedArsip = {
     sisa_waktu_detik: number;
 };
 
+type PaginationLink = {
+    url: string | null;
+    label: string;
+    active: boolean;
+};
+
+type PaginatedArsips = {
+    data: DeletedArsip[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+    links: PaginationLink[];
+    per_page?: number;
+};
+
 type RecycleBinProps = {
-    arsips: {
-        data: DeletedArsip[];
-        links: Array<{ url: string | null; label: string; active: boolean }>;
-        current_page: number;
-        last_page: number;
-        total: number;
-    };
+    arsips: PaginatedArsips;
 };
 
 function Countdown({ initialSeconds }: { initialSeconds: number }) {
@@ -51,11 +67,12 @@ function Countdown({ initialSeconds }: { initialSeconds: number }) {
         }, 1000);
 
         return () => clearInterval(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [seconds]);
 
     if (seconds <= 0) {
-        return <span className="font-semibold text-rose-500">Kadaluarsa</span>;
+        return (
+            <span className="font-bold text-destructive">Siap Dimusnahkan</span>
+        );
     }
 
     const hours = Math.floor(seconds / 3600);
@@ -75,33 +92,66 @@ function Countdown({ initialSeconds }: { initialSeconds: number }) {
 }
 
 export default function RecycleBinIndex({ arsips }: RecycleBinProps) {
-    const handleRestore = (id: number) => {
-        if (confirm('Apakah Anda yakin ingin memulihkan arsip ini?')) {
-            router.post(`/admin/recycle-bin/${id}/restore`);
+    const [restoreItem, setRestoreItem] = useState<DeletedArsip | null>(null);
+    const [forceDeleteItem, setForceDeleteItem] = useState<DeletedArsip | null>(
+        null,
+    );
+    const [actionLoading, setActionLoading] = useState(false);
+
+    const confirmRestore = () => {
+        if (!restoreItem) {
+            return;
         }
+
+        setActionLoading(true);
+        router.post(
+            `/admin/recycle-bin/${restoreItem.id}/restore`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setRestoreItem(null);
+                },
+                onError: () => {
+                    toast.error('Gagal memulihkan arsip.');
+                },
+                onFinish: () => {
+                    setActionLoading(false);
+                },
+            },
+        );
     };
 
-    const handleForceDelete = (id: number) => {
-        if (
-            confirm(
-                'PERINGATAN: Tindakan ini akan menghapus arsip secara permanen beserta seluruh file versi & riwayat di dalamnya. Anda yakin?',
-            )
-        ) {
-            router.delete(`/admin/recycle-bin/${id}/force-delete`);
+    const confirmForceDelete = () => {
+        if (!forceDeleteItem) {
+            return;
         }
+
+        setActionLoading(true);
+        router.delete(`/admin/recycle-bin/${forceDeleteItem.id}/force-delete`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setForceDeleteItem(null);
+            },
+            onError: () => {
+                toast.error('Gagal memusnahkan arsip.');
+            },
+            onFinish: () => {
+                setActionLoading(false);
+            },
+        });
     };
 
     return (
-        <RouteGuard permission="arsip.restore">
+        <RouteGuard permission="admin-recycle-bin.view">
             <Head title="Riwayat Arsip Dihapus" />
 
             <PageContainer>
                 <PageHeader
-                    title="Riwayat Arsip Dihapus (Recycle Bin)"
+                    title="Riwayat Arsip Dihapus"
                     description="Daftar seluruh arsip yang dihapus sementara. Arsip akan otomatis dimusnahkan secara permanen setelah 24 jam."
                     breadcrumb={[
-                        { title: 'Dashboard', href: '/dashboard' },
-                        { title: 'Administrasi', href: '#' },
+                        { title: 'ADMINISTRASI' },
                         { title: 'Riwayat Arsip Dihapus', href: index.url() },
                     ]}
                 />
@@ -123,150 +173,256 @@ export default function RecycleBinIndex({ arsips }: RecycleBinProps) {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-border/60">
-                        <CardContent className="p-0">
+                    <ContentCard
+                        title="Daftar Arsip Dihapus"
+                        description="Daftar arsip dalam antrian pemusnahan otomatis yang dapat dipulihkan atau dimusnahkan permanen"
+                    >
+                        <div className="space-y-4">
                             {arsips.data.length === 0 ? (
-                                <div className="p-6">
-                                    <EmptyTable
-                                        icon={Trash2}
-                                        title="Recycle bin kosong"
-                                        description="Tidak ada dokumen arsip yang sedang dalam antrian pemusnahan."
-                                    />
-                                </div>
+                                <EmptyTable
+                                    icon={Trash2}
+                                    title="Recycle bin kosong"
+                                    description="Tidak ada dokumen arsip yang sedang dalam antrian pemusnahan."
+                                />
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>
-                                                    Nomor Arsip
-                                                </TableHead>
-                                                <TableHead>Judul</TableHead>
-                                                <TableHead>
-                                                    Unit Organisasi
-                                                </TableHead>
-                                                <TableHead>
-                                                    Dihapus Oleh
-                                                </TableHead>
-                                                <TableHead>
-                                                    Waktu Dihapus
-                                                </TableHead>
-                                                <TableHead>
-                                                    Sisa Waktu
-                                                </TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead className="text-right">
-                                                    Aksi
-                                                </TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {arsips.data.map((arsip) => (
-                                                <TableRow key={arsip.id}>
-                                                    <TableCell className="font-mono text-xs font-semibold">
-                                                        {arsip.nomor_arsip}
-                                                    </TableCell>
-                                                    <TableCell className="max-w-[200px] truncate font-medium">
+                                <>
+                                    {/* Mobile card view */}
+                                    <div className="flex flex-col gap-3 md:hidden">
+                                        {arsips.data.map((arsip) => (
+                                            <div
+                                                key={arsip.id}
+                                                className="rounded-xl border border-border/70 bg-card p-4 shadow-sm"
+                                            >
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <p className="line-clamp-2 flex-1 text-sm leading-snug font-semibold text-foreground">
                                                         {arsip.judul}
-                                                    </TableCell>
-                                                    <TableCell>
+                                                    </p>
+                                                    <StatusBadge variant="danger">
+                                                        Akan Dihapus
+                                                    </StatusBadge>
+                                                </div>
+                                                <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                                                    {arsip.nomor_arsip}
+                                                </p>
+                                                <div className="mt-2 grid grid-cols-2 gap-y-1 text-[11px] text-muted-foreground">
+                                                    <span>Unit:</span>
+                                                    <span className="truncate font-medium text-foreground">
                                                         {arsip.unit_organisasi}
-                                                    </TableCell>
-                                                    <TableCell className="text-muted-foreground">
+                                                    </span>
+                                                    <span>Dihapus oleh:</span>
+                                                    <span className="truncate font-medium text-foreground">
                                                         {arsip.dihapus_oleh}
-                                                    </TableCell>
-                                                    <TableCell className="text-xs text-muted-foreground">
+                                                    </span>
+                                                    <span>Waktu Dihapus:</span>
+                                                    <span className="text-foreground">
                                                         {arsip.deleted_at}
-                                                    </TableCell>
-                                                    <TableCell>
+                                                    </span>
+                                                    <span>Sisa waktu:</span>
+                                                    <span>
                                                         <Countdown
                                                             initialSeconds={
                                                                 arsip.sisa_waktu_detik
                                                             }
                                                         />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-[10px] font-semibold text-rose-500">
-                                                            Akan Dihapus
-                                                        </span>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex items-center justify-end gap-2">
-                                                            <Can permission="arsip.restore">
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="h-8 gap-1.5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
-                                                                    onClick={() =>
-                                                                        handleRestore(
-                                                                            arsip.id,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <RotateCcw className="h-3.5 w-3.5" />
-                                                                    Pulihkan
-                                                                </Button>
-                                                            </Can>
-                                                            <Can permission="arsip.delete">
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="h-8 gap-1.5 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 hover:text-rose-700"
-                                                                    onClick={() =>
-                                                                        handleForceDelete(
-                                                                            arsip.id,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <AlertTriangle className="h-3.5 w-3.5" />
-                                                                    Hapus
-                                                                    Permanen
-                                                                </Button>
-                                                            </Can>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                                    </span>
+                                                </div>
+                                                <div className="mt-3 flex gap-2 border-t border-border/60 pt-3">
+                                                    <Can permission="admin-recycle-bin.restore">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-8 flex-1 gap-1.5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
+                                                            onClick={() =>
+                                                                setRestoreItem(
+                                                                    arsip,
+                                                                )
+                                                            }
+                                                        >
+                                                            Pulihkan
+                                                        </Button>
+                                                    </Can>
+                                                    <Can permission="admin-recycle-bin.force-delete">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-8 flex-1 gap-1.5 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 hover:text-rose-700"
+                                                            onClick={() =>
+                                                                setForceDeleteItem(
+                                                                    arsip,
+                                                                )
+                                                            }
+                                                        >
+                                                            Hapus Permanen
+                                                        </Button>
+                                                    </Can>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
 
-                    {/* Simple Pagination */}
-                    {arsips.last_page > 1 && (
-                        <div className="flex justify-center gap-1">
-                            {arsips.links.map((link, idx) => (
-                                <Button
-                                    key={idx}
-                                    variant={
-                                        link.active ? 'default' : 'outline'
-                                    }
-                                    size="sm"
-                                    disabled={!link.url}
-                                    onClick={() => {
-                                        if (link.url) {
-                                            router.get(link.url);
-                                        }
-                                    }}
-                                    dangerouslySetInnerHTML={{
-                                        __html: link.label,
-                                    }}
-                                />
-                            ))}
+                                    {/* Desktop table view */}
+                                    <div className="hidden overflow-hidden rounded-md border border-border/60 md:block">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow className="bg-muted/40">
+                                                    <TableHead className="w-[140px] font-semibold">
+                                                        Nomor Arsip
+                                                    </TableHead>
+                                                    <TableHead className="font-semibold">
+                                                        Judul
+                                                    </TableHead>
+                                                    <TableHead className="w-[150px] font-semibold">
+                                                        Unit Organisasi
+                                                    </TableHead>
+                                                    <TableHead className="w-[140px] font-semibold">
+                                                        Dihapus Oleh
+                                                    </TableHead>
+                                                    <TableHead className="w-[150px] font-semibold">
+                                                        Waktu Dihapus
+                                                    </TableHead>
+                                                    <TableHead className="w-[110px] font-semibold">
+                                                        Sisa Waktu
+                                                    </TableHead>
+                                                    <TableHead className="w-[110px] font-semibold">
+                                                        Status
+                                                    </TableHead>
+                                                    <TableHead className="w-[200px] text-center font-semibold">
+                                                        Aksi
+                                                    </TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {arsips.data.map((arsip) => (
+                                                    <TableRow
+                                                        key={arsip.id}
+                                                        className="transition-colors hover:bg-muted/30"
+                                                    >
+                                                        <TableCell
+                                                            className="font-mono text-xs whitespace-nowrap text-muted-foreground"
+                                                            title={
+                                                                arsip.nomor_arsip
+                                                            }
+                                                        >
+                                                            {arsip.nomor_arsip}
+                                                        </TableCell>
+                                                        <TableCell
+                                                            className="max-w-[200px] truncate text-sm font-medium"
+                                                            title={arsip.judul}
+                                                        >
+                                                            {arsip.judul}
+                                                        </TableCell>
+                                                        <TableCell
+                                                            className="max-w-[150px] truncate text-sm text-muted-foreground"
+                                                            title={
+                                                                arsip.unit_organisasi
+                                                            }
+                                                        >
+                                                            {
+                                                                arsip.unit_organisasi
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell
+                                                            className="max-w-[140px] truncate text-sm text-muted-foreground"
+                                                            title={
+                                                                arsip.dihapus_oleh
+                                                            }
+                                                        >
+                                                            {arsip.dihapus_oleh}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
+                                                            {arsip.deleted_at}
+                                                        </TableCell>
+                                                        <TableCell className="text-sm whitespace-nowrap">
+                                                            <Countdown
+                                                                initialSeconds={
+                                                                    arsip.sisa_waktu_detik
+                                                                }
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell className="whitespace-nowrap">
+                                                            <StatusBadge variant="danger">
+                                                                Akan Dihapus
+                                                            </StatusBadge>
+                                                        </TableCell>
+                                                        <TableCell className="text-center">
+                                                            <div className="flex items-center justify-center gap-2">
+                                                                <Can permission="admin-recycle-bin.restore">
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="h-8 gap-1.5 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
+                                                                        onClick={() =>
+                                                                            setRestoreItem(
+                                                                                arsip,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Pulihkan
+                                                                    </Button>
+                                                                </Can>
+                                                                <Can permission="admin-recycle-bin.force-delete">
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="h-8 gap-1.5 border-rose-500/20 text-rose-600 hover:bg-rose-500/10 hover:text-rose-700"
+                                                                        onClick={() =>
+                                                                            setForceDeleteItem(
+                                                                                arsip,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Hapus
+                                                                        Permanen
+                                                                    </Button>
+                                                                </Can>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+
+                                    <DataTablePagination
+                                        data={arsips}
+                                        itemName="arsip"
+                                    />
+                                </>
+                            )}
                         </div>
-                    )}
+                    </ContentCard>
                 </div>
             </PageContainer>
+
+            {/* Dialog Konfirmasi Pulihkan */}
+            <ConfirmDialog
+                isOpen={restoreItem !== null}
+                onClose={() => !actionLoading && setRestoreItem(null)}
+                onConfirm={confirmRestore}
+                title="Pulihkan Arsip"
+                description={`Apakah Anda yakin ingin memulihkan arsip "${restoreItem?.judul}" (${restoreItem?.nomor_arsip}) ke repositori aktif?`}
+                confirmLabel="Pulihkan Arsip"
+                loading={actionLoading}
+            />
+
+            {/* Dialog Konfirmasi Hapus Permanen */}
+            <ConfirmDialog
+                isOpen={forceDeleteItem !== null}
+                onClose={() => !actionLoading && setForceDeleteItem(null)}
+                onConfirm={confirmForceDelete}
+                title="Hapus Permanen Arsip"
+                description={`PERINGATAN: Tindakan ini akan menghapus arsip "${forceDeleteItem?.judul}" (${forceDeleteItem?.nomor_arsip}) secara permanen beserta seluruh file versi dan riwayatnya. Data yang dihapus tidak dapat dipulihkan kembali.`}
+                confirmLabel="Hapus Permanen"
+                destructive
+                loading={actionLoading}
+            />
         </RouteGuard>
     );
 }
 
 RecycleBinIndex.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Administrasi', href: '#' },
+        { title: 'ADMINISTRASI' },
         { title: 'Riwayat Arsip Dihapus', href: index.url() },
     ],
 };

@@ -127,11 +127,11 @@ test('user relationships to operational models work correctly', function () {
 
     $workflowHistory = ArsipWorkflowHistory::create([
         'arsip_id' => $arsip->id,
-        'status_lama' => WorkflowStatus::Draft,
-        'status_baru' => WorkflowStatus::Review,
-        'action' => 'submit',
+        'status_lama' => WorkflowStatus::Review,
+        'status_baru' => WorkflowStatus::Approved,
+        'action' => 'verify',
         'user_id' => $user->id,
-        'keterangan' => 'Pengajuan review',
+        'keterangan' => 'Verifikasi disetujui',
     ]);
 
     $auditLog = AuditLog::create([

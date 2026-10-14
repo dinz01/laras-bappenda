@@ -39,7 +39,7 @@ class TingkatPerkembanganArsip extends Model
     protected $table = 'tingkat_perkembangan_arsip';
 
     /**
-     * Atribut yang boleh diisi secara massal.
+     * Atribut yang boleh diisi.
      *
      * @var list<string>
      */
@@ -69,6 +69,33 @@ class TingkatPerkembanganArsip extends Model
     public function arsips(): HasMany
     {
         return $this->hasMany(Arsip::class, 'tingkat_perkembangan_arsip_id');
+    }
+
+    /**
+     * Generate unique sequential kode tingkat perkembangan arsip.
+     * Prefix: TPA-
+     */
+    public static function generateKode(): string
+    {
+        $prefix = 'TPA-';
+
+        $last = static::where('kode', 'like', "{$prefix}%")
+            ->orderByDesc('id')
+            ->first();
+
+        $nextNumber = 1;
+        if ($last && preg_match('/^'.preg_quote($prefix, '/').'(\d+)$/', $last->kode, $matches)) {
+            $nextNumber = ((int) $matches[1]) + 1;
+        }
+
+        $kode = $prefix.str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+
+        while (static::where('kode', $kode)->exists()) {
+            $nextNumber++;
+            $kode = $prefix.str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+        }
+
+        return $kode;
     }
 
     /**

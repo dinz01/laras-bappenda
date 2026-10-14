@@ -3,12 +3,10 @@
 namespace App\Providers;
 
 use App\Interfaces\AiServiceInterface;
-use App\Interfaces\OcrServiceInterface;
 use App\Interfaces\SearchServiceInterface;
 use App\Interfaces\TteServiceInterface;
 use App\Policies\PermissionPolicy;
 use App\Policies\RolePolicy;
-use App\Services\MockOcrService;
 use App\Services\NullAiService;
 use App\Services\NullTteService;
 use App\Services\SearchService;
@@ -28,7 +26,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(OcrServiceInterface::class, MockOcrService::class);
         $this->app->bind(AiServiceInterface::class, NullAiService::class);
         $this->app->bind(TteServiceInterface::class, NullTteService::class);
         $this->app->bind(SearchServiceInterface::class, SearchService::class);

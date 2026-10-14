@@ -12,18 +12,18 @@ class MediaArsipSeeder extends Seeder
      */
     public function run(): void
     {
-        $media = [
-            ['kode' => 'MA-00001', 'nama' => 'Kertas', 'deskripsi' => 'Media fisik berbasis kertas.', 'status' => 'active'],
-            ['kode' => 'MA-00002', 'nama' => 'Digital', 'deskripsi' => 'Media penyimpanan file digital/elektronik.', 'status' => 'active'],
-            ['kode' => 'MA-00003', 'nama' => 'Foto', 'deskripsi' => 'Media visual berupa dokumentasi cetak.', 'status' => 'active'],
-            ['kode' => 'MA-00004', 'nama' => 'Audio', 'deskripsi' => 'Media perekaman suara.', 'status' => 'active'],
-            ['kode' => 'MA-00005', 'nama' => 'Video', 'deskripsi' => 'Media dokumentasi audio visual.', 'status' => 'active'],
+        $mediaArsips = [
+            ['kode' => 'MA-00001', 'nama' => 'Kertas', 'deskripsi' => 'Arsip fisik berbentuk dokumen kertas.', 'status' => 'active'],
+            ['kode' => 'MA-00002', 'nama' => 'Digital/PDF', 'deskripsi' => 'Arsip dalam bentuk file digital (PDF, hasil scan, dsb).', 'status' => 'active'],
+            ['kode' => 'MA-00003', 'nama' => 'Mikrofilm', 'deskripsi' => 'Arsip yang disimpan dalam bentuk mikrofilm.', 'status' => 'active'],
+            ['kode' => 'MA-00004', 'nama' => 'Foto', 'deskripsi' => 'Arsip berbentuk media foto/gambar.', 'status' => 'active'],
+            ['kode' => 'MA-00005', 'nama' => 'Elektronik/Media Rekam', 'deskripsi' => 'Arsip pada media rekam elektronik seperti CD, DVD, flashdisk, hard disk.', 'status' => 'active'],
         ];
 
-        foreach ($media as $item) {
+        foreach ($mediaArsips as $media) {
             MediaArsip::updateOrCreate(
-                ['kode' => $item['kode']],
-                $item
+                ['kode' => $media['kode']],
+                $media
             );
         }
     }

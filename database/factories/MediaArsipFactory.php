@@ -24,15 +24,10 @@ class MediaArsipFactory extends Factory
     {
         $names = [
             'Kertas',
-            'Digital',
+            'Digital/PDF',
             'Mikrofilm',
             'Foto',
-            'Audio',
-            'Video',
-            'CD/DVD',
-            'Harddisk',
-            'Flashdisk',
-            'Cloud Storage',
+            'Elektronik/Media Rekam',
         ];
 
         return [

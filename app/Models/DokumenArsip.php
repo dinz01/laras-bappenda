@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\OcrStatus;
 use Database\Factories\DokumenArsipFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,12 +22,6 @@ use Illuminate\Support\Carbon;
  * @property string $path_penyimpanan
  * @property Carbon|null $uploaded_at
  * @property int|null $uploaded_by
- * @property OcrStatus $ocr_status
- * @property string|null $ocr_text
- * @property float|null $ocr_confidence
- * @property string|null $ocr_language
- * @property int|null $ocr_pages
- * @property Carbon|null $ocr_processed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Arsip $arsip
@@ -50,7 +43,7 @@ class DokumenArsip extends Model
     protected $table = 'dokumen_arsip';
 
     /**
-     * Atribut yang boleh diisi secara massal.
+     * Atribut yang boleh diisi.
      *
      * @var list<string>
      */
@@ -63,12 +56,6 @@ class DokumenArsip extends Model
         'path_penyimpanan',
         'uploaded_at',
         'uploaded_by',
-        'ocr_status',
-        'ocr_text',
-        'ocr_confidence',
-        'ocr_language',
-        'ocr_pages',
-        'ocr_processed_at',
     ];
 
     /**
@@ -81,10 +68,6 @@ class DokumenArsip extends Model
         return [
             'uploaded_at' => 'datetime',
             'ukuran' => 'integer',
-            'ocr_status' => OcrStatus::class,
-            'ocr_confidence' => 'float',
-            'ocr_pages' => 'integer',
-            'ocr_processed_at' => 'datetime',
         ];
     }
 

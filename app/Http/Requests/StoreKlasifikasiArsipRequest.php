@@ -18,6 +18,30 @@ class StoreKlasifikasiArsipRequest extends FormRequest
     }
 
     /**
+     * Normalize empty values for integer dropdowns/inputs.
+     */
+    protected function prepareForValidation(): void
+    {
+        $merge = [];
+        if ($this->input('parent_id') === '') {
+            $merge['parent_id'] = null;
+        }
+        if ($this->input('nasib_akhir_id') === '') {
+            $merge['nasib_akhir_id'] = null;
+        }
+        if ($this->input('retensi_aktif') === '') {
+            $merge['retensi_aktif'] = null;
+        }
+        if ($this->input('retensi_inaktif') === '') {
+            $merge['retensi_inaktif'] = null;
+        }
+
+        if (! empty($merge)) {
+            $this->merge($merge);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -30,6 +54,16 @@ class StoreKlasifikasiArsipRequest extends FormRequest
             : null;
 
         return [
+            'parent_id' => [
+                'nullable',
+                'integer',
+                'exists:klasifikasi_arsip,id',
+                function (string $attribute, mixed $value, \Closure $fail) use ($klasifikasiArsipId): void {
+                    if ($klasifikasiArsipId && (int) $value === (int) $klasifikasiArsipId) {
+                        $fail('Klasifikasi tidak boleh menjadi induk dari dirinya sendiri.');
+                    }
+                },
+            ],
             'kode' => [
                 'required',
                 'string',
@@ -43,7 +77,9 @@ class StoreKlasifikasiArsipRequest extends FormRequest
                 Rule::unique('klasifikasi_arsip', 'nama')->ignore($klasifikasiArsipId),
             ],
             'deskripsi' => ['nullable', 'string'],
-            'retensi_arsip_id' => ['nullable', 'exists:retensi_arsip,id'],
+            'retensi_aktif' => ['nullable', 'required_with:nasib_akhir_id', 'integer', 'min:0', 'max:100'],
+            'retensi_inaktif' => ['nullable', 'required_with:nasib_akhir_id', 'integer', 'min:0', 'max:100'],
+            'nasib_akhir_id' => ['nullable', 'integer', 'exists:nasib_akhir,id'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ];
     }
@@ -56,11 +92,27 @@ class StoreKlasifikasiArsipRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'kode' => 'kode',
-            'nama' => 'nama klasifikasi arsip',
+            'parent_id' => 'induk klasifikasi',
+            'kode' => 'kode klasifikasi',
+            'nama' => 'nama klasifikasi',
             'deskripsi' => 'deskripsi',
-            'retensi_arsip_id' => 'retensi arsip',
+            'retensi_aktif' => 'retensi aktif',
+            'retensi_inaktif' => 'retensi inaktif',
+            'nasib_akhir_id' => 'nasib akhir',
             'status' => 'status',
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'retensi_aktif.required_with' => 'Retensi aktif wajib diisi jika nasib akhir dipilih.',
+            'retensi_inaktif.required_with' => 'Retensi inaktif wajib diisi jika nasib akhir dipilih.',
         ];
     }
 }

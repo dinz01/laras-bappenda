@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUnitOrganisasiRequest;
 use App\Models\Arsip;
 use App\Models\UnitOrganisasi;
+use App\Services\AuditLogService;
 use App\Support\AppDateTime;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +19,10 @@ use Inertia\Response;
 
 class UnitOrganisasiController extends Controller
 {
+    public function __construct(
+        private readonly AuditLogService $auditLogService,
+    ) {}
+
     /**
      * Display a listing of the unit organisasi.
      */
@@ -85,7 +90,15 @@ class UnitOrganisasiController extends Controller
      */
     public function store(StoreUnitOrganisasiRequest $request): RedirectResponse
     {
-        UnitOrganisasi::create($this->storeData($request));
+        $unitOrganisasi = UnitOrganisasi::create($this->storeData($request));
+
+        $this->auditLogService->log(
+            'master.unit-organisasi.created',
+            $unitOrganisasi,
+            null,
+            ['kode' => $unitOrganisasi->kode, 'nama' => $unitOrganisasi->nama, 'tipe' => $unitOrganisasi->tipe, 'status' => $unitOrganisasi->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Unit organisasi berhasil ditambahkan.');
     }
@@ -95,7 +108,17 @@ class UnitOrganisasiController extends Controller
      */
     public function update(StoreUnitOrganisasiRequest $request, UnitOrganisasi $unitOrganisasi): RedirectResponse
     {
+        $oldValues = ['kode' => $unitOrganisasi->kode, 'nama' => $unitOrganisasi->nama, 'tipe' => $unitOrganisasi->tipe, 'status' => $unitOrganisasi->status];
+
         $unitOrganisasi->update($this->updateData($request));
+
+        $this->auditLogService->log(
+            'master.unit-organisasi.updated',
+            $unitOrganisasi,
+            $oldValues,
+            ['kode' => $unitOrganisasi->kode, 'nama' => $unitOrganisasi->nama, 'tipe' => $unitOrganisasi->tipe, 'status' => $unitOrganisasi->status],
+            auth()->user(),
+        );
 
         return back()->with('success', 'Unit organisasi berhasil diperbarui.');
     }
@@ -123,7 +146,17 @@ class UnitOrganisasiController extends Controller
             ]);
         }
 
+        $oldValues = ['kode' => $unitOrganisasi->kode, 'nama' => $unitOrganisasi->nama, 'tipe' => $unitOrganisasi->tipe, 'status' => $unitOrganisasi->status];
+
         $unitOrganisasi->delete();
+
+        $this->auditLogService->log(
+            'master.unit-organisasi.deleted',
+            $unitOrganisasi,
+            $oldValues,
+            null,
+            auth()->user(),
+        );
 
         return back()->with('success', 'Unit organisasi berhasil dihapus.');
     }
@@ -239,6 +272,7 @@ class UnitOrganisasiController extends Controller
      * Siapkan data untuk pembuatan unit baru.
      * Tipe ditentukan otomatis: jika ada parent_id maka 'sub_bidang',
      * jika tidak maka mengikuti input pengguna (bidang/upt).
+     * Kode dibuat otomatis berdasarkan tipe jika tidak diisi.
      *
      * @return array{kode: string, nama: string, singkatan: string|null, tipe: string, parent_id: int|null, status: string}
      */
@@ -250,10 +284,14 @@ class UnitOrganisasiController extends Controller
             ? (int) $validated['parent_id']
             : null;
 
-        $tipe = $parentId !== null ? 'sub_bidang' : (string) $validated['tipe'];
+        $tipe = $parentId !== null ? 'sub_bidang' : (string) ($validated['tipe'] ?? 'bidang');
+
+        $kode = isset($validated['kode']) && is_string($validated['kode']) && trim($validated['kode']) !== ''
+            ? trim($validated['kode'])
+            : UnitOrganisasi::generateKode($tipe);
 
         return [
-            'kode' => (string) $validated['kode'],
+            'kode' => $kode,
             'nama' => (string) $validated['nama'],
             'singkatan' => isset($validated['singkatan']) ? (string) $validated['singkatan'] : null,
             'tipe' => $tipe,
@@ -264,17 +302,16 @@ class UnitOrganisasiController extends Controller
 
     /**
      * Siapkan data untuk update unit yang sudah ada.
-     * Tipe dan parent_id sengaja TIDAK disentuh — struktur hierarki
-     * hanya dapat ditentukan saat pembuatan unit, bukan lewat edit.
+     * Kode, tipe, dan parent_id sengaja TIDAK disentuh — struktur hierarki
+     * dan identitas kode unit bersifat tetap.
      *
-     * @return array{kode: string, nama: string, singkatan: string|null, status: string}
+     * @return array{nama: string, singkatan: string|null, status: string}
      */
     private function updateData(StoreUnitOrganisasiRequest $request): array
     {
         $validated = $request->validated();
 
         return [
-            'kode' => (string) $validated['kode'],
             'nama' => (string) $validated['nama'],
             'singkatan' => isset($validated['singkatan']) ? (string) $validated['singkatan'] : null,
             'status' => (string) $validated['status'],

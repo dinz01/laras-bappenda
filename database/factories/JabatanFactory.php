@@ -11,6 +11,11 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class JabatanFactory extends Factory
 {
     /**
+     * Counter untuk kode sekuensial.
+     */
+    protected static int $sequence = 1;
+
+    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -18,7 +23,7 @@ class JabatanFactory extends Factory
     public function definition(): array
     {
         return [
-            'kode' => 'JBT-'.fake()->unique()->numerify('#####'),
+            'kode' => 'JAB-'.str_pad((string) self::$sequence++, 3, '0', STR_PAD_LEFT),
             'nama' => fake()->jobTitle(),
             'singkatan' => strtoupper(fake()->lexify('????')),
             'status' => 'active',

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Arsip;
 use App\Models\DokumenArsip;
+use App\Models\DokumenArsipVersion;
 use App\Models\TteSignature;
 use App\Models\User;
 use Endroid\QrCode\QrCode;
@@ -61,7 +62,7 @@ class TteService
         DokumenArsip $dokumen,
         string $verificationCode,
         User $pimpinan,
-    ): ?\App\Models\DokumenArsipVersion {
+    ): ?DokumenArsipVersion {
         $mimeType = $dokumen->mime_type;
 
         if (! in_array($mimeType, ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'], true)) {
@@ -91,7 +92,7 @@ class TteService
         $outputAbsolutePath = Storage::disk('local')->path($outputRelativePath);
 
         if ($mimeType === 'application/pdf') {
-            $this->stampPdf($sourcePath, $qrPath, $outputAbsolutePath);
+            $this->generatePdfCertificate($arsip, $dokumen, $qrPath, $outputAbsolutePath, $verificationCode, $pimpinan);
         } else {
             $this->stampImage($sourcePath, $qrPath, $outputAbsolutePath, $mimeType);
         }
@@ -129,7 +130,7 @@ class TteService
             margin: 8,
         );
 
-        $writer = new PngWriter();
+        $writer = new PngWriter;
         $result = $writer->write($qrCode);
 
         $tempPath = sys_get_temp_dir().'/'.Str::uuid().'.png';
@@ -139,27 +140,76 @@ class TteService
     }
 
     /**
-     * Tempelkan QR ke halaman terakhir PDF, pojok kanan bawah.
+     * Generate PDF sertifikat TTE dummy (bukan menempel ke PDF asli),
+     * supaya tidak bergantung pada parsing struktur PDF sumber.
      */
-    private function stampPdf(string $sourcePath, string $qrImagePath, string $outputPath): void
-    {
-        $pdf = new Fpdi();
-        $pageCount = $pdf->setSourceFile($sourcePath);
+    private function generatePdfCertificate(
+        Arsip $arsip,
+        DokumenArsip $dokumen,
+        string $qrImagePath,
+        string $outputPath,
+        string $verificationCode,
+        User $pimpinan,
+    ): void {
+        $pdf = new Fpdi; // dipakai sebagai Fpdf biasa, tanpa setSourceFile()
 
-        for ($i = 1; $i <= $pageCount; $i++) {
-            $templateId = $pdf->importPage($i);
-            $size = $pdf->getTemplateSize($templateId);
+        $pdf->AddPage('P', 'A4');
+        $pdf->SetMargins(20, 20, 20);
 
-            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-            $pdf->useTemplate($templateId);
+        // Header
+        $pdf->SetFont('Helvetica', 'B', 14);
+        $pdf->Cell(0, 8, 'LARAS BAPPENDA', 0, 1, 'C');
+        $pdf->SetFont('Helvetica', '', 11);
+        $pdf->Cell(0, 6, 'Sertifikat Tanda Tangan Elektronik (Dummy)', 0, 1, 'C');
+        $pdf->Ln(6);
+        $pdf->SetDrawColor(180, 180, 180);
+        $pdf->Line(20, $pdf->GetY(), 190, $pdf->GetY());
+        $pdf->Ln(8);
 
-            if ($i === $pageCount) {
-                $qrSize = 25; // mm
-                $x = $size['width'] - $qrSize - 12;
-                $y = $size['height'] - $qrSize - 12;
-                $pdf->Image($qrImagePath, $x, $y, $qrSize, $qrSize, 'PNG');
-            }
-        }
+        // Info dokumen
+        $pdf->SetFont('Helvetica', 'B', 11);
+        $pdf->Cell(50, 8, 'Nomor Arsip', 0, 0);
+        $pdf->SetFont('Helvetica', '', 11);
+        $pdf->Cell(0, 8, ': '.$arsip->nomor_arsip, 0, 1);
+
+        $pdf->SetFont('Helvetica', 'B', 11);
+        $pdf->Cell(50, 8, 'Judul', 0, 0);
+        $pdf->SetFont('Helvetica', '', 11);
+        $pdf->MultiCell(0, 8, ': '.$arsip->judul);
+
+        $pdf->SetFont('Helvetica', 'B', 11);
+        $pdf->Cell(50, 8, 'Nama File Asli', 0, 0);
+        $pdf->SetFont('Helvetica', '', 11);
+        $pdf->Cell(0, 8, ': '.$dokumen->nama_original, 0, 1);
+
+        $pdf->SetFont('Helvetica', 'B', 11);
+        $pdf->Cell(50, 8, 'Ditandatangani oleh', 0, 0);
+        $pdf->SetFont('Helvetica', '', 11);
+        $pdf->Cell(0, 8, ': '.$pimpinan->name, 0, 1);
+
+        $pdf->SetFont('Helvetica', 'B', 11);
+        $pdf->Cell(50, 8, 'Tanggal', 0, 0);
+        $pdf->SetFont('Helvetica', '', 11);
+        $pdf->Cell(0, 8, ': '.now()->translatedFormat('d F Y, H:i').' WIB', 0, 1);
+
+        $pdf->SetFont('Helvetica', 'B', 11);
+        $pdf->Cell(50, 8, 'Kode Verifikasi', 0, 0);
+        $pdf->SetFont('Helvetica', '', 11);
+        $pdf->Cell(0, 8, ': '.$verificationCode, 0, 1);
+
+        $pdf->Ln(10);
+
+        // QR code
+        $qrSize = 45; // mm
+        $pdf->Image($qrImagePath, 20, $pdf->GetY(), $qrSize, $qrSize, 'PNG');
+        $pdf->SetXY(20 + $qrSize + 8, $pdf->GetY());
+        $pdf->SetFont('Helvetica', 'I', 9);
+        $pdf->MultiCell(0, 5, "Pindai QR code di samping untuk memverifikasi\nkeabsahan dokumen ini secara elektronik.");
+
+        $pdf->Ln($qrSize + 5);
+        $pdf->SetFont('Helvetica', 'I', 8);
+        $pdf->SetTextColor(120, 120, 120);
+        $pdf->MultiCell(0, 5, 'Dokumen ini merupakan sertifikat TTE dummy yang dihasilkan otomatis oleh sistem untuk keperluan pengujian/simulasi, bukan tanda tangan elektronik resmi bersertifikat.');
 
         $pdf->Output('F', $outputPath);
     }
@@ -196,7 +246,7 @@ class TteService
         $qrTargetSize = (int) max(80, min($sourceWidth, $sourceHeight) * 0.18);
         $margin = (int) ($qrTargetSize * 0.2);
 
-        $resizedQr = imagecreatetruecolor($qrTargetSize, $qrTargetSize);
+        $resizedQr = imagecreatetruecolor(max(1, $qrTargetSize), max(1, $qrTargetSize));
         imagecopyresampled(
             $resizedQr, $qr,
             0, 0, 0, 0,

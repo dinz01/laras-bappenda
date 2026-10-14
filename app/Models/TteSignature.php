@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Database\Factories\TteSignatureFactory;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -24,14 +22,9 @@ use Illuminate\Support\Carbon;
  * @property-read Arsip $arsip
  * @property-read DokumenArsipVersion|null $dokumenArsipVersion
  * @property-read User $signer
- *
- * @use HasFactory<TteSignatureFactory>
  */
 class TteSignature extends Model
 {
-    /** @use HasFactory<TteSignatureFactory> */
-    use HasFactory;
-
     protected $table = 'tte_signatures';
 
     /**

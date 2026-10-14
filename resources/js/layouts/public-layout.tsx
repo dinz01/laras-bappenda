@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react';
+import { useFlashToast } from '@/hooks/use-flash-toast';
 
 interface PublicLayoutProps {
     children: ReactNode;
 }
 
 export default function PublicLayout({ children }: PublicLayoutProps) {
+    useFlashToast();
+
     return (
         <div className="flex min-h-screen flex-col bg-background">
             {/* Topbar publik minimal */}

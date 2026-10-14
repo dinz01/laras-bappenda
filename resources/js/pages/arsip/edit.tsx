@@ -1,7 +1,10 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ArrowLeft, FileText, Save, UploadCloud, X } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { BarcodePreview } from '@/components/BarcodePreview';
 import { ContentCard } from '@/components/Cards/content-card';
+import { ConfirmDialog } from '@/components/Dialogs/confirm-dialog';
 import InputError from '@/components/input-error';
 import { PageContainer } from '@/components/Layout/page-container';
 import { PageHeader } from '@/components/Layout/page-header';
@@ -16,7 +19,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { index, show } from '@/routes/arsip';
+import { index } from '@/routes/arsip';
+import { focusFirstInvalidField } from '@/utils/form-validation';
 
 type MasterItem = {
     id: number;
@@ -40,12 +44,16 @@ type Arsip = {
     judul: string;
     deskripsi: string | null;
     tanggal_arsip: string;
+    kategori_arsip_id: number | null;
+    no_register?: string | null;
+    nop?: string | null;
+    npwpd?: string | null;
+    nama_wajib_pajak?: string | null;
     klasifikasi_arsip_id: number;
     lokasi_arsip_id: number | null;
     jenis_arsip_id: number | null;
     media_arsip_id: number | null;
     kondisi_arsip_id: number | null;
-    status_arsip_id: number | null;
     tingkat_akses_arsip_id: number | null;
     retensi_arsip_id: number | null;
     unit_organisasi_id: number | null;
@@ -56,10 +64,10 @@ type Arsip = {
 type EditProps = {
     arsip: Arsip;
     klasifikasis: MasterItem[];
+    kategoriArsips?: MasterItem[];
     jenisArsips: MasterItem[];
     unitOrganisasis: MasterItem[];
     lokasiArsips: MasterItem[];
-    statusArsips: MasterItem[];
 };
 
 function formatBytes(bytes: number) {
@@ -77,10 +85,10 @@ function formatBytes(bytes: number) {
 export default function Edit({
     arsip,
     klasifikasis,
+    kategoriArsips = [],
     jenisArsips,
     unitOrganisasis,
     lokasiArsips,
-    statusArsips,
 }: EditProps) {
     const { data, setData, post, processing, errors } = useForm({
         _method: 'put',
@@ -88,15 +96,32 @@ export default function Edit({
         judul: arsip.judul || '',
         deskripsi: arsip.deskripsi || '',
         tanggal_arsip: arsip.tanggal_arsip || '',
+        kategori_arsip_id: arsip.kategori_arsip_id?.toString() || '',
+        no_register: arsip.no_register || '',
+        nop: arsip.nop || '',
+        npwpd: arsip.npwpd || '',
+        nama_wajib_pajak: arsip.nama_wajib_pajak || '',
         klasifikasi_arsip_id: arsip.klasifikasi_arsip_id?.toString() || '',
         jenis_arsip_id: arsip.jenis_arsip_id?.toString() || '',
         unit_organisasi_id: arsip.unit_organisasi_id?.toString() || '',
         lokasi_arsip_id: arsip.lokasi_arsip_id?.toString() || '',
-        status_arsip_id: arsip.status_arsip_id?.toString() || '',
         file: null as File | null,
     });
 
+    const selectedKategori = kategoriArsips.find(
+        (k) => k.id.toString() === data.kategori_arsip_id,
+    );
+    const isPajakDaerah =
+        selectedKategori?.nama === 'Arsip Pelayanan Pajak Daerah' ||
+        selectedKategori?.kode === 'KAT-002';
+
+    const formRef = useRef<HTMLFormElement>(null);
+
     const [dragActive, setDragActive] = useState(false);
+
+    const handleFileSelect = (file: File) => {
+        setData('file', file);
+    };
 
     const handleDrag = (e: React.DragEvent) => {
         e.preventDefault();
@@ -115,40 +140,115 @@ export default function Edit({
         setDragActive(false);
 
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            setData('file', e.dataTransfer.files[0]);
+            handleFileSelect(e.dataTransfer.files[0]);
         }
+    };
+
+    const validate = (): boolean => {
+        let firstMissingLabel = '';
+
+        if (!data.tanggal_arsip) {
+            firstMissingLabel = 'Tanggal Arsip';
+        } else if (!data.judul.trim()) {
+            firstMissingLabel = 'Judul Arsip';
+        } else if (!data.deskripsi.trim()) {
+            firstMissingLabel = 'Keterangan / Deskripsi';
+        } else if (!data.kategori_arsip_id) {
+            firstMissingLabel = 'Kategori Arsip';
+        } else if (!data.klasifikasi_arsip_id) {
+            firstMissingLabel = 'Klasifikasi Arsip';
+        } else if (!data.jenis_arsip_id) {
+            firstMissingLabel = 'Jenis Arsip';
+        } else if (!data.unit_organisasi_id) {
+            firstMissingLabel = 'Unit Organisasi';
+        } else if (!data.lokasi_arsip_id) {
+            firstMissingLabel = 'Lokasi Arsip';
+        }
+
+        if (isPajakDaerah && !firstMissingLabel) {
+            if (!data.no_register.trim()) {
+                firstMissingLabel = 'No Register';
+            } else if (!data.nop.trim()) {
+                firstMissingLabel = 'NOP';
+            } else if (!data.npwpd.trim()) {
+                firstMissingLabel = 'NPWPD';
+            } else if (!data.nama_wajib_pajak.trim()) {
+                firstMissingLabel = 'Nama Wajib Pajak';
+            }
+        }
+
+        if (firstMissingLabel) {
+            toast.warning(
+                `Harap isi kolom "${firstMissingLabel}" yang wajib diisi.`,
+                {
+                    description:
+                        'Lengkapi seluruh kolom bertanda bintang sebelum menyimpan.',
+                },
+            );
+            setTimeout(() => focusFirstInvalidField(formRef.current), 100);
+
+            return false;
+        }
+
+        return true;
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/arsip/${arsip.id}`);
+
+        if (!validate()) {
+            return;
+        }
+
+        post(`/arsip/${arsip.id}`, {
+            preserveScroll: true,
+            onError: () => {
+                toast.error('Terjadi kesalahan saat memperbarui arsip.', {
+                    description: 'Periksa kembali data yang ditandai merah.',
+                });
+                setTimeout(() => focusFirstInvalidField(formRef.current), 100);
+            },
+        });
     };
 
+    const [confirmDeleteFile, setConfirmDeleteFile] = useState(false);
+    const [deletingFile, setDeletingFile] = useState(false);
+
     const handleDeleteFile = () => {
-        if (confirm('Hapus dokumen ini? Tindakan tidak dapat dibatalkan.')) {
-            router.delete(`/arsip/${arsip.id}/file`, { preserveScroll: true });
-        }
+        setConfirmDeleteFile(true);
+    };
+
+    const handleConfirmDeleteFile = () => {
+        setDeletingFile(true);
+        router.delete(`/arsip/${arsip.id}/file`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setConfirmDeleteFile(false);
+            },
+            onError: () => {
+                toast.error('Gagal menghapus berkas arsip.');
+            },
+            onFinish: () => setDeletingFile(false),
+        });
     };
 
     return (
-        <RouteGuard permission="arsip.update">
-            <Head title={`Edit Arsip — ${arsip.nomor_arsip}`} />
+        <RouteGuard permission="kelola-arsip.update">
+            <Head title={`Edit Arsip - ${arsip.nomor_arsip}`} />
+
             <PageContainer>
                 <PageHeader
                     title="Edit Arsip"
-                    description={`Perbarui data arsip ${arsip.nomor_arsip}`}
+                    description={`Edit metadata arsip: ${arsip.nomor_arsip}`}
                     breadcrumb={[
-                        { title: 'Dashboard', href: '/dashboard' },
+                        { title: 'BERANDA', href: '/' },
+                        { title: 'UTAMA' },
                         { title: 'Repository Arsip', href: index() },
-                        {
-                            title: arsip.nomor_arsip,
-                            href: show({ arsip: arsip.id }),
-                        },
-                        { title: 'Edit', href: '#' },
+                        { title: 'Edit Arsip' },
                     ]}
                     actions={
                         <Button variant="outline" size="sm" asChild>
-                            <Link href={show({ arsip: arsip.id })}>
+                            <Link href={index()}>
                                 <ArrowLeft className="mr-2 h-4 w-4" />
                                 Kembali
                             </Link>
@@ -156,7 +256,12 @@ export default function Edit({
                     }
                 />
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form
+                    ref={formRef}
+                    onSubmit={handleSubmit}
+                    noValidate
+                    className="space-y-6"
+                >
                     {/* Informasi Dasar */}
                     <ContentCard
                         title="Informasi Dasar"
@@ -166,15 +271,15 @@ export default function Edit({
                             <div className="space-y-2">
                                 <Label htmlFor="nomor_arsip">
                                     Nomor Arsip{' '}
-                                    <span className="text-destructive">*</span>
+                                    <span className="text-xs text-muted-foreground">
+                                        (Otomatis)
+                                    </span>
                                 </Label>
                                 <Input
                                     id="nomor_arsip"
                                     value={data.nomor_arsip}
-                                    onChange={(e) =>
-                                        setData('nomor_arsip', e.target.value)
-                                    }
-                                    className="border-border/60"
+                                    disabled
+                                    className="cursor-not-allowed border-border/60 bg-muted/50 text-muted-foreground"
                                 />
                                 <InputError message={errors.nomor_arsip} />
                             </div>
@@ -230,93 +335,30 @@ export default function Edit({
                         </div>
                     </ContentCard>
 
-                    {/* Klasifikasi & Referensi */}
+                    {/* Kategori, Klasifikasi & Referensi */}
                     <ContentCard
-                        title="Klasifikasi & Referensi"
+                        title="Klasifikasi & Kategori Arsip"
                         description="Kategori dan pengelompokan arsip"
                     >
-                        <div className="grid gap-5 sm:grid-cols-2">
+                        <div className="space-y-5">
                             <div className="space-y-2">
-                                <Label htmlFor="klasifikasi_arsip_id">
-                                    Klasifikasi Arsip{' '}
-                                    <span className="text-destructive">*</span>
+                                <Label htmlFor="kategori_arsip_id">
+                                    Kategori Arsip
                                 </Label>
                                 <Select
-                                    value={data.klasifikasi_arsip_id}
+                                    value={data.kategori_arsip_id}
                                     onValueChange={(val) =>
-                                        setData('klasifikasi_arsip_id', val)
+                                        setData('kategori_arsip_id', val)
                                     }
                                 >
                                     <SelectTrigger
-                                        id="klasifikasi_arsip_id"
+                                        id="kategori_arsip_id"
                                         className="border-border/60"
                                     >
-                                        <SelectValue placeholder="Pilih klasifikasi..." />
+                                        <SelectValue placeholder="Pilih kategori arsip..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {klasifikasis.map((opt) => (
-                                            <SelectItem
-                                                key={opt.id}
-                                                value={opt.id.toString()}
-                                            >
-                                                {opt.kode} — {opt.nama}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError
-                                    message={errors.klasifikasi_arsip_id}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="jenis_arsip_id">
-                                    Jenis Arsip
-                                </Label>
-                                <Select
-                                    value={data.jenis_arsip_id}
-                                    onValueChange={(val) =>
-                                        setData('jenis_arsip_id', val)
-                                    }
-                                >
-                                    <SelectTrigger
-                                        id="jenis_arsip_id"
-                                        className="border-border/60"
-                                    >
-                                        <SelectValue placeholder="Pilih jenis arsip..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {jenisArsips.map((opt) => (
-                                            <SelectItem
-                                                key={opt.id}
-                                                value={opt.id.toString()}
-                                            >
-                                                {opt.nama}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.jenis_arsip_id} />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="unit_organisasi_id">
-                                    Unit Organisasi
-                                </Label>
-                                <Select
-                                    value={data.unit_organisasi_id}
-                                    onValueChange={(val) =>
-                                        setData('unit_organisasi_id', val)
-                                    }
-                                >
-                                    <SelectTrigger
-                                        id="unit_organisasi_id"
-                                        className="border-border/60"
-                                    >
-                                        <SelectValue placeholder="Pilih unit organisasi..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {unitOrganisasis.map((opt) => (
+                                        {kategoriArsips.map((opt) => (
                                             <SelectItem
                                                 key={opt.id}
                                                 value={opt.id.toString()}
@@ -327,66 +369,233 @@ export default function Edit({
                                     </SelectContent>
                                 </Select>
                                 <InputError
-                                    message={errors.unit_organisasi_id}
+                                    message={errors.kategori_arsip_id}
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="lokasi_arsip_id">
-                                    Lokasi Arsip
-                                </Label>
-                                <Select
-                                    value={data.lokasi_arsip_id}
-                                    onValueChange={(val) =>
-                                        setData('lokasi_arsip_id', val)
-                                    }
-                                >
-                                    <SelectTrigger
-                                        id="lokasi_arsip_id"
-                                        className="border-border/60"
-                                    >
-                                        <SelectValue placeholder="Pilih lokasi..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {lokasiArsips.map((opt) => (
-                                            <SelectItem
-                                                key={opt.id}
-                                                value={opt.id.toString()}
-                                            >
-                                                {opt.nama}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.lokasi_arsip_id} />
-                            </div>
+                            {/* Conditional Section for Arsip Pelayanan Pajak Daerah */}
+                            {isPajakDaerah && (
+                                <div className="animate-in space-y-3 rounded-md border border-primary/20 bg-primary/5 p-4 duration-200 fade-in-50">
+                                    <h5 className="text-sm font-semibold text-primary">
+                                        Data Pelayanan Pajak Daerah
+                                    </h5>
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="no_register">
+                                                No Register
+                                            </Label>
+                                            <Input
+                                                id="no_register"
+                                                value={data.no_register}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'no_register',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Masukkan No Register"
+                                                className="border-border/60 bg-background"
+                                            />
+                                            <InputError
+                                                message={errors.no_register}
+                                            />
+                                        </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="status_arsip_id">Status</Label>
-                                <Select
-                                    value={data.status_arsip_id}
-                                    onValueChange={(val) =>
-                                        setData('status_arsip_id', val)
-                                    }
-                                >
-                                    <SelectTrigger
-                                        id="status_arsip_id"
-                                        className="border-border/60"
+                                        <div className="space-y-2">
+                                            <Label htmlFor="nop">
+                                                NOP (Nomor Objek Pajak)
+                                            </Label>
+                                            <Input
+                                                id="nop"
+                                                value={data.nop}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'nop',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Masukkan NOP"
+                                                className="border-border/60 bg-background"
+                                            />
+                                            <InputError message={errors.nop} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="npwpd">NPWPD</Label>
+                                            <Input
+                                                id="npwpd"
+                                                value={data.npwpd}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'npwpd',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Masukkan NPWPD"
+                                                className="border-border/60 bg-background"
+                                            />
+                                            <InputError
+                                                message={errors.npwpd}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="nama_wajib_pajak">
+                                                Nama Wajib Pajak
+                                            </Label>
+                                            <Input
+                                                id="nama_wajib_pajak"
+                                                value={data.nama_wajib_pajak}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'nama_wajib_pajak',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Masukkan Nama Wajib Pajak"
+                                                className="border-border/60 bg-background"
+                                            />
+                                            <InputError
+                                                message={
+                                                    errors.nama_wajib_pajak
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="grid gap-5 sm:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="klasifikasi_arsip_id">
+                                        Klasifikasi Arsip{' '}
+                                        <span className="text-destructive">
+                                            *
+                                        </span>
+                                    </Label>
+                                    <Select
+                                        value={data.klasifikasi_arsip_id}
+                                        onValueChange={(val) =>
+                                            setData('klasifikasi_arsip_id', val)
+                                        }
                                     >
-                                        <SelectValue placeholder="Pilih status..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {statusArsips.map((opt) => (
-                                            <SelectItem
-                                                key={opt.id}
-                                                value={opt.id.toString()}
-                                            >
-                                                {opt.nama}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.status_arsip_id} />
+                                        <SelectTrigger
+                                            id="klasifikasi_arsip_id"
+                                            className="border-border/60"
+                                        >
+                                            <SelectValue placeholder="Pilih klasifikasi..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {klasifikasis.map((opt) => (
+                                                <SelectItem
+                                                    key={opt.id}
+                                                    value={opt.id.toString()}
+                                                >
+                                                    {opt.kode} — {opt.nama}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        message={errors.klasifikasi_arsip_id}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="jenis_arsip_id">
+                                        Jenis Arsip
+                                    </Label>
+                                    <Select
+                                        value={data.jenis_arsip_id}
+                                        onValueChange={(val) =>
+                                            setData('jenis_arsip_id', val)
+                                        }
+                                    >
+                                        <SelectTrigger
+                                            id="jenis_arsip_id"
+                                            className="border-border/60"
+                                        >
+                                            <SelectValue placeholder="Pilih jenis arsip..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {jenisArsips.map((opt) => (
+                                                <SelectItem
+                                                    key={opt.id}
+                                                    value={opt.id.toString()}
+                                                >
+                                                    {opt.nama}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        message={errors.jenis_arsip_id}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="unit_organisasi_id">
+                                        Unit Organisasi
+                                    </Label>
+                                    <Select
+                                        value={data.unit_organisasi_id}
+                                        onValueChange={(val) =>
+                                            setData('unit_organisasi_id', val)
+                                        }
+                                    >
+                                        <SelectTrigger
+                                            id="unit_organisasi_id"
+                                            className="border-border/60"
+                                        >
+                                            <SelectValue placeholder="Pilih unit organisasi..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {unitOrganisasis.map((opt) => (
+                                                <SelectItem
+                                                    key={opt.id}
+                                                    value={opt.id.toString()}
+                                                >
+                                                    {opt.nama}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        message={errors.unit_organisasi_id}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="lokasi_arsip_id">
+                                        Lokasi Arsip
+                                    </Label>
+                                    <Select
+                                        value={data.lokasi_arsip_id}
+                                        onValueChange={(val) =>
+                                            setData('lokasi_arsip_id', val)
+                                        }
+                                    >
+                                        <SelectTrigger
+                                            id="lokasi_arsip_id"
+                                            className="border-border/60"
+                                        >
+                                            <SelectValue placeholder="Pilih lokasi..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {lokasiArsips.map((opt) => (
+                                                <SelectItem
+                                                    key={opt.id}
+                                                    value={opt.id.toString()}
+                                                >
+                                                    {opt.nama}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        message={errors.lokasi_arsip_id}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </ContentCard>
@@ -436,27 +645,36 @@ export default function Edit({
                             }
                         >
                             {data.file ? (
-                                <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/40 p-3">
-                                    <div className="flex min-w-0 items-center gap-3">
-                                        <FileText className="h-8 w-8 shrink-0 text-muted-foreground" />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-medium">
-                                                {data.file.name}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {formatBytes(data.file.size)}
-                                            </p>
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/40 p-3">
+                                        <div className="flex min-w-0 items-center gap-3">
+                                            <FileText className="h-8 w-8 shrink-0 text-muted-foreground" />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-sm font-medium">
+                                                    {data.file.name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {formatBytes(
+                                                        data.file.size,
+                                                    )}
+                                                </p>
+                                            </div>
                                         </div>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                            onClick={() =>
+                                                setData('file', null)
+                                            }
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
                                     </div>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                        onClick={() => setData('file', null)}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
+
+                                    {/* Preview posisi barcode — kiri bawah otomatis */}
+                                    <BarcodePreview file={data.file} />
                                 </div>
                             ) : (
                                 <div
@@ -464,10 +682,11 @@ export default function Edit({
                                     onDragOver={handleDrag}
                                     onDragLeave={handleDrag}
                                     onDrop={handleDrop}
-                                    className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors ${dragActive
-                                        ? 'border-primary bg-primary/5'
-                                        : 'border-border/60 bg-muted/20'
-                                        }`}
+                                    className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+                                        dragActive
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-border/60 bg-muted/20'
+                                    }`}
                                 >
                                     <UploadCloud className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
                                     <p className="text-sm font-medium">
@@ -482,20 +701,18 @@ export default function Edit({
                                         <input
                                             type="file"
                                             className="sr-only"
-                                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-                                            onChange={(e) =>
-                                                setData(
-                                                    'file',
-                                                    e.target.files
-                                                        ? e.target.files[0]
-                                                        : null,
-                                                )
-                                            }
+                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            onChange={(e) => {
+                                                if (e.target.files?.[0]) {
+                                                    handleFileSelect(
+                                                        e.target.files[0],
+                                                    );
+                                                }
+                                            }}
                                         />
                                     </label>
                                     <p className="mt-2 text-xs text-muted-foreground">
-                                        PDF, DOC, DOCX, XLS, XLSX, JPG, PNG
-                                        hingga 10MB
+                                        PDF, JPG, PNG hingga 100MB
                                     </p>
                                 </div>
                             )}
@@ -509,7 +726,7 @@ export default function Edit({
                     {/* Tombol Aksi */}
                     <div className="flex items-center justify-end gap-3">
                         <Button variant="outline" asChild>
-                            <Link href={show({ arsip: arsip.id })}>Batal</Link>
+                            <Link href={index()}>Batal</Link>
                         </Button>
                         <Button type="submit" disabled={processing}>
                             <Save className="mr-2 h-4 w-4" />
@@ -517,6 +734,17 @@ export default function Edit({
                         </Button>
                     </div>
                 </form>
+
+                <ConfirmDialog
+                    isOpen={confirmDeleteFile}
+                    onClose={() => setConfirmDeleteFile(false)}
+                    onConfirm={handleConfirmDeleteFile}
+                    title="Hapus Dokumen Arsip"
+                    description="Apakah Anda yakin ingin menghapus berkas dokumen ini? Tindakan ini tidak dapat dibatalkan."
+                    confirmLabel="Hapus"
+                    loading={deletingFile}
+                    destructive
+                />
             </PageContainer>
         </RouteGuard>
     );
@@ -524,8 +752,8 @@ export default function Edit({
 
 Edit.layout = {
     breadcrumbs: [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Repository Arsip', href: '/arsip' },
-        { title: 'Edit', href: '#' },
+        { title: 'UTAMA' },
+        { title: 'Repositori Arsip', href: '/arsip' },
+        { title: 'Edit Arsip' },
     ],
 };

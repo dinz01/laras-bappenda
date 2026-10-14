@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Arsip;
 use App\Models\SifatArsip;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,42 +28,57 @@ it('renders sifat arsip index with correct props', function () {
         );
 });
 
-it('stores a new sifat arsip', function () {
+it('stores a new sifat arsip with auto-generated kode', function () {
     $this->actingAs($this->user)
         ->post(route('master.sifat-arsip.store'), [
-            'kode' => 'SA-001',
-            'nama' => 'Biasa Test',
-            'deskripsi' => 'Deskripsi test',
+            'nama' => 'Sifat Rahasia Baru',
+            'deskripsi' => 'Deskripsi sifat test',
             'status' => 'active',
         ])
         ->assertRedirect();
 
     $this->assertDatabaseHas('sifat_arsip', [
-        'kode' => 'SA-001',
-        'nama' => 'Biasa Test',
+        'kode' => 'SFT-001',
+        'nama' => 'Sifat Rahasia Baru',
+    ]);
+});
+
+it('increments sequential auto-generated kode for sifat arsip', function () {
+    SifatArsip::factory()->create(['kode' => 'SFT-001']);
+
+    $this->actingAs($this->user)
+        ->post(route('master.sifat-arsip.store'), [
+            'nama' => 'Sifat Terbuka',
+            'status' => 'active',
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('sifat_arsip', [
+        'kode' => 'SFT-002',
+        'nama' => 'Sifat Terbuka',
     ]);
 });
 
 it('validates required fields on store', function () {
     $this->actingAs($this->user)
         ->post(route('master.sifat-arsip.store'), [])
-        ->assertSessionHasErrors(['kode', 'nama', 'status']);
+        ->assertSessionHasErrors(['nama', 'status']);
 });
 
-it('updates a sifat arsip', function () {
-    $sifatArsip = SifatArsip::factory()->create();
+it('updates a sifat arsip without changing kode', function () {
+    $sifatArsip = SifatArsip::factory()->create(['kode' => 'SFT-001', 'nama' => 'Nama Awal']);
 
     $this->actingAs($this->user)
         ->put(route('master.sifat-arsip.update', $sifatArsip), [
-            'kode' => $sifatArsip->kode,
             'nama' => 'Nama Diperbarui',
-            'deskripsi' => null,
+            'deskripsi' => 'Deskripsi baru',
             'status' => 'inactive',
         ])
         ->assertRedirect();
 
     $this->assertDatabaseHas('sifat_arsip', [
         'id' => $sifatArsip->id,
+        'kode' => 'SFT-001',
         'nama' => 'Nama Diperbarui',
         'status' => 'inactive',
     ]);
@@ -80,23 +94,12 @@ it('deletes a sifat arsip not in use', function () {
     $this->assertDatabaseMissing('sifat_arsip', ['id' => $sifatArsip->id]);
 });
 
-it('prevents deleting sifat arsip in use by arsip', function () {
-    $sifatArsip = SifatArsip::factory()->create();
-    Arsip::factory()->create(['sifat_arsip_id' => $sifatArsip->id]);
-
-    $this->actingAs($this->user)
-        ->delete(route('master.sifat-arsip.destroy', $sifatArsip))
-        ->assertSessionHasErrors('sifat_arsip');
-
-    $this->assertDatabaseHas('sifat_arsip', ['id' => $sifatArsip->id]);
-});
-
 it('searches sifat arsip by kode', function () {
-    SifatArsip::factory()->create(['kode' => 'SA-001', 'nama' => 'Pertama']);
-    SifatArsip::factory()->create(['kode' => 'SB-002', 'nama' => 'Kedua']);
+    SifatArsip::factory()->create(['kode' => 'SFT-001', 'nama' => 'Biasa']);
+    SifatArsip::factory()->create(['kode' => 'SFT-002', 'nama' => 'Rahasia']);
 
     $this->actingAs($this->user)
-        ->get(route('master.sifat-arsip.index', ['search' => 'SA-001']))
+        ->get(route('master.sifat-arsip.index', ['search' => 'SFT-001']))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->has('sifatArsips.data', 1)

@@ -30,6 +30,7 @@ class UserFactory extends Factory
             'nip' => null,
             'nama_lengkap' => $nama,
             'name' => $nama,
+            'username' => fake()->unique()->userName(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'unit_organisasi_id' => null,

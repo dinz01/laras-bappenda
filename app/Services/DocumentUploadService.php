@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Jobs\ProcessOcrJob;
 use App\Models\Arsip;
 use App\Models\DokumenArsip;
 use App\Models\User;
@@ -67,8 +66,6 @@ class DocumentUploadService
             $uploadedById,
             $catatanPerubahan
         );
-
-        ProcessOcrJob::dispatch($dokumen);
 
         return $dokumen;
     }
@@ -139,8 +136,6 @@ class DocumentUploadService
             $uploadedById,
             $catatanPerubahan
         );
-
-        ProcessOcrJob::dispatch($dokumen);
 
         return $dokumen;
     }
